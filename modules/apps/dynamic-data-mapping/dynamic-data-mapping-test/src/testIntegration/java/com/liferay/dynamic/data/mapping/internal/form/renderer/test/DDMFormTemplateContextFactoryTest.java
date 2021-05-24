@@ -369,19 +369,19 @@ public class DDMFormTemplateContextFactoryTest {
 			).put(
 				"gt",
 				_getValidation(
-					"/^(.+)<(\\d+\\.?\\d*)?$/", "{name} < {parameter}")
+					"/^(.+)>(\\d+\\.?\\d*)?$/", "{name} > {parameter}")
 			).put(
 				"gteq",
 				_getValidation(
-					"/^(.+)<=(\\d+\\.?\\d*)?$/", "{name} <= {parameter}")
+					"/^(.+)>=(\\d+\\.?\\d*)?$/", "{name} >= {parameter}")
 			).put(
 				"lt",
 				_getValidation(
-					"/^(.+)>(\\d+\\.?\\d*)?$/", "{name} > {parameter}")
+					"/^(.+)<(\\d+\\.?\\d*)?$/", "{name} < {parameter}")
 			).put(
 				"lteq",
 				_getValidation(
-					"/^(.+)>=(\\d+\\.?\\d*)?$/", "{name} >= {parameter}")
+					"/^(.+)<=(\\d+\\.?\\d*)?$/", "{name} <= {parameter}")
 			).put(
 				"neq",
 				_getValidation(

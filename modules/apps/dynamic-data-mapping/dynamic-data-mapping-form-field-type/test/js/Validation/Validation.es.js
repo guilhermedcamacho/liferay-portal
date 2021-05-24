@@ -118,8 +118,8 @@ describe('Validation', () => {
 				en_US: undefined,
 			},
 			expression: {
-				name: 'notContains',
-				value: 'NOT(contains(textfield, "{parameter}"))',
+				name: 'contains',
+				value: 'contains(textfield, "{parameter}")',
 			},
 			parameter: {
 				en_US: undefined,
@@ -162,8 +162,8 @@ describe('Validation', () => {
 				en_US: undefined,
 			},
 			expression: {
-				name: 'neq',
-				value: 'numericfield!={parameter}',
+				name: 'eq',
+				value: 'numericfield=={parameter}',
 			},
 			parameter: {
 				en_US: undefined,
