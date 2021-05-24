@@ -3831,7 +3831,7 @@ definition {
 		FormFields.enableSwitcher(fieldName = "Validation");
 
 		FormFields.editValidation(
-			validationArgument = "Does not contain",
+			validationArgument = "Contains",
 			validationErrorMessage = "Text must contain &apos;&apos;Test&apos;&apos;",
 			validationInput = "Test");
 
