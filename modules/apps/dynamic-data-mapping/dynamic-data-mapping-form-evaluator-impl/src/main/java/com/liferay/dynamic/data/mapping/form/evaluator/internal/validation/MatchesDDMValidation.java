@@ -29,14 +29,14 @@ import org.osgi.service.component.annotations.Component;
 	immediate = true, property = "ddm.validation.data.type=string",
 	service = DDMValidation.class
 )
-public class MatchDDMValidation implements DDMValidation {
+public class MatchesDDMValidation implements DDMValidation {
 
 	@Override
 	public String getLabel(Locale locale) {
 		return LanguageUtil.get(
 			ResourceBundleUtil.getModuleAndPortalResourceBundle(
 				locale, getClass()),
-			"match");
+			"matches");
 	}
 
 	@Override
