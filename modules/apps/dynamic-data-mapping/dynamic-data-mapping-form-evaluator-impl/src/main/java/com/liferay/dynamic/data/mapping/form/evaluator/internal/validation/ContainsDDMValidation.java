@@ -26,7 +26,10 @@ import org.osgi.service.component.annotations.Component;
  * @author Marcela Cunha
  */
 @Component(
-	immediate = true, property = "ddm.validation.data.type=string",
+	immediate = true,
+	property = {
+		"ddm.validation.data.type=string", "ddm.validation.ranking:Float=1"
+	},
 	service = DDMValidation.class
 )
 public class ContainsDDMValidation implements DDMValidation {
