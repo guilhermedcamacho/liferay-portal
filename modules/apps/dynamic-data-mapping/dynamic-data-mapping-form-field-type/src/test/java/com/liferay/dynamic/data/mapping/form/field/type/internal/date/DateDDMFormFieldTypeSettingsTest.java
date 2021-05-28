@@ -113,7 +113,7 @@ public class DateDDMFormFieldTypeSettingsTest
 			"setVisible('dataType', false)",
 			actions.get(0));
 		Assert.assertEquals(
-			"setVisible('requiredErrorMessage', getValue('required'))",
+			"setVisible('requiredErrorMessage', false)",
 			actions.get(1));
 	}
 

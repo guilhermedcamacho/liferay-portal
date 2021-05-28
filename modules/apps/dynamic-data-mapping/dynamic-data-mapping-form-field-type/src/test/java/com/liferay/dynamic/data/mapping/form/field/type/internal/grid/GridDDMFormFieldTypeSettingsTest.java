@@ -124,7 +124,7 @@ public class GridDDMFormFieldTypeSettingsTest
 			"setVisible('repeatable', false)",
 			actions.get(2));
 		Assert.assertEquals(
-			"setVisible('requiredErrorMessage', getValue('required'))",
+			"setVisible('requiredErrorMessage', false)",
 			actions.get(3));
 		Assert.assertEquals(
 			"setVisible('validation', false)",
