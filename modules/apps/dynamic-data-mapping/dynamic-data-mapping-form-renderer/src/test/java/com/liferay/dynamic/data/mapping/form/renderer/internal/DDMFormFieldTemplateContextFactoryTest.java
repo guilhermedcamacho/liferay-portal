@@ -24,6 +24,7 @@ import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingContext;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
+import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLayoutLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
@@ -225,6 +226,12 @@ public class DDMFormFieldTemplateContextFactoryTest {
 
 		ddmForm.addDDMFormField(ddmFormField);
 
+		LocalizedValue expectedLocalizedValue = new LocalizedValue();
+
+		expectedLocalizedValue.addString(LocaleUtil.US, "Error message");
+
+		ddmFormField.setRequiredErrorMessage(expectedLocalizedValue);
+
 		// Dynamic data mapping form field evaluation
 
 		String instanceId = StringUtil.randomString();
@@ -280,6 +287,9 @@ public class DDMFormFieldTemplateContextFactoryTest {
 			false, MapUtil.getBoolean(fieldTemplateContext, "repeatable"));
 		Assert.assertEquals(
 			true, MapUtil.getBoolean(fieldTemplateContext, "required"));
+		Assert.assertEquals(
+			"Error message",
+			MapUtil.getString(fieldTemplateContext, "requiredErrorMessage"));
 		Assert.assertEquals(
 			"This is a tip.", MapUtil.getString(fieldTemplateContext, "tip"));
 		Assert.assertEquals(

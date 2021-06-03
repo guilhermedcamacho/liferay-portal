@@ -86,6 +86,32 @@ public class DDMFormTemplateContextProcessorTest extends PowerMockito {
 	}
 
 	@Test
+	public void testGetDDMFormFieldRequiredErrorMessage() {
+		DDMFormField ddmFormField =
+			_ddmFormTemplateContextProcessor.getDDMFormField(
+				JSONUtil.put(
+					"fieldName", "Custom12345678"
+				).put(
+					"requiredErrorMessage", "Custom required error message"
+				).put(
+					"type", "custom_field"
+				));
+
+		LocalizedValue localizedValue =
+			(LocalizedValue)ddmFormField.getProperty("requiredErrorMessage");
+
+		LocalizedValue expectedLocalizedValue = new LocalizedValue();
+
+		expectedLocalizedValue.addString(
+			LocaleUtil.US, "Custom required error message");
+
+		Assert.assertEquals("Custom12345678", ddmFormField.getName());
+		Assert.assertEquals(
+			expectedLocalizedValue.getValues(), localizedValue.getValues());
+		Assert.assertEquals("custom_field", ddmFormField.getType());
+	}
+
+	@Test
 	public void testGetDDMFormFieldsGroup() {
 		long ddmStructureId = RandomTestUtil.randomLong();
 		long ddmStructureLayoutId = RandomTestUtil.randomLong();
