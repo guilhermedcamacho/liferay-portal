@@ -212,11 +212,11 @@ public class NumericDDMFormFieldTypeSettingsTest
 			actions.get(3));
 		Assert.assertEquals(
 			"setVisible('confirmationErrorMessage', getValue(" +
-				"'requireConfirmation'))",
+			"'requireConfirmation'))",
 			actions.get(4));
 		Assert.assertEquals(
 			"setVisible('confirmationLabel', getValue(" +
-				"'requireConfirmation'))",
+			"'requireConfirmation'))",
 			actions.get(5));
 		Assert.assertEquals(
 			"setVisible('direction', getValue('requireConfirmation'))",
@@ -225,8 +225,11 @@ public class NumericDDMFormFieldTypeSettingsTest
 			"setVisible('inputMaskFormat', getValue('inputMask'))",
 			actions.get(7));
 		Assert.assertEquals(
-			"setVisible('requiredErrorMessage', false)", actions.get(8));
-		Assert.assertEquals("setVisible('tooltip', false)", actions.get(9));
+			"setVisible('requiredErrorMessage', false)",
+			actions.get(8));
+		Assert.assertEquals(
+			"setVisible('tooltip', false)",
+			actions.get(9));
 	}
 
 	@Override

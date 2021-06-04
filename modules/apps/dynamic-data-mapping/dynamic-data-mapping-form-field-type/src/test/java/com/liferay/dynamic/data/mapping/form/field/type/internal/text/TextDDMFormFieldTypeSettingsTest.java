@@ -18,6 +18,7 @@ import com.liferay.dynamic.data.mapping.form.field.type.BaseDDMFormFieldTypeSett
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
+import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMFormRule;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.util.DDMFormFactory;
@@ -243,11 +244,11 @@ public class TextDDMFormFieldTypeSettingsTest
 		Assert.assertEquals(actions.toString(), 12, actions.size());
 		Assert.assertEquals(
 			"setRequired('ddmDataProviderInstanceId', equals(getValue(" +
-				"'dataSourceType'), \"data-provider\"))",
+			"'dataSourceType'), \"data-provider\"))",
 			actions.get(0));
 		Assert.assertEquals(
 			"setRequired('ddmDataProviderInstanceOutput', equals(" +
-				"getValue('dataSourceType'), \"data-provider\"))",
+			"getValue('dataSourceType'), \"data-provider\"))",
 			actions.get(1));
 		Assert.assertEquals(
 			"setValidationDataType('validation', getValue('dataType'))",
@@ -257,34 +258,35 @@ public class TextDDMFormFieldTypeSettingsTest
 			actions.get(3));
 		Assert.assertEquals(
 			"setVisible('confirmationErrorMessage', getValue(" +
-				"'requireConfirmation'))",
+			"'requireConfirmation'))",
 			actions.get(4));
 		Assert.assertEquals(
 			"setVisible('confirmationLabel', getValue(" +
-				"'requireConfirmation'))",
+			"'requireConfirmation'))",
 			actions.get(5));
 		Assert.assertEquals(
 			"setVisible('dataSourceType', getValue('autocomplete'))",
 			actions.get(6));
 		Assert.assertEquals(
 			"setVisible('ddmDataProviderInstanceId', equals(getValue(" +
-				"'dataSourceType'), \"data-provider\") and getValue(" +
-					"'autocomplete'))",
+			"'dataSourceType'), \"data-provider\") and getValue(" +
+			"'autocomplete'))",
 			actions.get(7));
 		Assert.assertEquals(
 			"setVisible('ddmDataProviderInstanceOutput', equals(getValue(" +
-				"'dataSourceType'), \"data-provider\") and getValue(" +
-					"'autocomplete'))",
+			"'dataSourceType'), \"data-provider\") and getValue(" +
+			"'autocomplete'))",
 			actions.get(8));
 		Assert.assertEquals(
 			"setVisible('direction', getValue('requireConfirmation'))",
 			actions.get(9));
 		Assert.assertEquals(
 			"setVisible('options', contains(getValue('dataSourceType'), " +
-				"\"manual\") and getValue('autocomplete'))",
+			"\"manual\") and getValue('autocomplete'))",
 			actions.get(10));
 		Assert.assertEquals(
-			"setVisible('requiredErrorMessage', false)", actions.get(11));
+			"setVisible('requiredErrorMessage', false)",
+			actions.get(11));
 
 		DDMFormRule ddmFormRule3 = ddmFormRules.get(3);
 

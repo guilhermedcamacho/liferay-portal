@@ -114,13 +114,21 @@ public class GridDDMFormFieldTypeSettingsTest
 
 		Assert.assertEquals(actions.toString(), 5, actions.size());
 
-		Assert.assertEquals("setVisible('indexType', false)", actions.get(0));
 		Assert.assertEquals(
-			"setVisible('predefinedValue', false)", actions.get(1));
-		Assert.assertEquals("setVisible('repeatable', false)", actions.get(2));
+			"setVisible('indexType', false)",
+			actions.get(0));
 		Assert.assertEquals(
-			"setVisible('requiredErrorMessage', false)", actions.get(3));
-		Assert.assertEquals("setVisible('validation', false)", actions.get(4));
+			"setVisible('predefinedValue', false)",
+			actions.get(1));
+		Assert.assertEquals(
+			"setVisible('repeatable', false)",
+			actions.get(2));
+		Assert.assertEquals(
+			"setVisible('requiredErrorMessage', false)",
+			actions.get(3));
+		Assert.assertEquals(
+			"setVisible('validation', false)",
+			actions.get(4));
 	}
 
 	@Override

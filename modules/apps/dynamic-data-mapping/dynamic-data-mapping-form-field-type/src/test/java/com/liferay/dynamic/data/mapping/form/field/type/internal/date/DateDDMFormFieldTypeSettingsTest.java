@@ -101,15 +101,20 @@ public class DateDDMFormFieldTypeSettingsTest
 
 		DDMFormRule ddmFormRule = ddmFormRules.get(0);
 
-		Assert.assertEquals("TRUE", ddmFormRule.getCondition());
+		Assert.assertEquals(
+			"TRUE",
+			ddmFormRule.getCondition());
 
 		List<String> actions = ddmFormRule.getActions();
 
 		Assert.assertEquals(actions.toString(), 2, actions.size());
 
-		Assert.assertEquals("setVisible('dataType', false)", actions.get(0));
 		Assert.assertEquals(
-			"setVisible('requiredErrorMessage', false)", actions.get(1));
+			"setVisible('dataType', false)",
+			actions.get(0));
+		Assert.assertEquals(
+			"setVisible('requiredErrorMessage', false)",
+			actions.get(1));
 	}
 
 	@Override
