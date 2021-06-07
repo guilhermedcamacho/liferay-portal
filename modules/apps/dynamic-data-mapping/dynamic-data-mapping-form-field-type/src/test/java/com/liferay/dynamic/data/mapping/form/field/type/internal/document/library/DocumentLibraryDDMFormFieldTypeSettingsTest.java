@@ -98,18 +98,12 @@ public class DocumentLibraryDDMFormFieldTypeSettingsTest
 
 		Assert.assertEquals(actions.toString(), 4, actions.size());
 
+		Assert.assertEquals("setVisible('dataType', false)", actions.get(0));
 		Assert.assertEquals(
-			"setVisible('dataType', false)",
-			actions.get(0));
+			"setVisible('predefinedValue', false)", actions.get(1));
 		Assert.assertEquals(
-			"setVisible('predefinedValue', false)",
-			actions.get(1));
-		Assert.assertEquals(
-			"setVisible('requiredErrorMessage', false)",
-			actions.get(2));
-		Assert.assertEquals(
-			"setVisible('validation', false)",
-			actions.get(3));
+			"setVisible('requiredErrorMessage', false)", actions.get(2));
+		Assert.assertEquals("setVisible('validation', false)", actions.get(3));
 	}
 
 	@Override

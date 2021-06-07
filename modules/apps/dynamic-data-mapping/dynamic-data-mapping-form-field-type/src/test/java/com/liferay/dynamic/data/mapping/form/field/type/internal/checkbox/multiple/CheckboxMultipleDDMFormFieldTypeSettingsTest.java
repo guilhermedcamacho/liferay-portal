@@ -31,7 +31,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-import com.liferay.portal.struts.Action;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -92,9 +91,7 @@ public class CheckboxMultipleDDMFormFieldTypeSettingsTest
 
 		DDMFormRule ddmFormRule = ddmFormRules.get(0);
 
-		Assert.assertEquals(
-			"TRUE",
-			ddmFormRule.getCondition());
+		Assert.assertEquals("TRUE", ddmFormRule.getCondition());
 
 		List<String> actions = ddmFormRule.getActions();
 
@@ -103,15 +100,10 @@ public class CheckboxMultipleDDMFormFieldTypeSettingsTest
 		Assert.assertEquals(
 			"setOptions('predefinedValue', getValue('options'))",
 			actions.get(0));
+		Assert.assertEquals("setRequired('options', true)", actions.get(1));
 		Assert.assertEquals(
-			"setRequired('options', true)",
-			actions.get(1));
-		Assert.assertEquals(
-			"setVisible('requiredErrorMessage', false)",
-			actions.get(2));
-		Assert.assertEquals(
-			"setVisible('validation', false)",
-			actions.get(3));
+			"setVisible('requiredErrorMessage', false)", actions.get(2));
+		Assert.assertEquals("setVisible('validation', false)", actions.get(3));
 	}
 
 	@Override

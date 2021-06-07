@@ -155,42 +155,35 @@ public class SelectDDMFormFieldTypeSettingsTest
 			actions.get(1));
 		Assert.assertEquals(
 			"setRequired('ddmDataProviderInstanceId', contains(getValue(" +
-			"'dataSourceType'), \"data-provider\"))",
+				"'dataSourceType'), \"data-provider\"))",
 			actions.get(2));
 		Assert.assertEquals(
 			"setRequired('ddmDataProviderInstanceOutput', contains(" +
-			"getValue('dataSourceType'), \"data-provider\"))",
+				"getValue('dataSourceType'), \"data-provider\"))",
 			actions.get(3));
 		Assert.assertEquals(
-			StringBundler.concat(
-				"setRequired('options', ",
-				"contains(getValue('dataSourceType'), \"manual\") OR ",
-				"isEmpty(getValue('dataSourceType')))"),
+			"setRequired('options', contains(getValue('dataSourceType'), " +
+				"\"manual\") OR isEmpty(getValue('dataSourceType')))",
 			actions.get(4));
 		Assert.assertEquals(
 			"setVisible('ddmDataProviderInstanceId', contains(getValue(" +
-			"'dataSourceType'), \"data-provider\"))",
+				"'dataSourceType'), \"data-provider\"))",
 			actions.get(5));
 		Assert.assertEquals(
 			"setVisible('ddmDataProviderInstanceOutput', contains(" +
-			"getValue('dataSourceType'), \"data-provider\"))",
+				"getValue('dataSourceType'), \"data-provider\"))",
 			actions.get(6));
 		Assert.assertEquals(
-			StringBundler.concat(
-				"setVisible('options', ",
-				"contains(getValue('dataSourceType'), \"manual\") OR ",
-				"isEmpty(getValue('dataSourceType')))"),
+			"setVisible('options', contains(getValue('dataSourceType'), " +
+				"\"manual\") OR isEmpty(getValue('dataSourceType')))",
 			actions.get(7));
 		Assert.assertEquals(
-			"setVisible('predefinedValue', " +
-			"contains(getValue('dataSourceType'), \"manual\"))",
+			"setVisible('predefinedValue', contains(getValue(" +
+				"'dataSourceType'), \"manual\"))",
 			actions.get(8));
 		Assert.assertEquals(
-			"setVisible('requiredErrorMessage', false)",
-			actions.get(9));
-		Assert.assertEquals(
-			"setVisible('validation', false)",
-			actions.get(10));
+			"setVisible('requiredErrorMessage', false)", actions.get(9));
+		Assert.assertEquals("setVisible('validation', false)", actions.get(10));
 
 		DDMFormRule ddmFormRule3 = ddmFormRules.get(2);
 
