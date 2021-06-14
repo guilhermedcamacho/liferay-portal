@@ -35,6 +35,7 @@ import org.osgi.annotation.versioning.ProviderType;
 				"setVisible('emailFromName', getValue('sendEmailNotification'))",
 				"setVisible('emailSubject', getValue('sendEmailNotification'))",
 				"setVisible('emailToAddress', getValue('sendEmailNotification'))",
+				"setVisible('objectId', contains(getValue('storageType'), \"object\"))",
 				"setVisible('published', FALSE)"
 			},
 			condition = "TRUE"
@@ -53,7 +54,7 @@ import org.osgi.annotation.versioning.ProviderType;
 							size = 12,
 							value = {
 								"requireAuthentication", "requireCaptcha",
-								"autosaveEnabled", "storageType",
+								"autosaveEnabled", "storageType", "objectId",
 								"workflowDefinition"
 							}
 						)
@@ -159,6 +160,16 @@ public interface DDMFormInstanceSettings {
 		type = "select"
 	)
 	public String storageType();
+
+	@DDMFormField(
+		label = "%select-an-object",
+		properties = {
+			"dataSourceType=data-provider",
+			"ddmDataProviderInstanceId=objects-list"
+		},
+		type = "select"
+	)
+	public Long objectId();
 
 	@DDMFormField(
 		label = "%submit-button-label", properties = "placeholder=%submit-form",

@@ -49,7 +49,7 @@ public class ObjectDefinitionSampleGenerator {
 
 	@Activate
 	protected void activate(BundleContext bundleContext) throws Exception {
-		if (false) {
+		if (true) {
 			_addSampleObjectDefinition();
 		}
 	}
