@@ -278,22 +278,6 @@ public class DDMFormInstanceRecordLocalServiceImpl
 		return ddmStorageAdapterGetResponse.getDDMFormValues();
 	}
 
-	@Override
-	public DDMFormValues getDDMFormValues(
-		DDMForm ddmForm, DDMFormInstance ddmFormInstance, long storageId, String storageType)
-		throws StorageException {
-
-		DDMStorageAdapter ddmStorageAdapter = getDDMStorageAdapter(storageType);
-
-		DDMStorageAdapterGetResponse ddmStorageAdapterGetResponse =
-			ddmStorageAdapter.get(
-				DDMStorageAdapterGetRequest.Builder.newBuilder(
-					storageId, ddmForm
-				).build());
-
-		return ddmStorageAdapterGetResponse.getDDMFormValues();
-	}
-
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *             #getDDMFormValues(DDMForm, long, String)}
@@ -675,6 +659,8 @@ public class DDMFormInstanceRecordLocalServiceImpl
 					serviceContext.getUuid()
 				).withClassName(
 					DDMStorageLink.class.getName()
+				).withDDMFormInstance(
+					ddmFormInstance
 				).build());
 
 		long primaryKey = ddmStorageAdapterSaveResponse.getPrimaryKey();
@@ -929,6 +915,8 @@ public class DDMFormInstanceRecordLocalServiceImpl
 				ddmFormInstance.getStructureId()
 			).withPrimaryKey(
 				ddmFormInstanceRecordVersion.getStorageId()
+			).withDDMFormInstance(
+				ddmFormInstance
 			).build());
 	}
 

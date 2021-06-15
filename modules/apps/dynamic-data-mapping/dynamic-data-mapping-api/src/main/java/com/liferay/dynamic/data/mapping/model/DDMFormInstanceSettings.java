@@ -169,7 +169,7 @@ public interface DDMFormInstanceSettings {
 		},
 		type = "select"
 	)
-	public Long objectId();
+	public String objectId();
 
 	@DDMFormField(
 		label = "%submit-button-label", properties = "placeholder=%submit-form",

@@ -22,44 +22,48 @@ import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.KeyValuePair;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Gabriel Albuquerque
  */
 @Component(
-	immediate = true,
-	property = "ddm.data.provider.instance.id=objects-list",
+	immediate = true, property = "ddm.data.provider.instance.id=objects-list",
 	service = DDMDataProvider.class
 )
 public class ObjectDataProvider implements DDMDataProvider {
 
 	@Override
 	public DDMDataProviderResponse getData(
-		DDMDataProviderRequest ddmDataProviderRequest) throws
-		DDMDataProviderException {
+			DDMDataProviderRequest ddmDataProviderRequest)
+		throws DDMDataProviderException {
 
 		List<KeyValuePair> keyValuePairs = new ArrayList<>();
 
 		try {
 			int objectDefinitionsCount =
-				_objectDefinitionLocalService.getObjectDefinitionsCount(ddmDataProviderRequest.getCompanyId());
+				_objectDefinitionLocalService.getObjectDefinitionsCount(
+					ddmDataProviderRequest.getCompanyId());
 
 			List<ObjectDefinition> objectDefinitions =
-				_objectDefinitionLocalService.getObjectDefinitions(0,
-					objectDefinitionsCount);
+				_objectDefinitionLocalService.getObjectDefinitions(
+					0, objectDefinitionsCount);
 
-			for (ObjectDefinition objectDefinition : objectDefinitions){
-				keyValuePairs.add(new KeyValuePair(Long.toString(objectDefinition.getObjectDefinitionId()), objectDefinition.getName()));
+			for (ObjectDefinition objectDefinition : objectDefinitions) {
+				keyValuePairs.add(
+					new KeyValuePair(
+						String.valueOf(
+							objectDefinition.getObjectDefinitionId()),
+						objectDefinition.getName()));
 			}
-
 		}
-		catch (PortalException e) {
-			throw new DDMDataProviderException(e);
+		catch (PortalException portalException) {
+			throw new DDMDataProviderException(portalException);
 		}
 
 		DDMDataProviderResponse.Builder builder =
@@ -68,16 +72,14 @@ public class ObjectDataProvider implements DDMDataProvider {
 		builder.withOutput("Default-Output", keyValuePairs);
 
 		return builder.build();
-
 	}
-
-	@Reference
-	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Override
 	public Class<?> getSettings() {
 		throw new UnsupportedOperationException();
 	}
+
+	@Reference
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
 }
-
-
