@@ -153,7 +153,7 @@ export default (state, action, config) => {
 			const {editingLanguageId, pages} = state;
 			const {fieldSet} = action.payload;
 			const {dataDefinitionFields, defaultDataLayout, id} = fieldSet;
-			const fieldSetId = `${id}`;
+			const fieldSetId = id;
 			const visitor = new PagesVisitor(pages);
 			const newPages = visitor.mapFields((field) => {
 				if (field.ddmStructureId !== fieldSetId) {
