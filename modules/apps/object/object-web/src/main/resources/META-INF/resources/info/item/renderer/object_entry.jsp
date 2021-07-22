@@ -22,24 +22,14 @@ ObjectEntry objectEntry = (ObjectEntry)request.getAttribute(ObjectWebKeys.OBJECT
 Map<String, Serializable> objectEntryValues = (Map<String, Serializable>)request.getAttribute(ObjectWebKeys.OBJECT_ENTRY_VALUES);
 %>
 
-<h3>
-	<%= objectDefinition.getName() %> <%= objectEntry.getObjectEntryId() %>
-</h3>
+<%
+	for (Map.Entry<String, Serializable> entry : objectEntryValues.entrySet()) {
+%>
 
-<p>
-	<ul>
+	<td class="table-cell-expand-smallest">
+		<%= entry.getValue() %>
+	</td>
 
-		<%
-		for (Map.Entry<String, Serializable> entry : objectEntryValues.entrySet()) {
-		%>
-
-			<li>
-				<b><%= entry.getKey() %></b>: <%= entry.getValue() %>
-			</li>
-
-		<%
-		}
-		%>
-
-	</ul>
-</p>
+<%
+	}
+%>

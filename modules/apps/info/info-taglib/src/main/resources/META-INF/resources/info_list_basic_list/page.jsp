@@ -27,7 +27,7 @@
 				<li>
 					<c:choose>
 						<c:when test="<%= (infoItemRenderer instanceof InfoItemTemplatedRenderer) && Validator.isNotNull(templateKey) %>">
-
+							<b>passou 1</b>
 							<%
 							InfoItemTemplatedRenderer<Object> infoItemTemplatedRenderer = (InfoItemTemplatedRenderer)infoItemRenderer;
 
@@ -36,7 +36,7 @@
 
 						</c:when>
 						<c:otherwise>
-
+							<b>passou 2</b>
 							<%
 							infoItemRenderer.render(infoListObject, request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
 							%>
@@ -52,37 +52,68 @@
 		</ol>
 	</c:when>
 	<c:otherwise>
-		<ul class="<%= listCssClass %>">
-
-			<%
-			for (Object infoListObject : infoListObjects) {
-			%>
-
-				<li class="<%= listItemCssClass %>">
-					<c:choose>
-						<c:when test="<%= (infoItemRenderer instanceof InfoItemTemplatedRenderer) && Validator.isNotNull(templateKey) %>">
-
+		<div class="table-responsive">
+			<table class="table table-autofit">
+				<thead>
+					<tr>
+						<%
+							for (String objectColumnName : infoListObjectColumns) {
+						%>
+							<th class="table-cell-expand-smallest">
+								<liferay-ui:message key="<%= objectColumnName %>" />
+							</th>
+						<%
+							}
+						%>
+					</tr>
+				</thead>
+				<tbody>
+					<%
+						for (Object infoListObject : infoListObjects) {
+					%>
+						<tr class=table-active">
 							<%
-							InfoItemTemplatedRenderer<Object> infoItemTemplatedRenderer = (InfoItemTemplatedRenderer)infoItemRenderer;
-
-							infoItemTemplatedRenderer.render(infoListObject, templateKey, request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
+								infoItemRenderer.render(infoListObject, request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
 							%>
+						</tr>
+					<%
+						}
+					%>
+				</tbody>
+			</table>
+		</div>
 
-						</c:when>
-						<c:otherwise>
+<%--		<ul class="<%= listCssClass %>">--%>
 
-							<%
-							infoItemRenderer.render(infoListObject, request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
-							%>
+<%--			<%--%>
+<%--			for (Object infoListObject : infoListObjects) {--%>
+<%--			%>--%>
 
-						</c:otherwise>
-					</c:choose>
-				</li>
+<%--				<li class="<%= listItemCssClass %>">--%>
+<%--					<c:choose>--%>
+<%--						<c:when test="<%= (infoItemRenderer instanceof InfoItemTemplatedRenderer) && Validator.isNotNull(templateKey) %>">--%>
+<%--							<b>passou 3</b>--%>
+<%--							<%--%>
+<%--							InfoItemTemplatedRenderer<Object> infoItemTemplatedRenderer = (InfoItemTemplatedRenderer)infoItemRenderer;--%>
 
-			<%
-			}
-			%>
+<%--							infoItemTemplatedRenderer.render(infoListObject, templateKey, request, PipingServletResponseFactory.createPipingServletResponse(pageContext));--%>
+<%--							%>--%>
 
-		</ul>
+<%--						</c:when>--%>
+<%--						<c:otherwise>--%>
+<%--							<b>passou 4</b>--%>
+<%--							<%--%>
+<%--							infoItemRenderer.render(infoListObject, request, PipingServletResponseFactory.createPipingServletResponse(pageContext));--%>
+<%--							%>--%>
+
+<%--						</c:otherwise>--%>
+<%--					</c:choose>--%>
+<%--				</li>--%>
+
+<%--			<%--%>
+<%--			}--%>
+<%--			%>--%>
+
+<%--		</ul>--%>
 	</c:otherwise>
 </c:choose>

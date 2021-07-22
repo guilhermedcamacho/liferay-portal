@@ -16,7 +16,8 @@
 
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<%@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
+<%@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
+taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
 <%@ page import="com.liferay.info.item.renderer.InfoItemRenderer" %><%@
 page import="com.liferay.info.item.renderer.InfoItemTemplatedRenderer" %><%@
@@ -29,5 +30,6 @@ page import="com.liferay.portal.kernel.util.GetterUtil" %>
 <%
 InfoItemRenderer<Object> infoItemRenderer = (InfoItemRenderer<Object>)request.getAttribute("liferay-info:info-list-grid:infoItemRenderer");
 List<Object> infoListObjects = (List<Object>)request.getAttribute("liferay-info:info-list-grid:infoListObjects");
+List<String> infoListObjectColumns = (List<String>)request.getAttribute("liferay-info:info-list-grid:infoListObjectColumns");
 String templateKey = GetterUtil.getString(request.getAttribute("liferay-info:info-list-grid:templateKey"));
 %>

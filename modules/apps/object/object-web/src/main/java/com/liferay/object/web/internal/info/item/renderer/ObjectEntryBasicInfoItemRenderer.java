@@ -21,7 +21,12 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.web.internal.constants.ObjectWebKeys;
 import com.liferay.portal.kernel.language.LanguageUtil;
 
+import java.io.Serializable;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -35,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Jorge Ferrer
  */
 @Component(
-	enabled = false, property = "service.ranking:Integer=100",
+	enabled = true, property = "service.ranking:Integer=100",
 	service = InfoItemRenderer.class
 )
 public class ObjectEntryBasicInfoItemRenderer
@@ -58,9 +63,11 @@ public class ObjectEntryBasicInfoItemRenderer
 					objectEntry.getObjectDefinitionId()));
 			httpServletRequest.setAttribute(
 				ObjectWebKeys.OBJECT_ENTRY, objectEntry);
-			httpServletRequest.setAttribute(
-				ObjectWebKeys.OBJECT_ENTRY_VALUES,
-				_objectEntryLocalService.getValues(objectEntry));
+
+			Map<String, Serializable> mapValues =
+				_objectEntryLocalService.getValues(objectEntry);
+
+			httpServletRequest.setAttribute(ObjectWebKeys.OBJECT_ENTRY_VALUES, new TreeMap<>(mapValues));
 
 			RequestDispatcher requestDispatcher =
 				_servletContext.getRequestDispatcher(

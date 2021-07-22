@@ -36,6 +36,10 @@ public class InfoListBasicListTag extends IncludeTag {
 		return _infoListObjects;
 	}
 
+	public List<? extends String> getInfoListObjectColumns() {
+		return _infoListObjectColumns;
+	}
+
 	public String getItemRendererKey() {
 		return _itemRendererKey;
 	}
@@ -50,6 +54,10 @@ public class InfoListBasicListTag extends IncludeTag {
 
 	public void setInfoListObjects(List<? extends Object> infoListObjects) {
 		_infoListObjects = infoListObjects;
+	}
+
+	public void setInfoListObjectColumns(List<? extends String> infoListObjectColumns) {
+		_infoListObjectColumns = infoListObjectColumns;
 	}
 
 	public void setItemRendererKey(String itemRendererKey) {
@@ -79,6 +87,7 @@ public class InfoListBasicListTag extends IncludeTag {
 		super.cleanUp();
 
 		_infoListObjects = null;
+		_infoListObjectColumns = null;
 		_itemRendererKey = null;
 		_listStyleKey = null;
 		_templateKey = null;
@@ -105,6 +114,9 @@ public class InfoListBasicListTag extends IncludeTag {
 			"liferay-info:info-list-grid:infoListObjects",
 			getInfoListObjects());
 		httpServletRequest.setAttribute(
+			"liferay-info:info-list-grid:infoListObjectColumns",
+			getInfoListObjectColumns());
+		httpServletRequest.setAttribute(
 			"liferay-info:info-list-grid:listStyleKey", _listStyleKey);
 		httpServletRequest.setAttribute(
 			"liferay-info:info-list-grid:templateKey", _templateKey);
@@ -121,6 +133,7 @@ public class InfoListBasicListTag extends IncludeTag {
 	private static final String _PAGE = "/info_list_basic_list/page.jsp";
 
 	private List<? extends Object> _infoListObjects;
+	private List<? extends String> _infoListObjectColumns;
 	private String _itemRendererKey;
 	private String _listStyleKey;
 	private String _templateKey;

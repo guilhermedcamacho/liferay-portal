@@ -14,6 +14,9 @@
  */
 --%>
 
+<%@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
+	taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
+
 <%@ page import="com.liferay.object.model.ObjectDefinition" %><%@
 page import="com.liferay.object.model.ObjectEntry" %><%@
 page import="com.liferay.object.web.internal.constants.ObjectWebKeys" %>
@@ -21,3 +24,5 @@ page import="com.liferay.object.web.internal.constants.ObjectWebKeys" %>
 <%@ page import="java.io.Serializable" %>
 
 <%@ page import="java.util.Map" %>
+
+<liferay-theme:defineObjects />

@@ -22,13 +22,18 @@ import com.liferay.info.list.renderer.InfoListRendererContext;
 import com.liferay.info.taglib.list.renderer.BorderedBasicInfoListRenderer;
 import com.liferay.info.taglib.servlet.taglib.InfoListBasicListTag;
 import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.model.ObjectField;
+import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.web.internal.info.item.renderer.ObjectEntryBasicInfoItemRenderer;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -70,6 +75,18 @@ public class ObjectEntryBorderedBasicInfoListRenderer
 
 		infoListBasicListTag.setInfoListObjects(objectEntries);
 
+		if(objectEntries != null && !objectEntries.isEmpty()) {
+			ObjectEntry objectEntry = objectEntries.get(0);
+
+			List<ObjectField> objectFields = _objectFieldLocalService.getObjectFields(objectEntry.getObjectDefinitionId());
+
+			List<String> objectFieldNames = objectFields.stream()
+				.map(ObjectField::getName)
+				.collect(Collectors.toList());
+
+			infoListBasicListTag.setInfoListObjectColumns(objectFieldNames);
+		}
+
 		Optional<String> infoListItemRendererKeyOptional =
 			infoListRendererContext.getListItemRendererKeyOptional();
 
@@ -108,7 +125,9 @@ public class ObjectEntryBorderedBasicInfoListRenderer
 	@Reference
 	protected InfoItemRendererTracker infoItemRendererTracker;
 
+	@Reference
+	private ObjectFieldLocalService _objectFieldLocalService;
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectEntryBorderedBasicInfoListRenderer.class);
-
 }
