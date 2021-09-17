@@ -40,11 +40,9 @@ public class HasListTypeDefinitionFunction
 	public Boolean apply(String fieldValue) {
 		String fieldValueName = fieldValue.replaceAll("\\[|\\]|\"", "");
 
-		JSONArray objectFieldsJSONArray =
-			_ddmExpressionParameterAccessor.getObjectFields();
-
 		JSONObject jsonObject = _getJSONObject(
-			fieldValueName, objectFieldsJSONArray);
+			fieldValueName,
+			_ddmExpressionParameterAccessor.getObjectFieldsJSONArray());
 
 		if (jsonObject != null) {
 			Long listTypeDefinitionId = (Long)jsonObject.get(
