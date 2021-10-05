@@ -51,15 +51,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Guilherme Camacho
  */
-@Component(service = InfoItemFieldValuesProvider.class)
 public class ObjectEntryInfoItemFieldValuesProvider
 	implements InfoItemFieldValuesProvider<ObjectEntry> {
+
+	public ObjectEntryInfoItemFieldValuesProvider(
+		AssetDisplayPageFriendlyURLProvider assetDisplayPageFriendlyURLProvider,
+		InfoItemFieldReaderFieldSetProvider infoItemFieldReaderFieldSetProvider,
+		JSONFactory jsonFactory,
+		ObjectFieldLocalService objectFieldLocalService,
+		TemplateInfoItemFieldSetProvider templateInfoItemFieldSetProvider,
+		UserLocalService userLocalService) {
+
+		_assetDisplayPageFriendlyURLProvider =
+			assetDisplayPageFriendlyURLProvider;
+		_infoItemFieldReaderFieldSetProvider =
+			infoItemFieldReaderFieldSetProvider;
+		_jsonFactory = jsonFactory;
+		_objectFieldLocalService = objectFieldLocalService;
+		_templateInfoItemFieldSetProvider = templateInfoItemFieldSetProvider;
+		_userLocalService = userLocalService;
+	}
 
 	@Override
 	public InfoItemFieldValues getInfoItemFieldValues(ObjectEntry objectEntry) {
@@ -85,7 +99,7 @@ public class ObjectEntryInfoItemFieldValuesProvider
 		throws PortalException {
 
 		return _assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-			ObjectEntry.class.getName(), objectEntry.getObjectEntryId(),
+			objectEntry.getModelClassName(), objectEntry.getObjectEntryId(),
 			themeDisplay);
 	}
 
@@ -228,24 +242,14 @@ public class ObjectEntryInfoItemFieldValuesProvider
 		return null;
 	}
 
-	@Reference
-	private AssetDisplayPageFriendlyURLProvider
+	private final AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
-
-	@Reference
-	private InfoItemFieldReaderFieldSetProvider
+	private final InfoItemFieldReaderFieldSetProvider
 		_infoItemFieldReaderFieldSetProvider;
-
-	@Reference
-	private JSONFactory _jsonFactory;
-
-	@Reference
-	private ObjectFieldLocalService _objectFieldLocalService;
-
-	@Reference
-	private TemplateInfoItemFieldSetProvider _templateInfoItemFieldSetProvider;
-
-	@Reference
-	private UserLocalService _userLocalService;
+	private final JSONFactory _jsonFactory;
+	private final ObjectFieldLocalService _objectFieldLocalService;
+	private final TemplateInfoItemFieldSetProvider
+		_templateInfoItemFieldSetProvider;
+	private final UserLocalService _userLocalService;
 
 }

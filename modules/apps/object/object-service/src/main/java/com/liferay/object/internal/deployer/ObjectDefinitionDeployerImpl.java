@@ -134,7 +134,9 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 					_listTypeEntryLocalService, objectDefinition,
 					_objectEntryLocalService, _objectFieldLocalService,
 					_objectScopeProviderRegistry),
-				null),
+				HashMapDictionaryBuilder.<String, Object>put(
+					"item.class.name", objectDefinition.getClassName()
+				).build()),
 			_bundleContext.registerService(
 				KeywordQueryContributor.class,
 				new ObjectEntryKeywordQueryContributor(

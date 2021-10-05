@@ -72,6 +72,7 @@ import java.util.ResourceBundle;
 
 /**
  * @author Jorge Ferrer
+ * @author Guilherme Camacho
  */
 public class ObjectEntrySingleFormVariationInfoCollectionProvider
 	implements ConfigurableInfoCollectionProvider<ObjectEntry>,
@@ -120,6 +121,11 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 					_objectDefinition.getObjectDefinitionId(),
 				portalException);
 		}
+	}
+
+	@Override
+	public String getCollectionItemClassName() {
+		return _objectDefinition.getClassName();
 	}
 
 	@Override
