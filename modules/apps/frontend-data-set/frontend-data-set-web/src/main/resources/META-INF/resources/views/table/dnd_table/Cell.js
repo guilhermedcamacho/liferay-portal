@@ -29,6 +29,7 @@ function Cell({children, className, columnName, expand, heading, resizable}) {
 		isFixed,
 		registerColumn,
 		resizeColumn,
+		truncate,
 		updateDraggingAllowed,
 		updateDraggingColumnName,
 	} = useContext(Context);
@@ -97,7 +98,7 @@ function Cell({children, className, columnName, expand, heading, resizable}) {
 			className={classNames(
 				heading ? 'dnd-th' : 'dnd-td',
 				expand && 'expand',
-				className
+				className, 'text-truncate'
 			)}
 			ref={cellRef}
 			style={{
