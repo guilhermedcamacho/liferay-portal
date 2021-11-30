@@ -20,6 +20,7 @@ import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchemaBuild
 import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchemaBuilderFactory;
 import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchemaField;
 import com.liferay.frontend.taglib.clay.data.set.view.table.ClobTypeClayTableSchemaField;
+import com.liferay.frontend.taglib.clay.data.set.view.table.DateClayTableSchemaField;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectFieldLocalService;
@@ -71,32 +72,46 @@ public class ObjectEntriesTableClayDataSetDisplayView
 				fieldName = fieldName + ".name";
 			}
 
-			ClayTableSchemaField clayTableSchemaField =
+			ClayTableSchemaField clayTableSchemaField = null;
+
+			if (Objects.equals(objectField.getType(), "Clob")) {
+				ClobTypeClayTableSchemaField clobTypeClayTableSchemaField =
+					clayTableSchemaBuilder.addClayTableSchemaField(
+						ClobTypeClayTableSchemaField.class, fieldName,
+						objectField.getLabel(locale, true));
+
+				clobTypeClayTableSchemaField.setTruncate(true);
+
+				clayTableSchemaField = clobTypeClayTableSchemaField;
+			}
+			else if (Objects.equals(objectField.getType(), "Date")) {
+				DateClayTableSchemaField dateClayTableSchemaField =
+					clayTableSchemaBuilder.addClayTableSchemaField(
+						DateClayTableSchemaField.class, fieldName,
+						objectField.getLabel(locale, true));
+
+				dateClayTableSchemaField.setFormat("short");
+				dateClayTableSchemaField.setWithoutTime(true);
+
+				clayTableSchemaField = dateClayTableSchemaField;
+			}
+			else {
 				clayTableSchemaField =
 					clayTableSchemaBuilder.addClayTableSchemaField(
 						fieldName, objectField.getLabel(locale, true));
 
-			if (Objects.equals(objectField.getType(), "Boolean")) {
-				clayTableSchemaField.setContentRenderer("boolean");
+				if (Objects.equals(objectField.getType(), "Boolean")) {
+					clayTableSchemaField.setContentRenderer("boolean");
+				}
 			}
+
+			clayTableSchemaBuilder.addClayTableSchemaField(
+				clayTableSchemaField);
 
 			if (!Objects.equals(objectField.getType(), "Blob") &&
 				objectField.isIndexed()) {
 
 				clayTableSchemaField.setSortable(true);
-			}
-
-			if (Objects.equals(objectField.getType(), "Clob")) {
-				ClobTypeClayTableSchemaField clobTypeClayTableSchemaField =
-					new ClobTypeClayTableSchemaField();
-
-				clobTypeClayTableSchemaField.setFieldName(fieldName);
-				clobTypeClayTableSchemaField.setLabel(
-					objectField.getLabel(locale, true));
-				clobTypeClayTableSchemaField.setTruncate(true);
-
-				clayTableSchemaBuilder.addClayTableSchemaField(
-					clobTypeClayTableSchemaField);
 			}
 		}
 
