@@ -179,7 +179,6 @@
 	<classpathentry kind="lib" path="lib/portal/httpclient.jar"/>
 	<classpathentry kind="lib" path="lib/portal/httpcore.jar"/>
 	<classpathentry kind="lib" path="lib/portal/httpmime.jar"/>
-	<classpathentry kind="lib" path="lib/portal/ical4j.jar"/>
 	<classpathentry kind="lib" path="lib/portal/im4java.jar"/>
 	<classpathentry kind="lib" path="lib/portal/istack-commons-runtime.jar"/>
 	<classpathentry kind="lib" path="lib/portal/jabsorb.jar"/>
