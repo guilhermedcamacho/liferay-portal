@@ -1699,19 +1699,6 @@
 				</licenses>
 			</library>
 			<library>
-				<file-name>lib/portal/ical4j.jar</file-name>
-				<version>1.0 RC3</version>
-				<project-name>iCal4j</project-name>
-				<project-url>http://ical4j.sourceforge.net</project-url>
-				<licenses>
-					<license>
-						<license-name>BSD Style License</license-name>
-						<license-url>http://en.wikipedia.org/wiki/BSD_licenses</license-url>
-						<copyright-notice>Copyright (c) 2007, Ben Fortuna. All rights reserved.</copyright-notice>
-					</license>
-				</licenses>
-			</library>
-			<library>
 				<file-name>lib/portal/im4java.jar</file-name>
 				<version>1.2.0</version>
 				<project-name>im4java</project-name>
