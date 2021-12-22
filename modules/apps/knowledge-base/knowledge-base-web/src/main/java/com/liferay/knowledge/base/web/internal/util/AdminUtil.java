@@ -15,7 +15,7 @@
 package com.liferay.knowledge.base.web.internal.util;
 
 import com.liferay.knowledge.base.util.AdminHelper;
-import com.liferay.portal.kernel.diff.DiffVersionsInfo;
+import com.liferay.diff.DiffVersionsInfo;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
