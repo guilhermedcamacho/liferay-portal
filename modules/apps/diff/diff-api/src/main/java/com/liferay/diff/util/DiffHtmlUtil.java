@@ -18,6 +18,9 @@ import com.liferay.diff.DiffHtml;
 
 import java.io.Reader;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * <p>
  * This class can compare two different versions of HTML code. It detects
@@ -27,6 +30,7 @@ import java.io.Reader;
  *
  * @author Julio Camarero
  */
+@Component(immediate = true, service = {})
 public class DiffHtmlUtil {
 
 	public static String diff(Reader source, Reader target) throws Exception {
@@ -41,7 +45,8 @@ public class DiffHtmlUtil {
 		return _diffHtml.replaceStyles(html);
 	}
 
-	public void setDiffHtml(DiffHtml diffHtml) {
+	@Reference(unbind = "-")
+	protected void setDiffHtml(DiffHtml diffHtml) {
 		_diffHtml = diffHtml;
 	}
 

@@ -21,6 +21,9 @@ import java.io.Reader;
 
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * This class can compare two different versions of a text. Source refers to the
  * earliest version of the text and target refers to a modified version of
@@ -32,6 +35,7 @@ import java.util.List;
  * @author Bruno Farache
  * @see    DiffUtil
  */
+@Component(immediate = true, service = {})
 public class DiffUtil {
 
 	/**
@@ -82,7 +86,8 @@ public class DiffUtil {
 		return _diff;
 	}
 
-	public void setDiff(Diff diff) {
+	@Reference(unbind = "-")
+	protected void setDiff(Diff diff) {
 		_diff = diff;
 	}
 
