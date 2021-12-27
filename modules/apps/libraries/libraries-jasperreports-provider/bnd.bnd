@@ -1,0 +1,54 @@
+Bundle-Name: Liferay Libraries JasperReports Provider
+Bundle-SymbolicName: com.liferay.libraries.jasperreports.provider
+Bundle-Version: 1.0.0
+Export-Package: net.sf.jasperreports.*;-split-package:=merge-first
+Import-Package:\
+	!antlr.*,\
+	\
+	!com.thoughtworks.*,\
+	\
+	!groovyjarjarasm.asm.tree.analysis.*,\
+	\
+	!jline.*,\
+	\
+	!junit.*,\
+	\
+	!mondrian.*,\
+	\
+	!net.sf.cglib.proxy.*,\
+	\
+	!net.sourceforge.barbecue.*,\
+	\
+	!org.apache.bsf.*,\
+	!org.apache.commons.cli.*,\
+	!org.apache.commons.javaflow.*,\
+	!org.apache.ivy.*,\
+	!org.apache.poi.xssf.*,\
+	\
+	!org.eclipse.*,\
+	\
+	!org.exolab.castor.*,\
+	\
+	!org.fusesource.*,\
+	\
+	!org.junit.*,\
+	\
+	!org.krysalis.barcode4j.*,\
+	\
+	!org.mozilla.*,\
+	\
+	!org.w3c.dom.svg.*,\
+	\
+	org.apache.batik.*;resolution:=optional,\
+	org.apache.commons.math3.*;resolution:=optional,\
+	\
+	org.bouncycastle.*;resolution:=optional,\
+	\
+	*
+Private-Package:\
+	org.apache.commons.collections4,\
+	org.apache.poi.ss.usermodel
+-includeresource:\
+	@jasperreports-[0-9.]*.jar!/*,\
+	@jasperreports-[0-9.]*.jar!/META-INF/*,\
+	@jasperreports-[0-9.]*.jar!/net/*
