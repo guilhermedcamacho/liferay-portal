@@ -3,8 +3,6 @@ Bundle-SymbolicName: com.liferay.portal.reports.engine.console.jasper
 Bundle-Version: 4.0.12
 DynamicImport-Package: *
 Import-Package:\
-	!antlr.*,\
-	\
 	!bsh,\
 	\
 	!com.apple.mrj.*,\
@@ -15,9 +13,7 @@ Import-Package:\
 	\
 	!com.lowagie.toolbox.*,\
 	\
-	!com.thoughtworks.*,\
-	\
-	!groovyjarjarasm.asm.tree.analysis.*,\
+	!com.zaxxer.sparsebits.*,\
 	\
 	!javax.accessibility.*,\
 	\
@@ -29,20 +25,8 @@ Import-Package:\
 	\
 	!javax.swing.*,\
 	\
-	!jline.*,\
-	\
-	!junit.*,\
-	\
-	!mondrian.*,\
-	\
-	!net.sourceforge.barbecue.*,\
-	\
 	!org.apache.bcel.*,\
-	!org.apache.bsf.*,\
-	!org.apache.commons.cli.*,\
-	!org.apache.commons.javaflow.*,\
 	!org.apache.commons.jci.*,\
-	!org.apache.ivy.*,\
 	!org.apache.log.*,\
 	!org.apache.oro.*,\
 	!org.apache.poi.hdgf.*,\
@@ -54,7 +38,6 @@ Import-Package:\
 	!org.apache.poi.poifs.*,\
 	!org.apache.poi.sl.*,\
 	!org.apache.poi.ss.*,\
-	!org.apache.poi.xssf.*,\
 	!org.apache.tools.*,\
 	!org.apache.velocity.*,\
 	!org.apache.xerces.impl.xpath.regex.*,\
@@ -63,25 +46,11 @@ Import-Package:\
 	\
 	!org.dom4j.*,\
 	\
-	!org.eclipse.*,\
-	\
-	!org.exolab.castor.*,\
-	\
-	!org.fusesource.*,\
-	\
 	!org.hibernate.*,\
 	\
 	!org.jaxen.*,\
 	\
-	!org.junit.*,\
-	\
-	!org.krysalis.barcode4j.*,\
-	\
-	!org.mozilla.*,\
-	\
 	!org.osgi.service.prefs.*,\
-	\
-	!org.w3c.dom.svg.*,\
 	\
 	!schemasMicrosoftComOfficePowerpoint,\
 	\
@@ -96,10 +65,7 @@ Import-Package:\
 	\
 	com.sun.*;resolution:=optional,\
 	\
-	net.sf.*;resolution:=optional,\
-	\
 	org.apache.batik.*;resolution:=optional,\
-	org.apache.commons.math3.*;resolution:=optional,\
 	org.apache.jcp.*;resolution:=optional,\
 	\
 	org.bouncycastle.*;resolution:=optional,\
