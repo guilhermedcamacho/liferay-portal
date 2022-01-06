@@ -1,16 +1,5 @@
 dependencies {
-	compileInclude group: "com.github.virtuald", name: "curvesapi", version: "1.06"
-	compileInclude group: "commons-codec", name: "commons-codec", version: "1.12"
-	compileInclude group: "net.sourceforge.jexcelapi", name: "jxl", version: "2.6.10"
 	compileInclude group: "org.apache.commons", name: "commons-dbcp2", version: "2.0"
-	compileInclude group: "org.apache.commons", name: "commons-math3", version: "3.6.1"
-	compileInclude group: "org.apache.httpcomponents", name: "httpclient", version: "4.5.13"
-	compileInclude group: "org.apache.httpcomponents", name: "httpcore", version: "4.4.14"
-	compileInclude group: "org.apache.lucene", name: "lucene-queries", version: "7.1.0"
-	compileInclude group: "org.apache.lucene", name: "lucene-queryparser", version: "7.1.0"
-	compileInclude group: "org.apache.lucene", name: "lucene-sandbox", version: "7.1.0"
-	compileInclude group: "org.apache.poi", name: "poi-ooxml", version: "4.1.2"
-	compileInclude group: "org.apache.poi", name: "poi-ooxml-schemas", version: "4.1.2"
 
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
 	compileOnly group: "commons-collections", name: "commons-collections", version: "3.2.2"

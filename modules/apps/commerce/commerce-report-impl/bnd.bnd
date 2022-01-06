@@ -27,15 +27,6 @@ Import-Package:\
 	!org.apache.commons.jci.*,\
 	!org.apache.log.*,\
 	!org.apache.oro.*,\
-	!org.apache.poi.hdgf.*,\
-	!org.apache.poi.hpbf.*,\
-	!org.apache.poi.hslf.*,\
-	!org.apache.poi.hsmf.*,\
-	!org.apache.poi.hssf.*,\
-	!org.apache.poi.hwpf.*,\
-	!org.apache.poi.poifs.*,\
-	!org.apache.poi.sl.*,\
-	!org.apache.poi.ss.*,\
 	!org.apache.tools.*,\
 	!org.apache.velocity.*,\
 	!org.apache.xerces.impl.xpath.regex.*,\
@@ -56,17 +47,12 @@ Import-Package:\
 	\
 	!sun.*,\
 	\
-	com.github.*;resolution:=optional,\
-	\
 	com.microsoft.schemas.office.powerpoint.*;resolution:=optional,\
 	com.microsoft.schemas.office.word.*;resolution:=optional,\
 	\
 	com.sun.*;resolution:=optional,\
 	\
-	org.apache.batik.*;resolution:=optional,\
 	org.apache.jcp.*;resolution:=optional,\
-	\
-	org.bouncycastle.*;resolution:=optional,\
 	\
 	org.brotli.*;resolution:=optional,\
 	\
