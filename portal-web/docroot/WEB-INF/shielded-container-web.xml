@@ -250,10 +250,6 @@
 		<url-pattern>/combo/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
-		<servlet-name>Dynamic Resource Servlet</servlet-name>
-		<url-pattern>/sprite/*</url-pattern>
-	</servlet-mapping>
-	<servlet-mapping>
 		<servlet-name>Friendly URL Servlet - Private Group</servlet-name>
 		<url-pattern>/group/*</url-pattern>
 	</servlet-mapping>
