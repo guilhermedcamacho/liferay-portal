@@ -2562,18 +2562,6 @@
 				</licenses>
 			</library>
 			<library>
-				<file-name>lib/portal/wstx.jar</file-name>
-				<version>3.2.8</version>
-				<project-name>Woodstox</project-name>
-				<project-url>http://woodstox.codehaus.org</project-url>
-				<licenses>
-					<license>
-						<license-name>Apache License 2.0</license-name>
-						<license-url>http://www.apache.org/licenses/LICENSE-2.0</license-url>
-					</license>
-				</licenses>
-			</library>
-			<library>
 				<file-name>lib/portal/xbean.jar</file-name>
 				<version>3.0.2</version>
 				<project-name>XMLBeans</project-name>
