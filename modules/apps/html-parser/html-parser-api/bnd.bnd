@@ -1,0 +1,4 @@
+Bundle-Name: Liferay Html Parser API
+Bundle-SymbolicName: com.liferay.html.parser.api
+Bundle-Version: 1.0.0
+Export-Package: com.liferay.html.parser
