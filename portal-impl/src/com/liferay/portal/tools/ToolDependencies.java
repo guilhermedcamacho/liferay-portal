@@ -39,9 +39,11 @@ import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
+import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
 import com.liferay.portal.model.DefaultModelHintsImpl;
@@ -52,7 +54,6 @@ import com.liferay.portal.util.DigesterImpl;
 import com.liferay.portal.util.FastDateFormatFactoryImpl;
 import com.liferay.portal.util.FileImpl;
 import com.liferay.portal.util.FriendlyURLNormalizerImpl;
-import com.liferay.portal.util.HtmlImpl;
 import com.liferay.portal.util.HttpImpl;
 import com.liferay.portal.util.InitUtil;
 import com.liferay.portal.util.PortalImpl;
@@ -115,7 +116,10 @@ public class ToolDependencies {
 
 		HtmlUtil htmlUtil = new HtmlUtil();
 
-		htmlUtil.setHtml(new HtmlImpl());
+		htmlUtil.setHtml(
+			(Html)ProxyUtil.newProxyInstance(
+				ToolDependencies.class.getClassLoader(),
+				new Class<?>[] {Html.class}, (proxy, method, args) -> null));
 
 		HttpUtil httpUtil = new HttpUtil();
 

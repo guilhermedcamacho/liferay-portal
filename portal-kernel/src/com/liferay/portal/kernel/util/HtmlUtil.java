@@ -260,6 +260,8 @@ public class HtmlUtil {
 		_html = html;
 	}
 
-	private static Html _html;
+	private static volatile Html _html =
+		ServiceProxyFactory.newServiceTrackedInstance(
+			Html.class, HtmlUtil.class, "_html", true);
 
 }
