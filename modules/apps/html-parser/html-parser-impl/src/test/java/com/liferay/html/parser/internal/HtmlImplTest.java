@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.liferay.portal.util;
+package com.liferay.html.parser.internal;
 
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
