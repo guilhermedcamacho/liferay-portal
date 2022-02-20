@@ -29,6 +29,8 @@ import java.util.regex.Pattern;
 
 import net.htmlparser.jericho.Source;
 
+import org.osgi.service.component.annotations.Component;
+
 /**
  * Provides the implementation of the HTML utility interface for escaping,
  * rendering, replacing, and stripping HTML text. This class uses XSS
@@ -43,6 +45,7 @@ import net.htmlparser.jericho.Source;
  * @author Connor McKay
  * @author Shuyang Zhou
  */
+@Component(immediate = true, service = Html.class)
 public class HtmlImpl implements Html {
 
 	/**
