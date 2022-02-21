@@ -16,6 +16,7 @@ package com.liferay.blogs.web.internal.messaging;
 
 import com.liferay.blogs.configuration.BlogsConfiguration;
 import com.liferay.blogs.linkback.LinkbackConsumer;
+import com.liferay.message.boards.util.linkback.LinkbackProducerUtil;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.DestinationNames;
@@ -27,7 +28,6 @@ import com.liferay.portal.kernel.scheduler.SchedulerEntryImpl;
 import com.liferay.portal.kernel.scheduler.TimeUnit;
 import com.liferay.portal.kernel.scheduler.Trigger;
 import com.liferay.portal.kernel.scheduler.TriggerFactory;
-import com.liferay.portal.linkback.LinkbackProducerUtil;
 
 import java.util.Map;
 
