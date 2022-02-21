@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.liferay.portal.linkback;
+package com.liferay.message.boards.util.linkback;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
