@@ -13,4 +13,5 @@ Export-Package:\
 	com.liferay.message.boards.settings,\
 	com.liferay.message.boards.social,\
 	com.liferay.message.boards.util,\
-	com.liferay.message.boards.util.comparator
+	com.liferay.message.boards.util.comparator,\
+	com.liferay.message.boards.util.linkback
