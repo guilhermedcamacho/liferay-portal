@@ -176,7 +176,6 @@
 	<classpathentry kind="lib" path="lib/portal/jcl-over-slf4j.jar"/>
 	<classpathentry kind="lib" path="lib/portal/jdom2.jar"/>
 	<classpathentry kind="lib" path="lib/portal/jempbox.jar"/>
-	<classpathentry kind="lib" path="lib/portal/jericho-html.jar"/>
 	<classpathentry kind="lib" path="lib/portal/jersey-common.jar"/>
 	<classpathentry kind="lib" path="lib/portal/jhighlight.jar"/>
 	<classpathentry kind="lib" path="lib/portal/jmatio.jar"/>
