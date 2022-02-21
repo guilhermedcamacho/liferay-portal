@@ -22,6 +22,7 @@ import com.liferay.dynamic.data.mapping.form.field.type.BaseDDMFormFieldTypeSett
 import com.liferay.dynamic.data.mapping.form.item.selector.criterion.DDMUserPersonalFolderItemSelectorCriterion;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
+import com.liferay.html.parser.internal.HtmlImpl;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion;
 import com.liferay.portal.json.JSONFactoryImpl;
@@ -50,7 +51,6 @@ import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.util.HtmlImpl;
 
 import java.util.Locale;
 import java.util.Map;

@@ -39,6 +39,7 @@ import com.liferay.dynamic.data.mapping.test.util.DDMFormLayoutTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormValuesTestUtil;
 import com.liferay.google.places.util.GooglePlacesUtil;
+import com.liferay.html.parser.internal.HtmlImpl;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONFactoryImpl;
@@ -65,7 +66,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.language.LanguageResources;
 import com.liferay.portal.util.CalendarFactoryImpl;
 import com.liferay.portal.util.FastDateFormatFactoryImpl;
-import com.liferay.portal.util.HtmlImpl;
 
 import java.util.Arrays;
 import java.util.Collections;

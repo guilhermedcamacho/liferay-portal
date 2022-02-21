@@ -30,6 +30,9 @@ dependencies {
 	compileOnly project(":core:petra:petra-lang")
 	compileOnly project(":core:petra:petra-sql-dsl-api")
 	compileOnly project(":core:petra:petra-string")
+
+	testCompile group: "net.htmlparser.jericho", name: "jericho-html", version: "3.1"
+	testCompile project(":apps:html-parser:html-parser-impl")
 }
 
 generateGrammarSource {

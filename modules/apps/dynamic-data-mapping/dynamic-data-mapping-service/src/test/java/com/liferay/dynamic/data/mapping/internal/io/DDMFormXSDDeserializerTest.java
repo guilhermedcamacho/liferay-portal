@@ -17,10 +17,10 @@ package com.liferay.dynamic.data.mapping.internal.io;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeResponse;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
+import com.liferay.html.parser.internal.HtmlImpl;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
-import com.liferay.portal.util.HtmlImpl;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.xml.SAXReaderImpl;
 

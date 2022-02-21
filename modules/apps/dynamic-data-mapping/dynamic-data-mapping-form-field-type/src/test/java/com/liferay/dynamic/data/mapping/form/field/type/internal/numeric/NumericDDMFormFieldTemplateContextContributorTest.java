@@ -18,13 +18,13 @@ import com.liferay.dynamic.data.mapping.form.field.type.BaseDDMFormFieldTypeSett
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormValuesTestUtil;
+import com.liferay.html.parser.internal.HtmlImpl;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.util.HtmlImpl;
 
 import java.util.HashMap;
 import java.util.Locale;

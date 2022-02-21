@@ -14,6 +14,7 @@
 
 package com.liferay.portal.workflow.task.web.internal.notifications;
 
+import com.liferay.html.parser.internal.HtmlImpl;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONFactoryImpl;
@@ -39,7 +40,6 @@ import com.liferay.portal.kernel.workflow.DefaultWorkflowTask;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
 import com.liferay.portal.kernel.workflow.WorkflowTaskManagerUtil;
-import com.liferay.portal.util.HtmlImpl;
 import com.liferay.portal.workflow.WorkflowTaskManagerProxyBean;
 import com.liferay.portal.workflow.task.web.internal.permission.WorkflowTaskPermissionChecker;
 
