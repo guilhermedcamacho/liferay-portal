@@ -30,6 +30,7 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureLayoutLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.util.DDM;
 import com.liferay.dynamic.data.mapping.util.SettingsDDMFormFieldsUtil;
+import com.liferay.html.parser.Html;
 import com.liferay.osgi.service.tracker.collections.ServiceTrackerMapBuilder;
 import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceComparator;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
@@ -376,7 +377,7 @@ public class DDMFormTemplateContextFactoryImpl
 			new DDMFormPagesTemplateContextFactory(
 				ddmForm, ddmFormLayout, ddmFormRenderingContext,
 				_ddmStructureLayoutLocalService, _ddmStructureLocalService,
-				_groupLocalService, _jsonFactory);
+				_groupLocalService, _html, _jsonFactory);
 
 		ddmFormPagesTemplateContextFactory.setDDMFormEvaluator(
 			_ddmFormEvaluator);
@@ -495,6 +496,9 @@ public class DDMFormTemplateContextFactoryImpl
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private JSONFactory _jsonFactory;

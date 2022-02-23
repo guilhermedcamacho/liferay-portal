@@ -18,6 +18,7 @@ import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.comment.web.internal.constants.CommentPortletKeys;
+import com.liferay.html.parser.Html;
 import com.liferay.message.boards.model.MBDiscussion;
 import com.liferay.message.boards.service.MBDiscussionLocalService;
 import com.liferay.petra.string.StringPool;
@@ -86,7 +87,7 @@ public class CommentUserNotificationHandler
 
 	@Override
 	protected String getBodyContent(JSONObject jsonObject) {
-		return HtmlUtil.extractText(super.getBodyContent(jsonObject));
+		return _html.extractText(super.getBodyContent(jsonObject));
 	}
 
 	@Override
@@ -171,6 +172,9 @@ public class CommentUserNotificationHandler
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommentUserNotificationHandler.class);
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private MBDiscussionLocalService _mbDiscussionLocalService;

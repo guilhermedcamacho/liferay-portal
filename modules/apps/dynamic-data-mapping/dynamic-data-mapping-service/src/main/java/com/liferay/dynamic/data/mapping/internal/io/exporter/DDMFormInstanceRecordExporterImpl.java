@@ -36,11 +36,11 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalServi
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.util.comparator.FormInstanceVersionVersionComparator;
+import com.liferay.html.parser.Html;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -154,7 +154,7 @@ public class DDMFormInstanceRecordExporterImpl
 
 		Stream<DDMFormFieldValue> stream = ddmFormFieldValues.stream();
 
-		return HtmlUtil.extractText(
+		return _html.extractText(
 			StringUtil.merge(
 				stream.map(
 					ddmForFieldValue -> ddmFormFieldValueRenderer.render(
@@ -332,5 +332,8 @@ public class DDMFormInstanceRecordExporterImpl
 	private static final String _KEY_MODIFIED_DATE = "modifiedDate";
 
 	private static final String _KEY_STATUS = "status";
+
+	@Reference
+	private Html _html;
 
 }

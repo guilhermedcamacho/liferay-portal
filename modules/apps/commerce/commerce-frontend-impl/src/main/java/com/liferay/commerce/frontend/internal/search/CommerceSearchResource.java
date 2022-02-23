@@ -41,6 +41,7 @@ import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.util.CommerceUtil;
+import com.liferay.html.parser.Html;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -193,7 +194,7 @@ public class CommerceSearchResource {
 		String subtitle = cpCatalogEntry.getShortDescription();
 
 		if (Validator.isNull(subtitle)) {
-			subtitle = HtmlUtil.extractText(cpCatalogEntry.getDescription());
+			subtitle = _html.extractText(cpCatalogEntry.getDescription());
 		}
 
 		searchItemModel.setSubtitle(subtitle);
@@ -437,6 +438,9 @@ public class CommerceSearchResource {
 
 	@Reference
 	private CPDefinitionHelper _cpDefinitionHelper;
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private Http _http;

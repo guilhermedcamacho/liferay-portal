@@ -14,6 +14,7 @@
 
 package com.liferay.social.activities.web.internal.portlet.action;
 
+import com.liferay.html.parser.Html;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.model.Group;
@@ -25,7 +26,6 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -198,7 +198,7 @@ public class RSSMVCResourceCommand extends BaseRSSMVCResourceCommand {
 			syndEntry.setPublishedDate(
 				new Date(socialActivitySet.getCreateDate()));
 			syndEntry.setTitle(
-				HtmlUtil.extractText(socialActivityFeedEntry.getTitle()));
+				_html.extractText(socialActivityFeedEntry.getTitle()));
 			syndEntry.setUri(socialActivityFeedEntry.getLink());
 
 			syndEntries.add(syndEntry);
@@ -241,6 +241,9 @@ public class RSSMVCResourceCommand extends BaseRSSMVCResourceCommand {
 	}
 
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private Portal _portal;

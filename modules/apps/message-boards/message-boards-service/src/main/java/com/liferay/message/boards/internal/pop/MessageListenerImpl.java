@@ -14,6 +14,7 @@
 
 package com.liferay.message.boards.internal.pop;
 
+import com.liferay.html.parser.Html;
 import com.liferay.message.boards.constants.MBCategoryConstants;
 import com.liferay.message.boards.constants.MBMessageConstants;
 import com.liferay.message.boards.internal.util.MBMailMessage;
@@ -235,15 +236,16 @@ public class MessageListenerImpl implements MessageListener {
 
 			if (parentMessage == null) {
 				_mbMessageService.addMessage(
-					groupId, categoryId, subject, mbMailMessage.getBody(),
+					groupId, categoryId, subject, mbMailMessage.getBody(_html),
 					MBMessageConstants.DEFAULT_FORMAT, inputStreamOVPs, false,
 					0.0, true, serviceContext);
 			}
 			else {
 				_mbMessageService.addMessage(
 					parentMessage.getMessageId(), subject,
-					mbMailMessage.getBody(), MBMessageConstants.DEFAULT_FORMAT,
-					inputStreamOVPs, false, 0.0, true, serviceContext);
+					mbMailMessage.getBody(_html),
+					MBMessageConstants.DEFAULT_FORMAT, inputStreamOVPs, false,
+					0.0, true, serviceContext);
 			}
 
 			if (_log.isDebugEnabled()) {
@@ -366,6 +368,9 @@ public class MessageListenerImpl implements MessageListener {
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private MBCategoryLocalService _mbCategoryLocalService;

@@ -41,6 +41,7 @@ import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.friendly.url.exception.DuplicateFriendlyURLEntryException;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
+import com.liferay.html.parser.Html;
 import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
@@ -1107,7 +1108,7 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 			visible = true;
 		}
 
-		String summary = HtmlUtil.extractText(
+		String summary = _html.extractText(
 			StringUtil.shorten(entry.getContent(), 500));
 
 		AssetEntry assetEntry = _assetEntryLocalService.updateEntry(
@@ -2198,7 +2199,7 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 		).put(
 			"excerpt",
 			StringUtil.shorten(
-				HtmlUtil.extractText(entry.getContent()),
+				_html.extractText(entry.getContent()),
 				PropsValues.BLOGS_LINKBACK_EXCERPT_LENGTH)
 		).put(
 			"title", entry.getTitle()
@@ -2430,6 +2431,9 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private Http _http;

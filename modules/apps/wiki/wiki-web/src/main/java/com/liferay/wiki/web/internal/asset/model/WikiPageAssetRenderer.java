@@ -17,6 +17,7 @@ package com.liferay.wiki.web.internal.asset.model;
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
+import com.liferay.html.parser.Html;
 import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -80,11 +81,12 @@ public class WikiPageAssetRenderer
 	}
 
 	public WikiPageAssetRenderer(
-		WikiPage page, WikiEngineRenderer wikiEngineRenderer,
+		WikiPage page, WikiEngineRenderer wikiEngineRenderer, Html html,
 		TrashHelper trashHelper) {
 
 		_page = page;
 		_wikiEngineRenderer = wikiEngineRenderer;
+		_html = html;
 		_trashHelper = trashHelper;
 	}
 
@@ -416,6 +418,7 @@ public class WikiPageAssetRenderer
 
 	private AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
+	private final Html _html;
 	private final WikiPage _page;
 	private final TrashHelper _trashHelper;
 	private final WikiEngineRenderer _wikiEngineRenderer;

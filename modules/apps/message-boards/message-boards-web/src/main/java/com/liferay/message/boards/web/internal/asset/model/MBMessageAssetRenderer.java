@@ -17,6 +17,7 @@ package com.liferay.message.boards.web.internal.asset.model;
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
+import com.liferay.html.parser.Html;
 import com.liferay.message.boards.constants.MBPortletKeys;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.service.permission.MBDiscussionPermission;
@@ -38,7 +39,6 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.trash.TrashRenderer;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -64,10 +64,12 @@ public class MBMessageAssetRenderer
 
 	public MBMessageAssetRenderer(
 		MBMessage message,
-		ModelResourcePermission<MBMessage> messageModelResourcePermission) {
+		ModelResourcePermission<MBMessage> messageModelResourcePermission,
+		Html html) {
 
 		_message = message;
 		_messageModelResourcePermission = messageModelResourcePermission;
+		_html = html;
 	}
 
 	@Override
@@ -114,7 +116,7 @@ public class MBMessageAssetRenderer
 	@Override
 	public String getSearchSummary(Locale locale) {
 		if (_message.isFormatBBCode()) {
-			return HtmlUtil.extractText(
+			return _html.extractText(
 				BBCodeTranslatorUtil.getHTML(_message.getBody()));
 		}
 
@@ -339,6 +341,7 @@ public class MBMessageAssetRenderer
 
 	private AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
+	private final Html _html;
 	private final MBMessage _message;
 	private final ModelResourcePermission<MBMessage>
 		_messageModelResourcePermission;

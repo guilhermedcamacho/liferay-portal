@@ -49,6 +49,7 @@ import com.liferay.calendar.util.JCalendarUtil;
 import com.liferay.calendar.util.RecurrenceUtil;
 import com.liferay.calendar.workflow.constants.CalendarBookingWorkflowConstants;
 import com.liferay.expando.kernel.model.ExpandoBridge;
+import com.liferay.html.parser.Html;
 import com.liferay.message.boards.service.MBMessageLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
@@ -85,7 +86,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -1152,7 +1152,7 @@ public class CalendarBookingLocalServiceImpl
 			publishDate = calendarBooking.getCreateDate();
 		}
 
-		String summary = HtmlUtil.extractText(
+		String summary = _html.extractText(
 			StringUtil.shorten(calendarBooking.getDescription(), 500));
 
 		AssetEntry assetEntry = _assetEntryLocalService.updateEntry(
@@ -2723,6 +2723,9 @@ public class CalendarBookingLocalServiceImpl
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private RatingsStatsLocalService _ratingsStatsLocalService;

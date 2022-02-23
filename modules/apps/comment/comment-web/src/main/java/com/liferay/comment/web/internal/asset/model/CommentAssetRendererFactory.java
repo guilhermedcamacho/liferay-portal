@@ -19,6 +19,7 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseAssetRendererFactory;
 import com.liferay.comment.constants.CommentConstants;
 import com.liferay.comment.web.internal.constants.CommentPortletKeys;
+import com.liferay.html.parser.Html;
 import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.comment.DiscussionPermission;
@@ -74,7 +75,7 @@ public class CommentAssetRendererFactory
 		WorkflowableComment workflowableComment = (WorkflowableComment)comment;
 
 		CommentAssetRenderer commentAssetRenderer = new CommentAssetRenderer(
-			workflowableComment, this);
+			workflowableComment, this, _html);
 
 		commentAssetRenderer.setAssetRendererType(type);
 		commentAssetRenderer.setServletContext(_servletContext);
@@ -136,6 +137,9 @@ public class CommentAssetRendererFactory
 
 	@Reference
 	private CommentManager _commentManager;
+
+	@Reference
+	private Html _html;
 
 	@Reference(target = "(osgi.web.symbolicname=com.liferay.comment.web)")
 	private ServletContext _servletContext;

@@ -14,6 +14,7 @@
 
 package com.liferay.wiki.service.impl;
 
+import com.liferay.html.parser.Html;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
@@ -28,7 +29,6 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
@@ -934,7 +934,7 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 									WikiConstants.SERVICE_NAME));
 
 					value = StringUtil.shorten(
-						HtmlUtil.extractText(page.getContent()),
+						_html.extractText(page.getContent()),
 						wikiGroupServiceOverriddenConfiguration.
 							rssAbstractLength(),
 						StringPool.BLANK);
@@ -997,6 +997,9 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private Portal _portal;

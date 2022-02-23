@@ -15,6 +15,7 @@
 package com.liferay.wiki.web.internal.trash;
 
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.html.parser.Html;
 import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -281,7 +282,7 @@ public class WikiPageTrashHandler extends BaseWikiTrashHandler {
 			classPK, WorkflowConstants.STATUS_ANY, false);
 
 		return new WikiPageAssetRenderer(
-			page, _wikiEngineRenderer, _trashHelper);
+			page, _wikiEngineRenderer, _html, _trashHelper);
 	}
 
 	@Override
@@ -472,6 +473,9 @@ public class WikiPageTrashHandler extends BaseWikiTrashHandler {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		WikiPageTrashHandler.class);
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private Portal _portal;

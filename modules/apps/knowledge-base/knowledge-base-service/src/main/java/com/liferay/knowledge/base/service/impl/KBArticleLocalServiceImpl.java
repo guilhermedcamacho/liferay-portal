@@ -23,6 +23,7 @@ import com.liferay.diff.DiffHtml;
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
+import com.liferay.html.parser.Html;
 import com.liferay.knowledge.base.configuration.KBGroupServiceConfiguration;
 import com.liferay.knowledge.base.constants.AdminActivityKeys;
 import com.liferay.knowledge.base.constants.KBArticleConstants;
@@ -96,7 +97,6 @@ import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
@@ -1233,7 +1233,7 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 			visible = true;
 		}
 
-		String summary = HtmlUtil.extractText(
+		String summary = _html.extractText(
 			StringUtil.shorten(kbArticle.getContent(), 500));
 
 		AssetEntry assetEntry = _assetEntryLocalService.updateEntry(
@@ -2106,6 +2106,9 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private IndexerRegistry _indexerRegistry;

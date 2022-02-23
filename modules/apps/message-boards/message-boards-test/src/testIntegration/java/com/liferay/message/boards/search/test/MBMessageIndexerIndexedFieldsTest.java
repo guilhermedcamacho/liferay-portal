@@ -17,6 +17,7 @@ package com.liferay.message.boards.search.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.html.parser.Html;
 import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBThread;
@@ -35,7 +36,6 @@ import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -293,7 +293,7 @@ public class MBMessageIndexerIndexedFieldsTest {
 			content = BBCodeTranslatorUtil.getHTML(content);
 		}
 
-		return HtmlUtil.extractText(content);
+		return _html.extractText(content);
 	}
 
 	@Inject
@@ -303,6 +303,9 @@ public class MBMessageIndexerIndexedFieldsTest {
 
 	@DeleteAfterTestRun
 	private List<Group> _groups;
+
+	@Inject
+	private Html _html;
 
 	@DeleteAfterTestRun
 	private List<MBCategory> _mbCategories;

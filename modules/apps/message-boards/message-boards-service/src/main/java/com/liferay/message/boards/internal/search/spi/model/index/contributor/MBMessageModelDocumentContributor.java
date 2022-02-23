@@ -14,6 +14,7 @@
 
 package com.liferay.message.boards.internal.search.spi.model.index.contributor;
 
+import com.liferay.html.parser.Html;
 import com.liferay.message.boards.model.MBDiscussion;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBThread;
@@ -32,7 +33,6 @@ import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.RelatedEntryIndexer;
 import com.liferay.portal.kernel.search.RelatedEntryIndexerRegistryUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -162,10 +162,13 @@ public class MBMessageModelDocumentContributor
 				exception);
 		}
 
-		return HtmlUtil.extractText(content);
+		return _html.extractText(content);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		MBMessageModelDocumentContributor.class);
+
+	@Reference
+	private Html _html;
 
 }

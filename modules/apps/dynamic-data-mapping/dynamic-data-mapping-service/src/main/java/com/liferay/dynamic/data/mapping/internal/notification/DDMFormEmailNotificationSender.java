@@ -30,6 +30,7 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
+import com.liferay.html.parser.Html;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
@@ -434,7 +435,7 @@ public class DDMFormEmailNotificationSender {
 			return StringPool.BLANK;
 		}
 
-		return HtmlUtil.extractText(text.getString(locale));
+		return _html.extractText(text.getString(locale));
 	}
 
 	private ResourceBundle _getResourceBundle(Locale locale) {
@@ -583,6 +584,9 @@ public class DDMFormEmailNotificationSender {
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Html _html;
 
 	private MailService _mailService;
 

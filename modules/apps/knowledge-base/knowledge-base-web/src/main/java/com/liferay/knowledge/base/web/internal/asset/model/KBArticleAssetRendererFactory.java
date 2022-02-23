@@ -18,6 +18,7 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseAssetRendererFactory;
+import com.liferay.html.parser.Html;
 import com.liferay.knowledge.base.constants.KBActionKeys;
 import com.liferay.knowledge.base.constants.KBConstants;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
@@ -87,7 +88,7 @@ public class KBArticleAssetRendererFactory
 		}
 
 		KBArticleAssetRenderer kbArticleAssetRenderer =
-			new KBArticleAssetRenderer(kbArticle);
+			new KBArticleAssetRenderer(kbArticle, _html);
 
 		kbArticleAssetRenderer.setAssetRendererType(type);
 		kbArticleAssetRenderer.setServletContext(_servletContext);
@@ -185,6 +186,9 @@ public class KBArticleAssetRendererFactory
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		KBArticleAssetRendererFactory.class);
+
+	@Reference
+	private Html _html;
 
 	private KBArticleLocalService _kbArticleLocalService;
 

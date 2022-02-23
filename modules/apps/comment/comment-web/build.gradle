@@ -12,6 +12,7 @@ dependencies {
 	compileOnly project(":apps:frontend-editor:frontend-editor-taglib")
 	compileOnly project(":apps:frontend-taglib:frontend-taglib")
 	compileOnly project(":apps:frontend-taglib:frontend-taglib-clay")
+	compileOnly project(":apps:html-parser:html-parser-api")
 	compileOnly project(":apps:message-boards:message-boards-api")
 	compileOnly project(":apps:petra:petra-portlet-url-builder")
 	compileOnly project(":core:petra:petra-lang")

@@ -19,6 +19,7 @@ import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.base.BlogsEntryServiceBaseImpl;
 import com.liferay.blogs.util.comparator.EntryDisplayDateComparator;
 import com.liferay.blogs.util.comparator.EntryIdComparator;
+import com.liferay.html.parser.Html;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
@@ -37,7 +38,6 @@ import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -622,7 +622,7 @@ public class BlogsEntryServiceImpl extends BlogsEntryServiceBaseImpl {
 				}
 
 				value = StringUtil.shorten(
-					HtmlUtil.extractText(summary),
+					_html.extractText(summary),
 					PropsValues.BLOGS_RSS_ABSTRACT_LENGTH, StringPool.BLANK);
 			}
 			else if (displayStyle.equals(RSSUtil.DISPLAY_STYLE_TITLE)) {
@@ -697,6 +697,9 @@ public class BlogsEntryServiceImpl extends BlogsEntryServiceBaseImpl {
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private OrganizationLocalService _organizationLocalService;

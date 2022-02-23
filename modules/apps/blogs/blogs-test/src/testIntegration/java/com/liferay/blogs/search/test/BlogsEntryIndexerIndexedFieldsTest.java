@@ -19,6 +19,7 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
+import com.liferay.html.parser.Html;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -29,7 +30,6 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
@@ -227,7 +227,7 @@ public class BlogsEntryIndexerIndexedFieldsTest {
 
 			map.put(
 				"content_" + LocaleUtil.toLanguageId(locale),
-				HtmlUtil.extractText(blogsEntry.getContent()));
+				_html.extractText(blogsEntry.getContent()));
 		}
 	}
 
@@ -282,6 +282,9 @@ public class BlogsEntryIndexerIndexedFieldsTest {
 
 	@DeleteAfterTestRun
 	private List<Group> _groups;
+
+	@Inject
+	private Html _html;
 
 	private IndexedFieldsFixture _indexedFieldsFixture;
 

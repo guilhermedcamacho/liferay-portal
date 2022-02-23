@@ -14,6 +14,7 @@
 
 package com.liferay.message.boards.internal.messaging;
 
+import com.liferay.html.parser.Html;
 import com.liferay.mail.kernel.model.Account;
 import com.liferay.message.boards.constants.MBMessageConstants;
 import com.liferay.message.boards.internal.util.MBMailMessage;
@@ -258,15 +259,16 @@ public class MailingListMessageListener extends BaseMessageListener {
 		try {
 			if (parentMessage == null) {
 				_mbMessageService.addMessage(
-					groupId, categoryId, subject, mbMailMessage.getBody(),
+					groupId, categoryId, subject, mbMailMessage.getBody(_html),
 					MBMessageConstants.DEFAULT_FORMAT, inputStreamOVPs,
 					anonymous, 0.0, true, serviceContext);
 			}
 			else {
 				_mbMessageService.addMessage(
 					parentMessage.getMessageId(), subject,
-					mbMailMessage.getBody(), MBMessageConstants.DEFAULT_FORMAT,
-					inputStreamOVPs, anonymous, 0.0, true, serviceContext);
+					mbMailMessage.getBody(_html),
+					MBMessageConstants.DEFAULT_FORMAT, inputStreamOVPs,
+					anonymous, 0.0, true, serviceContext);
 			}
 		}
 		finally {
@@ -300,6 +302,9 @@ public class MailingListMessageListener extends BaseMessageListener {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		MailingListMessageListener.class);
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private MBMessageLocalService _mbMessageLocalService;

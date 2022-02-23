@@ -26,6 +26,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
+import com.liferay.html.parser.Html;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
@@ -77,7 +78,7 @@ public class KaleoFormsAdminDisplayContext {
 	public KaleoFormsAdminDisplayContext(
 		RenderRequest renderRequest, RenderResponse renderResponse,
 		DDLRecordLocalService ddlRecordLocalService,
-		DDMDisplayRegistry ddmDisplayRegistry,
+		DDMDisplayRegistry ddmDisplayRegistry, Html html,
 		KaleoDefinitionVersionLocalService kaleoDefinitionVersionLocalService,
 		KaleoFormsWebConfiguration kaleoFormsWebConfiguration,
 		StorageEngine storageEngine) {
@@ -86,6 +87,7 @@ public class KaleoFormsAdminDisplayContext {
 		_renderResponse = renderResponse;
 		_ddlRecordLocalService = ddlRecordLocalService;
 		_ddmDisplayRegistry = ddmDisplayRegistry;
+		_html = html;
 		_kaleoDefinitionVersionLocalService =
 			kaleoDefinitionVersionLocalService;
 		_kaleoFormsWebConfiguration = kaleoFormsWebConfiguration;
@@ -211,7 +213,7 @@ public class KaleoFormsAdminDisplayContext {
 		throws PortalException {
 
 		return new KaleoFormsViewRecordsDisplayContext(
-			_renderRequest, _renderResponse, _ddlRecordLocalService);
+			_renderRequest, _renderResponse, _ddlRecordLocalService, _html);
 	}
 
 	public OrderByComparator<KaleoProcess> getKaleoProcessOrderByComparator(
@@ -491,6 +493,7 @@ public class KaleoFormsAdminDisplayContext {
 
 	private final DDLRecordLocalService _ddlRecordLocalService;
 	private final DDMDisplayRegistry _ddmDisplayRegistry;
+	private final Html _html;
 	private final KaleoDefinitionVersionLocalService
 		_kaleoDefinitionVersionLocalService;
 	private String _kaleoFormsAdminDisplayStyle;

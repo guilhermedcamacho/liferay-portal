@@ -15,6 +15,7 @@
 package com.liferay.knowledge.base.web.internal.asset.model;
 
 import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
+import com.liferay.html.parser.Html;
 import com.liferay.knowledge.base.constants.KBActionKeys;
 import com.liferay.knowledge.base.constants.KBArticleConstants;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
@@ -30,7 +31,6 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -50,8 +50,9 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class KBArticleAssetRenderer extends BaseJSPAssetRenderer<KBArticle> {
 
-	public KBArticleAssetRenderer(KBArticle kbArticle) {
+	public KBArticleAssetRenderer(KBArticle kbArticle, Html html) {
 		_kbArticle = kbArticle;
+		_html = html;
 	}
 
 	@Override
@@ -100,7 +101,7 @@ public class KBArticleAssetRenderer extends BaseJSPAssetRenderer<KBArticle> {
 
 		if (Validator.isNull(summary)) {
 			summary = StringUtil.shorten(
-				HtmlUtil.extractText(_kbArticle.getContent()), 200);
+				_html.extractText(_kbArticle.getContent()), 200);
 		}
 
 		return summary;
@@ -212,6 +213,7 @@ public class KBArticleAssetRenderer extends BaseJSPAssetRenderer<KBArticle> {
 		return kbArticle.getResourcePrimKey();
 	}
 
+	private final Html _html;
 	private final KBArticle _kbArticle;
 
 }

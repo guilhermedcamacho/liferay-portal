@@ -20,6 +20,7 @@ import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingContext;
 import com.liferay.dynamic.data.mapping.form.renderer.internal.DDMFormPagesTemplateContextFactory;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLayoutLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.html.parser.Html;
 import com.liferay.portal.events.EventsProcessorUtil;
 import com.liferay.portal.kernel.events.ActionException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -155,7 +156,7 @@ public class DDMFormContextProviderServlet extends HttpServlet {
 						ddmFormTemplateContextProcessor.getDDMFormLayout(),
 						ddmFormRenderingContext,
 						_ddmStructureLayoutLocalService,
-						_ddmStructureLocalService, _groupLocalService,
+						_ddmStructureLocalService, _groupLocalService, _html,
 						_jsonFactory);
 
 			ddmFormPagesTemplateContextFactory.setDDMFormEvaluator(
@@ -233,6 +234,9 @@ public class DDMFormContextProviderServlet extends HttpServlet {
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private JSONFactory _jsonFactory;

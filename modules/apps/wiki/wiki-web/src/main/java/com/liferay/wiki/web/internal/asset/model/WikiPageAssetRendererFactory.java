@@ -18,6 +18,7 @@ import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvide
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseAssetRendererFactory;
+import com.liferay.html.parser.Html;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -96,7 +97,7 @@ public class WikiPageAssetRendererFactory
 		}
 
 		WikiPageAssetRenderer wikiPageAssetRenderer = new WikiPageAssetRenderer(
-			page, _wikiEngineRenderer, _trashHelper);
+			page, _wikiEngineRenderer, _html, _trashHelper);
 
 		wikiPageAssetRenderer.setAssetDisplayPageFriendlyURLProvider(
 			_assetDisplayPageFriendlyURLProvider);
@@ -157,6 +158,9 @@ public class WikiPageAssetRendererFactory
 	@Reference
 	private AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
+
+	@Reference
+	private Html _html;
 
 	@Reference(target = "(osgi.web.symbolicname=com.liferay.wiki.web)")
 	private ServletContext _servletContext;

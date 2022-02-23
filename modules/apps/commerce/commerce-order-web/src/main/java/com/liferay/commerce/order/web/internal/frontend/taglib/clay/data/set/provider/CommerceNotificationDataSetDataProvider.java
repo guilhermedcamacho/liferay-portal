@@ -27,6 +27,7 @@ import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.frontend.taglib.clay.data.Filter;
 import com.liferay.frontend.taglib.clay.data.Pagination;
 import com.liferay.frontend.taglib.clay.data.set.provider.ClayDataSetDataProvider;
+import com.liferay.html.parser.Html;
 import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -41,7 +42,6 @@ import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -111,8 +111,7 @@ public class CommerceNotificationDataSetDataProvider
 						_getCommerceNotificationTemplateType(
 							commerceNotificationQueueEntry)),
 					commerceNotificationQueueEntry.getSubject(),
-					HtmlUtil.extractText(
-						commerceNotificationQueueEntry.getBody()),
+					_html.extractText(commerceNotificationQueueEntry.getBody()),
 					_getNotificationPanelURL(
 						commerceNotificationQueueEntry.
 							getCommerceNotificationQueueEntryId(),
@@ -236,6 +235,9 @@ public class CommerceNotificationDataSetDataProvider
 
 	@Reference
 	private CommerceOrderService _commerceOrderService;
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private Portal _portal;

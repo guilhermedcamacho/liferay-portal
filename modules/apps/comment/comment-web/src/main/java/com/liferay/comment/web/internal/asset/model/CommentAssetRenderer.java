@@ -19,6 +19,7 @@ import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
 import com.liferay.comment.web.internal.constants.CommentPortletKeys;
+import com.liferay.html.parser.Html;
 import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.Comment;
@@ -34,7 +35,6 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.trash.TrashRenderer;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -58,10 +58,12 @@ public class CommentAssetRenderer
 
 	public CommentAssetRenderer(
 		WorkflowableComment workflowableComment,
-		AssetRendererFactory<WorkflowableComment> assetRendererFactory) {
+		AssetRendererFactory<WorkflowableComment> assetRendererFactory,
+		Html html) {
 
 		_workflowableComment = workflowableComment;
 		_assetRendererFactory = assetRendererFactory;
+		_html = html;
 	}
 
 	@Override
@@ -112,7 +114,7 @@ public class CommentAssetRenderer
 
 	@Override
 	public String getSearchSummary(Locale locale) {
-		return HtmlUtil.extractText(
+		return _html.extractText(
 			_workflowableComment.getTranslatedBody(StringPool.BLANK));
 	}
 
@@ -266,6 +268,7 @@ public class CommentAssetRenderer
 
 	private final AssetRendererFactory<WorkflowableComment>
 		_assetRendererFactory;
+	private final Html _html;
 	private final WorkflowableComment _workflowableComment;
 
 }

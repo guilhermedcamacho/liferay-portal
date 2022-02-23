@@ -37,6 +37,7 @@ import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLayoutLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
+import com.liferay.html.parser.Html;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -85,7 +86,7 @@ public class DDMFormFieldTemplateContextFactory {
 		DDMFormRenderingContext ddmFormRenderingContext,
 		DDMStructureLayoutLocalService ddmStructureLayoutLocalService,
 		DDMStructureLocalService ddmStructureLocalService,
-		GroupLocalService groupLocalService, JSONFactory jsonFactory,
+		GroupLocalService groupLocalService, Html html, JSONFactory jsonFactory,
 		boolean pageEnabled, DDMFormLayout parentDDMFormLayout) {
 
 		_ddmFormEvaluator = ddmFormEvaluator;
@@ -97,6 +98,7 @@ public class DDMFormFieldTemplateContextFactory {
 		_ddmStructureLayoutLocalService = ddmStructureLayoutLocalService;
 		_ddmStructureLocalService = ddmStructureLocalService;
 		_groupLocalService = groupLocalService;
+		_html = html;
 		_jsonFactory = jsonFactory;
 		_pageEnabled = pageEnabled;
 		_parentDDMFormLayout = parentDDMFormLayout;
@@ -508,7 +510,7 @@ public class DDMFormFieldTemplateContextFactory {
 						ddmFormField.getDDMForm(), ddmFormLayout,
 						_ddmFormRenderingContext,
 						_ddmStructureLayoutLocalService,
-						_ddmStructureLocalService, _groupLocalService,
+						_ddmStructureLocalService, _groupLocalService, _html,
 						_jsonFactory);
 
 			ddmFormPagesTemplateContextFactory.setDDMFormEvaluator(
@@ -1126,6 +1128,7 @@ public class DDMFormFieldTemplateContextFactory {
 		_ddmStructureLayoutLocalService;
 	private final DDMStructureLocalService _ddmStructureLocalService;
 	private final GroupLocalService _groupLocalService;
+	private final Html _html;
 	private final JSONFactory _jsonFactory;
 	private final Locale _locale;
 	private final boolean _pageEnabled;

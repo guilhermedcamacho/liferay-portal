@@ -14,11 +14,11 @@
 
 package com.liferay.message.boards.internal.util;
 
+import com.liferay.html.parser.Html;
 import com.liferay.message.boards.constants.MBMessageConstants;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -51,7 +51,7 @@ public class MBMailMessage {
 		_bytesOVPs.add(new ObjectValuePair<String, byte[]>(fileName, bytes));
 	}
 
-	public String getBody() {
+	public String getBody(Html html) {
 		String body = null;
 
 		if (MBMessageConstants.DEFAULT_FORMAT.equals("bbcode")) {
@@ -59,7 +59,7 @@ public class MBMailMessage {
 				body = GetterUtil.getString(_plainBody);
 			}
 			else if (Validator.isNotNull(_htmlBody)) {
-				body = HtmlUtil.extractText(_htmlBody);
+				body = html.extractText(_htmlBody);
 			}
 		}
 		else if (MBMessageConstants.DEFAULT_FORMAT.equals("html")) {
