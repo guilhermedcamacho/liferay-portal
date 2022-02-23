@@ -21,6 +21,7 @@ import com.liferay.blogs.web.internal.servlet.taglib.util.BlogsEntryActionDropdo
 import com.liferay.blogs.web.internal.util.BlogsEntryUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.soy.BaseVerticalCard;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.html.parser.Html;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -45,7 +46,7 @@ import javax.portlet.RenderResponse;
 public class BlogsEntryVerticalCard extends BaseVerticalCard {
 
 	public BlogsEntryVerticalCard(
-		BlogsEntry blogsEntry, RenderRequest renderRequest,
+		BlogsEntry blogsEntry, Html html, RenderRequest renderRequest,
 		RenderResponse renderResponse, RowChecker rowChecker,
 		TrashHelper trashHelper, String blogsEntryURL,
 		PermissionChecker permissionChecker, ResourceBundle resourceBundle) {
@@ -53,6 +54,7 @@ public class BlogsEntryVerticalCard extends BaseVerticalCard {
 		super(blogsEntry, renderRequest, rowChecker);
 
 		_blogsEntry = blogsEntry;
+		_html = html;
 		_renderResponse = renderResponse;
 		_trashHelper = trashHelper;
 		_blogsEntryURL = blogsEntryURL;
@@ -137,7 +139,7 @@ public class BlogsEntryVerticalCard extends BaseVerticalCard {
 
 	@Override
 	public String getTitle() {
-		return HtmlUtil.extractText(
+		return _html.extractText(
 			BlogsEntryUtil.getDisplayTitle(_resourceBundle, _blogsEntry));
 	}
 
@@ -148,6 +150,7 @@ public class BlogsEntryVerticalCard extends BaseVerticalCard {
 
 	private final BlogsEntry _blogsEntry;
 	private final String _blogsEntryURL;
+	private final Html _html;
 	private final PermissionChecker _permissionChecker;
 	private final RenderResponse _renderResponse;
 	private final ResourceBundle _resourceBundle;
