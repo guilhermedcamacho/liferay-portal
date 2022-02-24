@@ -33,6 +33,7 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -150,6 +151,8 @@ public abstract class BaseDDLExporter implements DDLExporter {
 		return ddmFormFields;
 	}
 
+	protected abstract HtmlParser getHtmlParser();
+
 	protected Map<String, DDMFormFieldRenderedValue> getRenderedValues(
 			int scope, Collection<DDMFormField> ddmFormFields,
 			DDMFormValues ddmFormValues)
@@ -248,7 +251,7 @@ public abstract class BaseDDLExporter implements DDLExporter {
 			}
 		}
 
-		valueString = HtmlUtil.render(valueString);
+		valueString = getHtmlParser().render(valueString);
 
 		return new DDMFormFieldRenderedValue(
 			ddmFormField.getName(), ddmFormField.getLabel(), valueString);

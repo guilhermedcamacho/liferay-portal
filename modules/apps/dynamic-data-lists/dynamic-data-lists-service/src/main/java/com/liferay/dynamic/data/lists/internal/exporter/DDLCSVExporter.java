@@ -32,6 +32,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.CSVUtil;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.time.format.DateTimeFormatter;
@@ -161,6 +162,11 @@ public class DDLCSVExporter extends BaseDDLExporter {
 		return _ddmFormFieldValueRendererRegistry;
 	}
 
+	@Override
+	protected HtmlParser getHtmlParser() {
+		return _htmlParser;
+	}
+
 	@Reference(unbind = "-")
 	protected void setDDLRecordLocalService(
 		DDLRecordLocalService ddlRecordLocalService) {
@@ -197,6 +203,11 @@ public class DDLCSVExporter extends BaseDDLExporter {
 	}
 
 	@Reference(unbind = "-")
+	protected void setHtmlParser(HtmlParser htmlParser) {
+		_htmlParser = htmlParser;
+	}
+
+	@Reference(unbind = "-")
 	protected void setStorageEngine(StorageEngine storageEngine) {
 		_storageEngine = storageEngine;
 	}
@@ -207,6 +218,7 @@ public class DDLCSVExporter extends BaseDDLExporter {
 	private DDMFormFieldTypeServicesTracker _ddmFormFieldTypeServicesTracker;
 	private DDMFormFieldValueRendererRegistry
 		_ddmFormFieldValueRendererRegistry;
+	private HtmlParser _htmlParser;
 	private StorageEngine _storageEngine;
 
 }

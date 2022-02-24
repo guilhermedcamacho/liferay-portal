@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.ByteArrayOutputStream;
@@ -152,6 +153,11 @@ public class DDLXLSExporter extends BaseDDLExporter {
 		return _ddmFormFieldValueRendererRegistry;
 	}
 
+	@Override
+	protected HtmlParser getHtmlParser() {
+		return _htmlParser;
+	}
+
 	@Reference(unbind = "-")
 	protected void setDDLRecordLocalService(
 		DDLRecordLocalService ddlRecordLocalService) {
@@ -185,6 +191,11 @@ public class DDLXLSExporter extends BaseDDLExporter {
 		DDMFormFieldValueRendererRegistry ddmFormFieldValueRendererRegistry) {
 
 		_ddmFormFieldValueRendererRegistry = ddmFormFieldValueRendererRegistry;
+	}
+
+	@Reference(unbind = "-")
+	protected void setHtmlParser(HtmlParser htmlParser) {
+		_htmlParser = htmlParser;
 	}
 
 	@Reference(unbind = "-")
@@ -302,6 +313,7 @@ public class DDLXLSExporter extends BaseDDLExporter {
 	private DDMFormFieldTypeServicesTracker _ddmFormFieldTypeServicesTracker;
 	private DDMFormFieldValueRendererRegistry
 		_ddmFormFieldValueRendererRegistry;
+	private HtmlParser _htmlParser;
 	private StorageEngine _storageEngine;
 
 }

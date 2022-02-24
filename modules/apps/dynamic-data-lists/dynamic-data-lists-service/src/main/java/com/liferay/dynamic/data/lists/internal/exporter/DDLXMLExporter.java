@@ -29,6 +29,7 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.StorageEngine;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
@@ -137,6 +138,11 @@ public class DDLXMLExporter extends BaseDDLExporter {
 		return _ddmFormFieldValueRendererRegistry;
 	}
 
+	@Override
+	protected HtmlParser getHtmlParser() {
+		return _htmlParser;
+	}
+
 	@Reference(unbind = "-")
 	protected void setDDLRecordLocalService(
 		DDLRecordLocalService ddlRecordLocalService) {
@@ -170,6 +176,11 @@ public class DDLXMLExporter extends BaseDDLExporter {
 		DDMFormFieldValueRendererRegistry ddmFormFieldValueRendererRegistry) {
 
 		_ddmFormFieldValueRendererRegistry = ddmFormFieldValueRendererRegistry;
+	}
+
+	@Reference(unbind = "-")
+	protected void setHtmlParser(HtmlParser htmlParser) {
+		_htmlParser = htmlParser;
 	}
 
 	@Reference(unbind = "-")
@@ -220,6 +231,7 @@ public class DDLXMLExporter extends BaseDDLExporter {
 	private DDMFormFieldTypeServicesTracker _ddmFormFieldTypeServicesTracker;
 	private DDMFormFieldValueRendererRegistry
 		_ddmFormFieldValueRendererRegistry;
+	private HtmlParser _htmlParser;
 	private StorageEngine _storageEngine;
 
 }
