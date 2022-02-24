@@ -48,7 +48,6 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
@@ -250,7 +249,7 @@ public class WikiPageIndexer
 		String content = null;
 
 		try {
-			content = HtmlUtil.extractText(
+			content = _htmlParser.extractText(
 				_wikiEngineRenderer.convert(wikiPage, null, null, null));
 
 			document.addText(Field.CONTENT, content);
@@ -479,6 +478,9 @@ public class WikiPageIndexer
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		WikiPageIndexer.class);
+
+	@Reference
+	private HtmlParser _htmlParser;
 
 	@Reference
 	private IndexWriterHelper _indexWriterHelper;

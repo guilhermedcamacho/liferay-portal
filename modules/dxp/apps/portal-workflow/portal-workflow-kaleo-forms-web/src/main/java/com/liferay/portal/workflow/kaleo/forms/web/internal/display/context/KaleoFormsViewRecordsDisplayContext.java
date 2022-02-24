@@ -76,12 +76,13 @@ public class KaleoFormsViewRecordsDisplayContext {
 
 	public KaleoFormsViewRecordsDisplayContext(
 			RenderRequest renderRequest, RenderResponse renderResponse,
-			DDLRecordLocalService ddlRecordLocalService)
+			DDLRecordLocalService ddlRecordLocalService, Html html)
 		throws PortalException {
 
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_ddlRecordLocalService = ddlRecordLocalService;
+		_html = html;
 
 		_kaleoProcess = (KaleoProcess)_renderRequest.getAttribute(
 			KaleoFormsWebKeys.KALEO_PROCESS);
@@ -264,7 +265,7 @@ public class KaleoFormsViewRecordsDisplayContext {
 				ThemeDisplay themeDisplay = _getThemeDisplay();
 
 				navigationItem.setLabel(
-					HtmlUtil.extractText(
+					_htmlParser.extractText(
 						_kaleoProcess.getName(themeDisplay.getLocale())));
 			}
 		).build();
@@ -559,6 +560,7 @@ public class KaleoFormsViewRecordsDisplayContext {
 	private final DDLRecordLocalService _ddlRecordLocalService;
 	private final DDLRecordSet _ddlRecordSet;
 	private List<DDMFormField> _ddmFormFields;
+	private final Html _html;
 	private final KaleoFormsAdminRequestHelper _kaleoFormsAdminRequestHelper;
 	private final KaleoProcess _kaleoProcess;
 	private String _orderByCol;
