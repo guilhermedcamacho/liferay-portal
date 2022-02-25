@@ -39,6 +39,7 @@ import com.liferay.dynamic.data.mapping.test.util.DDMFormLayoutTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormValuesTestUtil;
 import com.liferay.google.places.util.GooglePlacesUtil;
+import com.liferay.html.parser.internal.HtmlParserImpl;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONFactoryImpl;
@@ -48,11 +49,13 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -395,10 +398,22 @@ public class DDMFormPagesTemplateContextFactoryTest extends PowerMockito {
 				"Field1", formFieldLabel, "integer", false, false, true,
 				formFieldTip, formFieldPlaceholder, formFieldTooltip));
 
+		DDMFormFieldTemplateContextContributor
+			ddmFormFieldTemplateContextContributor =
+				_ddmFormFieldTemplateContextContributorTestHelper.
+					createNumericDDMFormFieldTemplateContextContributor();
+
+		ReflectionTestUtil.setFieldValue(
+			ddmFormFieldTemplateContextContributor, "_htmlParser", _htmlParser);
+
+		when(
+			_htmlParser.extractText(StringPool.BLANK)
+		).thenReturn(
+			StringPool.BLANK
+		);
+
 		mockDDMFormFieldTypeServicesTracker(
-			"numeric",
-			_ddmFormFieldTemplateContextContributorTestHelper.
-				createNumericDDMFormFieldTemplateContextContributor());
+			"numeric", ddmFormFieldTemplateContextContributor);
 
 		// Template context
 
@@ -878,7 +893,8 @@ public class DDMFormPagesTemplateContextFactoryTest extends PowerMockito {
 			new DDMFormPagesTemplateContextFactory(
 				ddmForm, ddmFormLayout, ddmFormRenderingContext,
 				_ddmStructureLayoutLocalService, _ddmStructureLocalService,
-				_groupLocalService, new JSONFactoryImpl());
+				_groupLocalService, new HtmlParserImpl(),
+				new JSONFactoryImpl());
 
 		ddmFormPagesTemplateContextFactory.setDDMFormEvaluator(
 			_getDDMFormEvaluator());
@@ -1116,6 +1132,9 @@ public class DDMFormPagesTemplateContextFactoryTest extends PowerMockito {
 
 	@Mock
 	private GroupLocalService _groupLocalService;
+
+	@Mock
+	private HtmlParser _htmlParser;
 
 	private HttpServletRequest _httpServletRequest;
 
