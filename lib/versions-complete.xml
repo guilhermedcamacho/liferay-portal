@@ -5068,6 +5068,18 @@
 				</licenses>
 			</library>
 			<library>
+				<file-name>com.liferay.shared.dependencies.apache.commons.jar!commons-beanutils.jar</file-name>
+				<version>1.9.4</version>
+				<project-name>Apache Commons BeanUtils</project-name>
+				<project-url>https://commons.apache.org/proper/commons-beanutils/</project-url>
+				<licenses>
+					<license>
+						<license-name>Apache License, Version 2.0</license-name>
+						<license-url>https://www.apache.org/licenses/LICENSE-2.0.txt</license-url>
+					</license>
+				</licenses>
+			</library>
+			<library>
 				<file-name>com.liferay.shared.dependencies.apache.commons.jar!commons-digester.jar</file-name>
 				<version>1.8.1</version>
 				<project-name>Commons Digester</project-name>
@@ -6578,18 +6590,6 @@
 					<license>
 						<license-name>LGPL 2.1</license-name>
 						<license-url>http://www.gnu.org/licenses/lgpl-2.1.html</license-url>
-					</license>
-				</licenses>
-			</library>
-			<library>
-				<file-name>lib/portal/commons-beanutils.jar</file-name>
-				<version>1.9.4</version>
-				<project-name>Commons Beanutils</project-name>
-				<project-url>http://commons.apache.org/beanutils</project-url>
-				<licenses>
-					<license>
-						<license-name>Apache License 2.0</license-name>
-						<license-url>http://www.apache.org/licenses/LICENSE-2.0</license-url>
 					</license>
 				</licenses>
 			</library>
