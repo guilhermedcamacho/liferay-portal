@@ -45,6 +45,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.BeanTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
@@ -60,8 +61,6 @@ import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
-
-import java.lang.reflect.InvocationTargetException;
 
 import java.text.DateFormat;
 
@@ -80,8 +79,6 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
@@ -411,7 +408,7 @@ public abstract class BaseKeywordResourceTestCase {
 		testGetAssetLibraryKeywordsPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, keyword1, keyword2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					keyword1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
 			});
@@ -424,8 +421,8 @@ public abstract class BaseKeywordResourceTestCase {
 		testGetAssetLibraryKeywordsPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, keyword1, keyword2) -> {
-				BeanUtils.setProperty(keyword1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(keyword2, entityField.getName(), 0.5);
+				BeanTestUtil.setProperty(keyword1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(keyword2, entityField.getName(), 0.5);
 			});
 	}
 
@@ -436,8 +433,8 @@ public abstract class BaseKeywordResourceTestCase {
 		testGetAssetLibraryKeywordsPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, keyword1, keyword2) -> {
-				BeanUtils.setProperty(keyword1, entityField.getName(), 0);
-				BeanUtils.setProperty(keyword2, entityField.getName(), 1);
+				BeanTestUtil.setProperty(keyword1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(keyword2, entityField.getName(), 1);
 			});
 	}
 
@@ -458,21 +455,21 @@ public abstract class BaseKeywordResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						keyword1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						keyword2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						keyword1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						keyword2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -480,12 +477,12 @@ public abstract class BaseKeywordResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						keyword1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						keyword2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -1056,7 +1053,7 @@ public abstract class BaseKeywordResourceTestCase {
 		testGetSiteKeywordsPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, keyword1, keyword2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					keyword1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
 			});
@@ -1067,8 +1064,8 @@ public abstract class BaseKeywordResourceTestCase {
 		testGetSiteKeywordsPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, keyword1, keyword2) -> {
-				BeanUtils.setProperty(keyword1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(keyword2, entityField.getName(), 0.5);
+				BeanTestUtil.setProperty(keyword1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(keyword2, entityField.getName(), 0.5);
 			});
 	}
 
@@ -1077,8 +1074,8 @@ public abstract class BaseKeywordResourceTestCase {
 		testGetSiteKeywordsPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, keyword1, keyword2) -> {
-				BeanUtils.setProperty(keyword1, entityField.getName(), 0);
-				BeanUtils.setProperty(keyword2, entityField.getName(), 1);
+				BeanTestUtil.setProperty(keyword1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(keyword2, entityField.getName(), 1);
 			});
 	}
 
@@ -1097,21 +1094,21 @@ public abstract class BaseKeywordResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						keyword1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						keyword2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						keyword1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						keyword2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -1119,12 +1116,12 @@ public abstract class BaseKeywordResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						keyword1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						keyword2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -2086,18 +2083,6 @@ public abstract class BaseKeywordResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseKeywordResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject

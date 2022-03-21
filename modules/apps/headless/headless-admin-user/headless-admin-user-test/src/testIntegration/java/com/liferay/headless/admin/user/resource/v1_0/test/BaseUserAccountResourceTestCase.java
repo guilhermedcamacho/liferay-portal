@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.test.BeanTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -52,8 +53,6 @@ import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
-
-import java.lang.reflect.InvocationTargetException;
 
 import java.text.DateFormat;
 
@@ -72,8 +71,6 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
@@ -505,7 +502,7 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetAccountUserAccountsByExternalReferenceCodePageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					userAccount1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
 			});
@@ -518,8 +515,10 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetAccountUserAccountsByExternalReferenceCodePageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(userAccount1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(userAccount2, entityField.getName(), 0.5);
+				BeanTestUtil.setProperty(
+					userAccount1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					userAccount2, entityField.getName(), 0.5);
 			});
 	}
 
@@ -530,8 +529,10 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetAccountUserAccountsByExternalReferenceCodePageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(userAccount1, entityField.getName(), 0);
-				BeanUtils.setProperty(userAccount2, entityField.getName(), 1);
+				BeanTestUtil.setProperty(
+					userAccount1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					userAccount2, entityField.getName(), 1);
 			});
 	}
 
@@ -552,21 +553,21 @@ public abstract class BaseUserAccountResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -574,12 +575,12 @@ public abstract class BaseUserAccountResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -1000,7 +1001,7 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetAccountUserAccountsPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					userAccount1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
 			});
@@ -1013,8 +1014,10 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetAccountUserAccountsPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(userAccount1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(userAccount2, entityField.getName(), 0.5);
+				BeanTestUtil.setProperty(
+					userAccount1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					userAccount2, entityField.getName(), 0.5);
 			});
 	}
 
@@ -1025,8 +1028,10 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetAccountUserAccountsPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(userAccount1, entityField.getName(), 0);
-				BeanUtils.setProperty(userAccount2, entityField.getName(), 1);
+				BeanTestUtil.setProperty(
+					userAccount1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					userAccount2, entityField.getName(), 1);
 			});
 	}
 
@@ -1047,21 +1052,21 @@ public abstract class BaseUserAccountResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -1069,12 +1074,12 @@ public abstract class BaseUserAccountResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -1491,7 +1496,7 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetOrganizationUserAccountsPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					userAccount1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
 			});
@@ -1504,8 +1509,10 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetOrganizationUserAccountsPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(userAccount1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(userAccount2, entityField.getName(), 0.5);
+				BeanTestUtil.setProperty(
+					userAccount1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					userAccount2, entityField.getName(), 0.5);
 			});
 	}
 
@@ -1516,8 +1523,10 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetOrganizationUserAccountsPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(userAccount1, entityField.getName(), 0);
-				BeanUtils.setProperty(userAccount2, entityField.getName(), 1);
+				BeanTestUtil.setProperty(
+					userAccount1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					userAccount2, entityField.getName(), 1);
 			});
 	}
 
@@ -1538,21 +1547,21 @@ public abstract class BaseUserAccountResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -1560,12 +1569,12 @@ public abstract class BaseUserAccountResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -1832,7 +1841,7 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetSiteUserAccountsPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					userAccount1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
 			});
@@ -1843,8 +1852,10 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetSiteUserAccountsPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(userAccount1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(userAccount2, entityField.getName(), 0.5);
+				BeanTestUtil.setProperty(
+					userAccount1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					userAccount2, entityField.getName(), 0.5);
 			});
 	}
 
@@ -1853,8 +1864,10 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetSiteUserAccountsPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(userAccount1, entityField.getName(), 0);
-				BeanUtils.setProperty(userAccount2, entityField.getName(), 1);
+				BeanTestUtil.setProperty(
+					userAccount1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					userAccount2, entityField.getName(), 1);
 			});
 	}
 
@@ -1873,21 +1886,21 @@ public abstract class BaseUserAccountResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -1895,12 +1908,12 @@ public abstract class BaseUserAccountResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -2132,7 +2145,7 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetUserAccountsPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					userAccount1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
 			});
@@ -2143,8 +2156,10 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetUserAccountsPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(userAccount1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(userAccount2, entityField.getName(), 0.5);
+				BeanTestUtil.setProperty(
+					userAccount1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					userAccount2, entityField.getName(), 0.5);
 			});
 	}
 
@@ -2153,8 +2168,10 @@ public abstract class BaseUserAccountResourceTestCase {
 		testGetUserAccountsPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, userAccount1, userAccount2) -> {
-				BeanUtils.setProperty(userAccount1, entityField.getName(), 0);
-				BeanUtils.setProperty(userAccount2, entityField.getName(), 1);
+				BeanTestUtil.setProperty(
+					userAccount1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					userAccount2, entityField.getName(), 1);
 			});
 	}
 
@@ -2173,21 +2190,21 @@ public abstract class BaseUserAccountResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -2195,12 +2212,12 @@ public abstract class BaseUserAccountResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						userAccount2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -2615,8 +2632,8 @@ public abstract class BaseUserAccountResourceTestCase {
 
 		UserAccount expectedPatchUserAccount = postUserAccount.clone();
 
-		_beanUtilsBean.copyProperties(
-			expectedPatchUserAccount, randomPatchUserAccount);
+		BeanTestUtil.copyProperties(
+			randomPatchUserAccount, expectedPatchUserAccount);
 
 		UserAccount getUserAccount = userAccountResource.getUserAccount(
 			patchUserAccount.getId());
@@ -3896,18 +3913,6 @@ public abstract class BaseUserAccountResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseUserAccountResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject
