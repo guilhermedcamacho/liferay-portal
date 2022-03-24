@@ -94,10 +94,9 @@ public class BlogEntriesDisplayContext {
 		_liferayPortletResponse = portal.getLiferayPortletResponse(
 			renderResponse);
 
+		_httpServletRequest = _liferayPortletRequest.getHttpServletRequest();
 		_portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(
 			_liferayPortletRequest);
-
-		_httpServletRequest = _liferayPortletRequest.getHttpServletRequest();
 	}
 
 	public List<String> getAvailableActions(BlogsEntry blogsEntry)
