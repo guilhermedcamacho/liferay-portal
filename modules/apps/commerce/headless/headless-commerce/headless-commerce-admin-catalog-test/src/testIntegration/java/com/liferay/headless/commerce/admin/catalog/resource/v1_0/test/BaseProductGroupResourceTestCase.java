@@ -39,6 +39,8 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.test.BeanTestUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -52,8 +54,6 @@ import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
-
-import java.lang.reflect.InvocationTargetException;
 
 import java.text.DateFormat;
 
@@ -72,8 +72,6 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
@@ -357,7 +355,7 @@ public abstract class BaseProductGroupResourceTestCase {
 		testGetProductGroupsPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, productGroup1, productGroup2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					productGroup1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
 			});
@@ -368,9 +366,9 @@ public abstract class BaseProductGroupResourceTestCase {
 		testGetProductGroupsPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, productGroup1, productGroup2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					productGroup1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					productGroup2, entityField.getName(), 0.5);
 			});
 	}
@@ -380,8 +378,10 @@ public abstract class BaseProductGroupResourceTestCase {
 		testGetProductGroupsPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, productGroup1, productGroup2) -> {
-				BeanUtils.setProperty(productGroup1, entityField.getName(), 0);
-				BeanUtils.setProperty(productGroup2, entityField.getName(), 1);
+				BeanTestUtil.setProperty(
+					productGroup1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					productGroup2, entityField.getName(), 1);
 			});
 	}
 
@@ -400,21 +400,21 @@ public abstract class BaseProductGroupResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						productGroup1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						productGroup2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						productGroup1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						productGroup2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -422,12 +422,12 @@ public abstract class BaseProductGroupResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						productGroup1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						productGroup2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -453,7 +453,15 @@ public abstract class BaseProductGroupResourceTestCase {
 		ProductGroup productGroup2 = randomProductGroup();
 
 		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(entityField, productGroup1, productGroup2);
+			String setMethodName =
+				"set" + StringUtil.upperCaseFirstLetter(entityField.getName());
+
+			if (ReflectionTestUtil.hasMethod(
+					ProductGroup.class, setMethodName)) {
+
+				unsafeTriConsumer.accept(
+					entityField, productGroup1, productGroup2);
+			}
 		}
 
 		productGroup1 = testGetProductGroupsPage_addProductGroup(productGroup1);
@@ -1375,18 +1383,6 @@ public abstract class BaseProductGroupResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseProductGroupResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject

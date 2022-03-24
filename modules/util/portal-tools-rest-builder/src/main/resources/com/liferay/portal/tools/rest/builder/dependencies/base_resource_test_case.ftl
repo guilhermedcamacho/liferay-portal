@@ -909,12 +909,14 @@ public abstract class Base${schemaName}ResourceTestCase {
 						${schemaName} ${schemaVarName}2 = random${schemaName}();
 
 						for (EntityField entityField : entityFields) {
-							if (ReflectionTestUtil.hasMethod(
-								 ${schemaName}.class,
-								 "set" +
-									StringUtil.upperCaseFirstLetter(entityField.getName()))) {
+							String setMethodName =
+								"set" + StringUtil.upperCaseFirstLetter(entityField.getName());
 
-							unsafeTriConsumer.accept(entityField, ${schemaVarName}1, ${schemaVarName}2);
+							if (ReflectionTestUtil.hasMethod(
+								 ${schemaName}.class, setMethodName)) {
+
+								unsafeTriConsumer.accept(
+									entityField, ${schemaVarName}1, ${schemaVarName}2);
 							}
 						}
 

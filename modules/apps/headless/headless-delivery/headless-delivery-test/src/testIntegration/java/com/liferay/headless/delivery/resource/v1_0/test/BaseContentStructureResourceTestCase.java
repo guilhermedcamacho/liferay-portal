@@ -44,6 +44,8 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.BeanTestUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
@@ -58,8 +60,6 @@ import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
-
-import java.lang.reflect.InvocationTargetException;
 
 import java.text.DateFormat;
 
@@ -78,8 +78,6 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
@@ -433,7 +431,7 @@ public abstract class BaseContentStructureResourceTestCase {
 		testGetAssetLibraryContentStructuresPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, contentStructure1, contentStructure2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					contentStructure1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
 			});
@@ -446,9 +444,9 @@ public abstract class BaseContentStructureResourceTestCase {
 		testGetAssetLibraryContentStructuresPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, contentStructure1, contentStructure2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					contentStructure1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					contentStructure2, entityField.getName(), 0.5);
 			});
 	}
@@ -460,9 +458,9 @@ public abstract class BaseContentStructureResourceTestCase {
 		testGetAssetLibraryContentStructuresPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, contentStructure1, contentStructure2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					contentStructure1, entityField.getName(), 0);
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					contentStructure2, entityField.getName(), 1);
 			});
 	}
@@ -484,21 +482,21 @@ public abstract class BaseContentStructureResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						contentStructure1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						contentStructure2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						contentStructure1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						contentStructure2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -506,12 +504,12 @@ public abstract class BaseContentStructureResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						contentStructure1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						contentStructure2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -540,8 +538,15 @@ public abstract class BaseContentStructureResourceTestCase {
 		ContentStructure contentStructure2 = randomContentStructure();
 
 		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(
-				entityField, contentStructure1, contentStructure2);
+			String setMethodName =
+				"set" + StringUtil.upperCaseFirstLetter(entityField.getName());
+
+			if (ReflectionTestUtil.hasMethod(
+					ContentStructure.class, setMethodName)) {
+
+				unsafeTriConsumer.accept(
+					entityField, contentStructure1, contentStructure2);
+			}
 		}
 
 		contentStructure1 =
@@ -1003,7 +1008,7 @@ public abstract class BaseContentStructureResourceTestCase {
 		testGetSiteContentStructuresPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, contentStructure1, contentStructure2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					contentStructure1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
 			});
@@ -1016,9 +1021,9 @@ public abstract class BaseContentStructureResourceTestCase {
 		testGetSiteContentStructuresPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, contentStructure1, contentStructure2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					contentStructure1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					contentStructure2, entityField.getName(), 0.5);
 			});
 	}
@@ -1030,9 +1035,9 @@ public abstract class BaseContentStructureResourceTestCase {
 		testGetSiteContentStructuresPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, contentStructure1, contentStructure2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					contentStructure1, entityField.getName(), 0);
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					contentStructure2, entityField.getName(), 1);
 			});
 	}
@@ -1054,21 +1059,21 @@ public abstract class BaseContentStructureResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						contentStructure1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						contentStructure2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						contentStructure1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						contentStructure2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -1076,12 +1081,12 @@ public abstract class BaseContentStructureResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						contentStructure1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						contentStructure2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -1109,8 +1114,15 @@ public abstract class BaseContentStructureResourceTestCase {
 		ContentStructure contentStructure2 = randomContentStructure();
 
 		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(
-				entityField, contentStructure1, contentStructure2);
+			String setMethodName =
+				"set" + StringUtil.upperCaseFirstLetter(entityField.getName());
+
+			if (ReflectionTestUtil.hasMethod(
+					ContentStructure.class, setMethodName)) {
+
+				unsafeTriConsumer.accept(
+					entityField, contentStructure1, contentStructure2);
+			}
 		}
 
 		contentStructure1 =
@@ -2040,18 +2052,6 @@ public abstract class BaseContentStructureResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseContentStructureResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject

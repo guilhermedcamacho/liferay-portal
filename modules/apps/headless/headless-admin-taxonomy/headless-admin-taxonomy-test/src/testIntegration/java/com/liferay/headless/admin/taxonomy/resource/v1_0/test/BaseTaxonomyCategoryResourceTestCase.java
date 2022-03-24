@@ -41,6 +41,8 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.test.BeanTestUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
@@ -55,8 +57,6 @@ import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
-
-import java.lang.reflect.InvocationTargetException;
 
 import java.text.DateFormat;
 
@@ -75,8 +75,6 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
@@ -540,7 +538,7 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		testGetTaxonomyCategoryTaxonomyCategoriesPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, taxonomyCategory1, taxonomyCategory2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					taxonomyCategory1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
 			});
@@ -553,9 +551,9 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		testGetTaxonomyCategoryTaxonomyCategoriesPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, taxonomyCategory1, taxonomyCategory2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					taxonomyCategory1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					taxonomyCategory2, entityField.getName(), 0.5);
 			});
 	}
@@ -567,9 +565,9 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		testGetTaxonomyCategoryTaxonomyCategoriesPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, taxonomyCategory1, taxonomyCategory2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					taxonomyCategory1, entityField.getName(), 0);
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					taxonomyCategory2, entityField.getName(), 1);
 			});
 	}
@@ -591,21 +589,21 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						taxonomyCategory1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						taxonomyCategory2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						taxonomyCategory1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						taxonomyCategory2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -613,12 +611,12 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						taxonomyCategory1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						taxonomyCategory2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -647,8 +645,15 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		TaxonomyCategory taxonomyCategory2 = randomTaxonomyCategory();
 
 		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(
-				entityField, taxonomyCategory1, taxonomyCategory2);
+			String setMethodName =
+				"set" + StringUtil.upperCaseFirstLetter(entityField.getName());
+
+			if (ReflectionTestUtil.hasMethod(
+					TaxonomyCategory.class, setMethodName)) {
+
+				unsafeTriConsumer.accept(
+					entityField, taxonomyCategory1, taxonomyCategory2);
+			}
 		}
 
 		taxonomyCategory1 =
@@ -876,8 +881,8 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		TaxonomyCategory expectedPatchTaxonomyCategory =
 			postTaxonomyCategory.clone();
 
-		_beanUtilsBean.copyProperties(
-			expectedPatchTaxonomyCategory, randomPatchTaxonomyCategory);
+		BeanTestUtil.copyProperties(
+			randomPatchTaxonomyCategory, expectedPatchTaxonomyCategory);
 
 		TaxonomyCategory getTaxonomyCategory =
 			taxonomyCategoryResource.getTaxonomyCategory(
@@ -1228,7 +1233,7 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		testGetTaxonomyVocabularyTaxonomyCategoriesPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, taxonomyCategory1, taxonomyCategory2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					taxonomyCategory1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
 			});
@@ -1241,9 +1246,9 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		testGetTaxonomyVocabularyTaxonomyCategoriesPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, taxonomyCategory1, taxonomyCategory2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					taxonomyCategory1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					taxonomyCategory2, entityField.getName(), 0.5);
 			});
 	}
@@ -1255,9 +1260,9 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		testGetTaxonomyVocabularyTaxonomyCategoriesPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, taxonomyCategory1, taxonomyCategory2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					taxonomyCategory1, entityField.getName(), 0);
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					taxonomyCategory2, entityField.getName(), 1);
 			});
 	}
@@ -1279,21 +1284,21 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						taxonomyCategory1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						taxonomyCategory2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						taxonomyCategory1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						taxonomyCategory2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -1301,12 +1306,12 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						taxonomyCategory1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						taxonomyCategory2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -1335,8 +1340,15 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		TaxonomyCategory taxonomyCategory2 = randomTaxonomyCategory();
 
 		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(
-				entityField, taxonomyCategory1, taxonomyCategory2);
+			String setMethodName =
+				"set" + StringUtil.upperCaseFirstLetter(entityField.getName());
+
+			if (ReflectionTestUtil.hasMethod(
+					TaxonomyCategory.class, setMethodName)) {
+
+				unsafeTriConsumer.accept(
+					entityField, taxonomyCategory1, taxonomyCategory2);
+			}
 		}
 
 		taxonomyCategory1 =
@@ -2599,18 +2611,6 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseTaxonomyCategoryResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject
