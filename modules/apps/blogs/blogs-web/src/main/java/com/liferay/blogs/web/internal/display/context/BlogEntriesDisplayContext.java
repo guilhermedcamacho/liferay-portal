@@ -81,13 +81,13 @@ import javax.servlet.http.HttpServletRequest;
 public class BlogEntriesDisplayContext {
 
 	public BlogEntriesDisplayContext(
-		RenderRequest renderRequest, RenderResponse renderResponse,
-		HtmlParser htmlParser, Portal portal, TrashHelper trashHelper) {
+		HtmlParser htmlParser, Portal portal, RenderRequest renderRequest,
+		RenderResponse renderResponse, TrashHelper trashHelper) {
 
-		_renderRequest = renderRequest;
-		_renderResponse = renderResponse;
 		_htmlParser = htmlParser;
 		_portal = portal;
+		_renderRequest = renderRequest;
+		_renderResponse = renderResponse;
 		_trashHelper = trashHelper;
 
 		_liferayPortletRequest = portal.getLiferayPortletRequest(renderRequest);
