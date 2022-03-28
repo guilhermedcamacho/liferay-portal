@@ -43,6 +43,7 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.test.BeanTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
@@ -56,8 +57,6 @@ import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
-
-import java.lang.reflect.InvocationTargetException;
 
 import java.text.DateFormat;
 
@@ -76,8 +75,6 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
@@ -363,8 +360,8 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		MessageBoardMessage expectedPatchMessageBoardMessage =
 			postMessageBoardMessage.clone();
 
-		_beanUtilsBean.copyProperties(
-			expectedPatchMessageBoardMessage, randomPatchMessageBoardMessage);
+		BeanTestUtil.copyProperties(
+			randomPatchMessageBoardMessage, expectedPatchMessageBoardMessage);
 
 		MessageBoardMessage getMessageBoardMessage =
 			messageBoardMessageResource.getMessageBoardMessage(
@@ -805,9 +802,13 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		testGetMessageBoardMessageMessageBoardMessagesPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, messageBoardMessage1, messageBoardMessage2) -> {
-				BeanUtils.setProperty(
-					messageBoardMessage1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage1, entityField.getName(),
+						DateUtils.addMinutes(new Date(), -2));
+				}
 			});
 	}
 
@@ -818,10 +819,19 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		testGetMessageBoardMessageMessageBoardMessagesPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, messageBoardMessage1, messageBoardMessage2) -> {
-				BeanUtils.setProperty(
-					messageBoardMessage1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(
-					messageBoardMessage2, entityField.getName(), 0.5);
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage1, entityField.getName(), 0.1);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage2, entityField.getName(), 0.5);
+				}
 			});
 	}
 
@@ -832,10 +842,19 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		testGetMessageBoardMessageMessageBoardMessagesPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, messageBoardMessage1, messageBoardMessage2) -> {
-				BeanUtils.setProperty(
-					messageBoardMessage1, entityField.getName(), 0);
-				BeanUtils.setProperty(
-					messageBoardMessage2, entityField.getName(), 1);
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage1, entityField.getName(), 0);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage2, entityField.getName(), 1);
+				}
 			});
 	}
 
@@ -856,38 +875,65 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
-						messageBoardMessage1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
-						messageBoardMessage2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage1, entityFieldName,
+							Collections.singletonMap("Aaa", "Aaa"));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage2, entityFieldName,
+							Collections.singletonMap("Bbb", "Bbb"));
+					}
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
-						messageBoardMessage1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanUtils.setProperty(
-						messageBoardMessage2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
+
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
 				}
 				else {
-					BeanUtils.setProperty(
-						messageBoardMessage1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
-						messageBoardMessage2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
 				}
 			});
 	}
@@ -1240,9 +1286,13 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		testGetMessageBoardThreadMessageBoardMessagesPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, messageBoardMessage1, messageBoardMessage2) -> {
-				BeanUtils.setProperty(
-					messageBoardMessage1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage1, entityField.getName(),
+						DateUtils.addMinutes(new Date(), -2));
+				}
 			});
 	}
 
@@ -1253,10 +1303,19 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		testGetMessageBoardThreadMessageBoardMessagesPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, messageBoardMessage1, messageBoardMessage2) -> {
-				BeanUtils.setProperty(
-					messageBoardMessage1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(
-					messageBoardMessage2, entityField.getName(), 0.5);
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage1, entityField.getName(), 0.1);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage2, entityField.getName(), 0.5);
+				}
 			});
 	}
 
@@ -1267,10 +1326,19 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		testGetMessageBoardThreadMessageBoardMessagesPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, messageBoardMessage1, messageBoardMessage2) -> {
-				BeanUtils.setProperty(
-					messageBoardMessage1, entityField.getName(), 0);
-				BeanUtils.setProperty(
-					messageBoardMessage2, entityField.getName(), 1);
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage1, entityField.getName(), 0);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage2, entityField.getName(), 1);
+				}
 			});
 	}
 
@@ -1291,38 +1359,65 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
-						messageBoardMessage1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
-						messageBoardMessage2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage1, entityFieldName,
+							Collections.singletonMap("Aaa", "Aaa"));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage2, entityFieldName,
+							Collections.singletonMap("Bbb", "Bbb"));
+					}
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
-						messageBoardMessage1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanUtils.setProperty(
-						messageBoardMessage2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
+
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
 				}
 				else {
-					BeanUtils.setProperty(
-						messageBoardMessage1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
-						messageBoardMessage2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
 				}
 			});
 	}
@@ -1649,9 +1744,13 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		testGetSiteMessageBoardMessagesPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, messageBoardMessage1, messageBoardMessage2) -> {
-				BeanUtils.setProperty(
-					messageBoardMessage1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage1, entityField.getName(),
+						DateUtils.addMinutes(new Date(), -2));
+				}
 			});
 	}
 
@@ -1662,10 +1761,19 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		testGetSiteMessageBoardMessagesPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, messageBoardMessage1, messageBoardMessage2) -> {
-				BeanUtils.setProperty(
-					messageBoardMessage1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(
-					messageBoardMessage2, entityField.getName(), 0.5);
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage1, entityField.getName(), 0.1);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage2, entityField.getName(), 0.5);
+				}
 			});
 	}
 
@@ -1676,10 +1784,19 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		testGetSiteMessageBoardMessagesPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, messageBoardMessage1, messageBoardMessage2) -> {
-				BeanUtils.setProperty(
-					messageBoardMessage1, entityField.getName(), 0);
-				BeanUtils.setProperty(
-					messageBoardMessage2, entityField.getName(), 1);
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage1, entityField.getName(), 0);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						messageBoardMessage2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						messageBoardMessage2, entityField.getName(), 1);
+				}
 			});
 	}
 
@@ -1700,38 +1817,65 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
-						messageBoardMessage1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
-						messageBoardMessage2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage1, entityFieldName,
+							Collections.singletonMap("Aaa", "Aaa"));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage2, entityFieldName,
+							Collections.singletonMap("Bbb", "Bbb"));
+					}
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
-						messageBoardMessage1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanUtils.setProperty(
-						messageBoardMessage2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
+
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
 				}
 				else {
-					BeanUtils.setProperty(
-						messageBoardMessage1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
-						messageBoardMessage2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							messageBoardMessage2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							messageBoardMessage2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
 				}
 			});
 	}
@@ -3636,18 +3780,6 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseMessageBoardMessageResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject

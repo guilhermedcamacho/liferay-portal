@@ -46,6 +46,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.BeanTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
@@ -60,8 +61,6 @@ import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
-
-import java.lang.reflect.InvocationTargetException;
 
 import java.text.DateFormat;
 
@@ -80,8 +79,6 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
@@ -473,9 +470,13 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 		testGetAssetLibraryStructuredContentFoldersPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, structuredContentFolder1, structuredContentFolder2) ->{
-				BeanUtils.setProperty(
-					structuredContentFolder1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder1, entityField.getName(),
+						DateUtils.addMinutes(new Date(), -2));
+				}
 			});
 	}
 
@@ -486,10 +487,19 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 		testGetAssetLibraryStructuredContentFoldersPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, structuredContentFolder1, structuredContentFolder2) ->{
-				BeanUtils.setProperty(
-					structuredContentFolder1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(
-					structuredContentFolder2, entityField.getName(), 0.5);
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder1, entityField.getName(), 0.1);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder2, entityField.getName(), 0.5);
+				}
 			});
 	}
 
@@ -500,10 +510,19 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 		testGetAssetLibraryStructuredContentFoldersPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, structuredContentFolder1, structuredContentFolder2) ->{
-				BeanUtils.setProperty(
-					structuredContentFolder1, entityField.getName(), 0);
-				BeanUtils.setProperty(
-					structuredContentFolder2, entityField.getName(), 1);
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder1, entityField.getName(), 0);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder2, entityField.getName(), 1);
+				}
 			});
 	}
 
@@ -524,38 +543,65 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
-						structuredContentFolder1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
-						structuredContentFolder2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder1, entityFieldName,
+							Collections.singletonMap("Aaa", "Aaa"));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder2, entityFieldName,
+							Collections.singletonMap("Bbb", "Bbb"));
+					}
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
-						structuredContentFolder1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanUtils.setProperty(
-						structuredContentFolder2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
+
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
 				}
 				else {
-					BeanUtils.setProperty(
-						structuredContentFolder1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
-						structuredContentFolder2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
 				}
 			});
 	}
@@ -968,9 +1014,13 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 		testGetSiteStructuredContentFoldersPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, structuredContentFolder1, structuredContentFolder2) ->{
-				BeanUtils.setProperty(
-					structuredContentFolder1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder1, entityField.getName(),
+						DateUtils.addMinutes(new Date(), -2));
+				}
 			});
 	}
 
@@ -981,10 +1031,19 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 		testGetSiteStructuredContentFoldersPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, structuredContentFolder1, structuredContentFolder2) ->{
-				BeanUtils.setProperty(
-					structuredContentFolder1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(
-					structuredContentFolder2, entityField.getName(), 0.5);
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder1, entityField.getName(), 0.1);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder2, entityField.getName(), 0.5);
+				}
 			});
 	}
 
@@ -995,10 +1054,19 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 		testGetSiteStructuredContentFoldersPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, structuredContentFolder1, structuredContentFolder2) ->{
-				BeanUtils.setProperty(
-					structuredContentFolder1, entityField.getName(), 0);
-				BeanUtils.setProperty(
-					structuredContentFolder2, entityField.getName(), 1);
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder1, entityField.getName(), 0);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder2, entityField.getName(), 1);
+				}
 			});
 	}
 
@@ -1019,38 +1087,65 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
-						structuredContentFolder1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
-						structuredContentFolder2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder1, entityFieldName,
+							Collections.singletonMap("Aaa", "Aaa"));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder2, entityFieldName,
+							Collections.singletonMap("Bbb", "Bbb"));
+					}
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
-						structuredContentFolder1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanUtils.setProperty(
-						structuredContentFolder2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
+
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
 				}
 				else {
-					BeanUtils.setProperty(
-						structuredContentFolder1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
-						structuredContentFolder2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
 				}
 			});
 	}
@@ -1612,9 +1707,13 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 		testGetStructuredContentFolderStructuredContentFoldersPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, structuredContentFolder1, structuredContentFolder2) ->{
-				BeanUtils.setProperty(
-					structuredContentFolder1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder1, entityField.getName(),
+						DateUtils.addMinutes(new Date(), -2));
+				}
 			});
 	}
 
@@ -1625,10 +1724,19 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 		testGetStructuredContentFolderStructuredContentFoldersPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, structuredContentFolder1, structuredContentFolder2) ->{
-				BeanUtils.setProperty(
-					structuredContentFolder1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(
-					structuredContentFolder2, entityField.getName(), 0.5);
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder1, entityField.getName(), 0.1);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder2, entityField.getName(), 0.5);
+				}
 			});
 	}
 
@@ -1639,10 +1747,19 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 		testGetStructuredContentFolderStructuredContentFoldersPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, structuredContentFolder1, structuredContentFolder2) ->{
-				BeanUtils.setProperty(
-					structuredContentFolder1, entityField.getName(), 0);
-				BeanUtils.setProperty(
-					structuredContentFolder2, entityField.getName(), 1);
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder1, entityField.getName(), 0);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						structuredContentFolder2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						structuredContentFolder2, entityField.getName(), 1);
+				}
 			});
 	}
 
@@ -1663,38 +1780,65 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
-						structuredContentFolder1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
-						structuredContentFolder2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder1, entityFieldName,
+							Collections.singletonMap("Aaa", "Aaa"));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder2, entityFieldName,
+							Collections.singletonMap("Bbb", "Bbb"));
+					}
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
-						structuredContentFolder1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanUtils.setProperty(
-						structuredContentFolder2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
+
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
 				}
 				else {
-					BeanUtils.setProperty(
-						structuredContentFolder1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
-						structuredContentFolder2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							structuredContentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							structuredContentFolder2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
 				}
 			});
 	}
@@ -1967,9 +2111,9 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 		StructuredContentFolder expectedPatchStructuredContentFolder =
 			postStructuredContentFolder.clone();
 
-		_beanUtilsBean.copyProperties(
-			expectedPatchStructuredContentFolder,
-			randomPatchStructuredContentFolder);
+		BeanTestUtil.copyProperties(
+			randomPatchStructuredContentFolder,
+			expectedPatchStructuredContentFolder);
 
 		StructuredContentFolder getStructuredContentFolder =
 			structuredContentFolderResource.getStructuredContentFolder(
@@ -3069,18 +3213,6 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 		LogFactoryUtil.getLog(
 			BaseStructuredContentFolderResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject
