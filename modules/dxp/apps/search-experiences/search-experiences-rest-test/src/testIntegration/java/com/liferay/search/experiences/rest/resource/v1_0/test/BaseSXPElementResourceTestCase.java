@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.test.BeanTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -54,8 +55,6 @@ import com.liferay.search.experiences.rest.client.pagination.Pagination;
 import com.liferay.search.experiences.rest.client.resource.v1_0.SXPElementResource;
 import com.liferay.search.experiences.rest.client.serdes.v1_0.SXPElementSerDes;
 
-import java.lang.reflect.InvocationTargetException;
-
 import java.text.DateFormat;
 
 import java.util.ArrayList;
@@ -73,8 +72,6 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
@@ -361,9 +358,13 @@ public abstract class BaseSXPElementResourceTestCase {
 		testGetSXPElementsPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, sxpElement1, sxpElement2) -> {
-				BeanUtils.setProperty(
-					sxpElement1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+				if (BeanTestUtil.hasProperty(
+						sxpElement1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						sxpElement1, entityField.getName(),
+						DateUtils.addMinutes(new Date(), -2));
+				}
 			});
 	}
 
@@ -372,8 +373,19 @@ public abstract class BaseSXPElementResourceTestCase {
 		testGetSXPElementsPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, sxpElement1, sxpElement2) -> {
-				BeanUtils.setProperty(sxpElement1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(sxpElement2, entityField.getName(), 0.5);
+				if (BeanTestUtil.hasProperty(
+						sxpElement1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						sxpElement1, entityField.getName(), 0.1);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						sxpElement2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						sxpElement2, entityField.getName(), 0.5);
+				}
 			});
 	}
 
@@ -382,8 +394,19 @@ public abstract class BaseSXPElementResourceTestCase {
 		testGetSXPElementsPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, sxpElement1, sxpElement2) -> {
-				BeanUtils.setProperty(sxpElement1, entityField.getName(), 0);
-				BeanUtils.setProperty(sxpElement2, entityField.getName(), 1);
+				if (BeanTestUtil.hasProperty(
+						sxpElement1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						sxpElement1, entityField.getName(), 0);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						sxpElement2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						sxpElement2, entityField.getName(), 1);
+				}
 			});
 	}
 
@@ -402,38 +425,65 @@ public abstract class BaseSXPElementResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
-						sxpElement1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
-						sxpElement2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
+					if (BeanTestUtil.hasProperty(
+							sxpElement1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							sxpElement1, entityFieldName,
+							Collections.singletonMap("Aaa", "Aaa"));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							sxpElement2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							sxpElement2, entityFieldName,
+							Collections.singletonMap("Bbb", "Bbb"));
+					}
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
-						sxpElement1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanUtils.setProperty(
-						sxpElement2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
+					if (BeanTestUtil.hasProperty(
+							sxpElement1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							sxpElement1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
+
+					if (BeanTestUtil.hasProperty(
+							sxpElement2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							sxpElement2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
 				}
 				else {
-					BeanUtils.setProperty(
-						sxpElement1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
-						sxpElement2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
+					if (BeanTestUtil.hasProperty(
+							sxpElement1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							sxpElement1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							sxpElement2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							sxpElement2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
 				}
 			});
 	}
@@ -659,8 +709,8 @@ public abstract class BaseSXPElementResourceTestCase {
 
 		SXPElement expectedPatchSXPElement = postSXPElement.clone();
 
-		_beanUtilsBean.copyProperties(
-			expectedPatchSXPElement, randomPatchSXPElement);
+		BeanTestUtil.copyProperties(
+			randomPatchSXPElement, expectedPatchSXPElement);
 
 		SXPElement getSXPElement = sxpElementResource.getSXPElement(
 			patchSXPElement.getId());
@@ -1515,18 +1565,6 @@ public abstract class BaseSXPElementResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseSXPElementResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject

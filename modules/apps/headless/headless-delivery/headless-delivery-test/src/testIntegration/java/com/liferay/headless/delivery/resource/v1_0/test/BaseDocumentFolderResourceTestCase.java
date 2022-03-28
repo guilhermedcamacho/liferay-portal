@@ -46,6 +46,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.BeanTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
@@ -60,8 +61,6 @@ import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
-
-import java.lang.reflect.InvocationTargetException;
 
 import java.text.DateFormat;
 
@@ -80,8 +79,6 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
@@ -440,9 +437,13 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		testGetAssetLibraryDocumentFoldersPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, documentFolder1, documentFolder2) -> {
-				BeanUtils.setProperty(
-					documentFolder1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+				if (BeanTestUtil.hasProperty(
+						documentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder1, entityField.getName(),
+						DateUtils.addMinutes(new Date(), -2));
+				}
 			});
 	}
 
@@ -453,10 +454,19 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		testGetAssetLibraryDocumentFoldersPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, documentFolder1, documentFolder2) -> {
-				BeanUtils.setProperty(
-					documentFolder1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(
-					documentFolder2, entityField.getName(), 0.5);
+				if (BeanTestUtil.hasProperty(
+						documentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder1, entityField.getName(), 0.1);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						documentFolder2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder2, entityField.getName(), 0.5);
+				}
 			});
 	}
 
@@ -467,10 +477,19 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		testGetAssetLibraryDocumentFoldersPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, documentFolder1, documentFolder2) -> {
-				BeanUtils.setProperty(
-					documentFolder1, entityField.getName(), 0);
-				BeanUtils.setProperty(
-					documentFolder2, entityField.getName(), 1);
+				if (BeanTestUtil.hasProperty(
+						documentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder1, entityField.getName(), 0);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						documentFolder2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder2, entityField.getName(), 1);
+				}
 			});
 	}
 
@@ -491,38 +510,65 @@ public abstract class BaseDocumentFolderResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
-						documentFolder1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
-						documentFolder2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
+					if (BeanTestUtil.hasProperty(
+							documentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder1, entityFieldName,
+							Collections.singletonMap("Aaa", "Aaa"));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							documentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder2, entityFieldName,
+							Collections.singletonMap("Bbb", "Bbb"));
+					}
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
-						documentFolder1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanUtils.setProperty(
-						documentFolder2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
+					if (BeanTestUtil.hasProperty(
+							documentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
+
+					if (BeanTestUtil.hasProperty(
+							documentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
 				}
 				else {
-					BeanUtils.setProperty(
-						documentFolder1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
-						documentFolder2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
+					if (BeanTestUtil.hasProperty(
+							documentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							documentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
 				}
 			});
 	}
@@ -842,8 +888,8 @@ public abstract class BaseDocumentFolderResourceTestCase {
 
 		DocumentFolder expectedPatchDocumentFolder = postDocumentFolder.clone();
 
-		_beanUtilsBean.copyProperties(
-			expectedPatchDocumentFolder, randomPatchDocumentFolder);
+		BeanTestUtil.copyProperties(
+			randomPatchDocumentFolder, expectedPatchDocumentFolder);
 
 		DocumentFolder getDocumentFolder =
 			documentFolderResource.getDocumentFolder(
@@ -1222,9 +1268,13 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		testGetDocumentFolderDocumentFoldersPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, documentFolder1, documentFolder2) -> {
-				BeanUtils.setProperty(
-					documentFolder1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+				if (BeanTestUtil.hasProperty(
+						documentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder1, entityField.getName(),
+						DateUtils.addMinutes(new Date(), -2));
+				}
 			});
 	}
 
@@ -1235,10 +1285,19 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		testGetDocumentFolderDocumentFoldersPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, documentFolder1, documentFolder2) -> {
-				BeanUtils.setProperty(
-					documentFolder1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(
-					documentFolder2, entityField.getName(), 0.5);
+				if (BeanTestUtil.hasProperty(
+						documentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder1, entityField.getName(), 0.1);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						documentFolder2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder2, entityField.getName(), 0.5);
+				}
 			});
 	}
 
@@ -1249,10 +1308,19 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		testGetDocumentFolderDocumentFoldersPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, documentFolder1, documentFolder2) -> {
-				BeanUtils.setProperty(
-					documentFolder1, entityField.getName(), 0);
-				BeanUtils.setProperty(
-					documentFolder2, entityField.getName(), 1);
+				if (BeanTestUtil.hasProperty(
+						documentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder1, entityField.getName(), 0);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						documentFolder2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder2, entityField.getName(), 1);
+				}
 			});
 	}
 
@@ -1273,38 +1341,65 @@ public abstract class BaseDocumentFolderResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
-						documentFolder1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
-						documentFolder2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
+					if (BeanTestUtil.hasProperty(
+							documentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder1, entityFieldName,
+							Collections.singletonMap("Aaa", "Aaa"));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							documentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder2, entityFieldName,
+							Collections.singletonMap("Bbb", "Bbb"));
+					}
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
-						documentFolder1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanUtils.setProperty(
-						documentFolder2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
+					if (BeanTestUtil.hasProperty(
+							documentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
+
+					if (BeanTestUtil.hasProperty(
+							documentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
 				}
 				else {
-					BeanUtils.setProperty(
-						documentFolder1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
-						documentFolder2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
+					if (BeanTestUtil.hasProperty(
+							documentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							documentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
 				}
 			});
 	}
@@ -1617,9 +1712,13 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		testGetSiteDocumentFoldersPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, documentFolder1, documentFolder2) -> {
-				BeanUtils.setProperty(
-					documentFolder1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+				if (BeanTestUtil.hasProperty(
+						documentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder1, entityField.getName(),
+						DateUtils.addMinutes(new Date(), -2));
+				}
 			});
 	}
 
@@ -1630,10 +1729,19 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		testGetSiteDocumentFoldersPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, documentFolder1, documentFolder2) -> {
-				BeanUtils.setProperty(
-					documentFolder1, entityField.getName(), 0.1);
-				BeanUtils.setProperty(
-					documentFolder2, entityField.getName(), 0.5);
+				if (BeanTestUtil.hasProperty(
+						documentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder1, entityField.getName(), 0.1);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						documentFolder2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder2, entityField.getName(), 0.5);
+				}
 			});
 	}
 
@@ -1644,10 +1752,19 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		testGetSiteDocumentFoldersPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, documentFolder1, documentFolder2) -> {
-				BeanUtils.setProperty(
-					documentFolder1, entityField.getName(), 0);
-				BeanUtils.setProperty(
-					documentFolder2, entityField.getName(), 1);
+				if (BeanTestUtil.hasProperty(
+						documentFolder1, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder1, entityField.getName(), 0);
+				}
+
+				if (BeanTestUtil.hasProperty(
+						documentFolder2, entityField.getName())) {
+
+					BeanTestUtil.setProperty(
+						documentFolder2, entityField.getName(), 1);
+				}
 			});
 	}
 
@@ -1668,38 +1785,65 @@ public abstract class BaseDocumentFolderResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
-						documentFolder1, entityFieldName,
-						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
-						documentFolder2, entityFieldName,
-						Collections.singletonMap("Bbb", "Bbb"));
+					if (BeanTestUtil.hasProperty(
+							documentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder1, entityFieldName,
+							Collections.singletonMap("Aaa", "Aaa"));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							documentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder2, entityFieldName,
+							Collections.singletonMap("Bbb", "Bbb"));
+					}
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
-						documentFolder1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
-					BeanUtils.setProperty(
-						documentFolder2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()) +
-									"@liferay.com");
+					if (BeanTestUtil.hasProperty(
+							documentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
+
+					if (BeanTestUtil.hasProperty(
+							documentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()) +
+										"@liferay.com");
+					}
 				}
 				else {
-					BeanUtils.setProperty(
-						documentFolder1, entityFieldName,
-						"aaa" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
-						documentFolder2, entityFieldName,
-						"bbb" +
-							StringUtil.toLowerCase(
-								RandomTestUtil.randomString()));
+					if (BeanTestUtil.hasProperty(
+							documentFolder1, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder1, entityFieldName,
+							"aaa" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
+
+					if (BeanTestUtil.hasProperty(
+							documentFolder2, entityField.getName())) {
+
+						BeanTestUtil.setProperty(
+							documentFolder2, entityFieldName,
+							"bbb" +
+								StringUtil.toLowerCase(
+									RandomTestUtil.randomString()));
+					}
 				}
 			});
 	}
@@ -2848,18 +2992,6 @@ public abstract class BaseDocumentFolderResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseDocumentFolderResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject
