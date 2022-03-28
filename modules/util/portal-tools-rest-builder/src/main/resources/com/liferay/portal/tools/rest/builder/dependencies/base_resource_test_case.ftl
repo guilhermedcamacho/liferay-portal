@@ -841,7 +841,9 @@ public abstract class Base${schemaName}ResourceTestCase {
 						test${javaMethodSignature.methodName?cap_first}WithSort(
 							EntityField.Type.DATE_TIME,
 							(entityField, ${schemaVarName}1, ${schemaVarName}2) -> {
-								BeanTestUtil.setProperty(${schemaVarName}1, entityField.getName(), DateUtils.addMinutes(new Date(), -2));
+								if(BeanTestUtil.hasProperty(${schemaVarName}1, entityField.getName())) {
+									BeanTestUtil.setProperty(${schemaVarName}1, entityField.getName(), DateUtils.addMinutes(new Date(), -2));
+								}
 							});
 					}
 
@@ -850,8 +852,12 @@ public abstract class Base${schemaName}ResourceTestCase {
 						test${javaMethodSignature.methodName?cap_first}WithSort(
 							EntityField.Type.DOUBLE,
 							(entityField, ${schemaVarName}1, ${schemaVarName}2) -> {
-								BeanTestUtil.setProperty(${schemaVarName}1, entityField.getName(), 0.1);
-								BeanTestUtil.setProperty(${schemaVarName}2, entityField.getName(), 0.5);
+								if(BeanTestUtil.hasProperty(${schemaVarName}1, entityField.getName())) {
+									BeanTestUtil.setProperty(${schemaVarName}1, entityField.getName(), 0.1);
+								}
+								if(BeanTestUtil.hasProperty(${schemaVarName}2, entityField.getName())) {
+									BeanTestUtil.setProperty(${schemaVarName}2, entityField.getName(), 0.5);
+								}
 							});
 					}
 
@@ -860,8 +866,12 @@ public abstract class Base${schemaName}ResourceTestCase {
 						test${javaMethodSignature.methodName?cap_first}WithSort(
 							EntityField.Type.INTEGER,
 							(entityField, ${schemaVarName}1, ${schemaVarName}2) -> {
-								BeanTestUtil.setProperty(${schemaVarName}1, entityField.getName(), 0);
-								BeanTestUtil.setProperty(${schemaVarName}2, entityField.getName(), 1);
+								if(BeanTestUtil.hasProperty(${schemaVarName}1, entityField.getName())) {
+									BeanTestUtil.setProperty(${schemaVarName}1, entityField.getName(), 0);
+								}
+								if(BeanTestUtil.hasProperty(${schemaVarName}2, entityField.getName())) {
+									BeanTestUtil.setProperty(${schemaVarName}2, entityField.getName(), 1);
+								}
 							});
 					}
 
@@ -880,16 +890,28 @@ public abstract class Base${schemaName}ResourceTestCase {
 								Class<?> returnType = method.getReturnType();
 
 								if (returnType.isAssignableFrom(Map.class)) {
-									BeanTestUtil.setProperty(${schemaVarName}1, entityFieldName, Collections.singletonMap("Aaa", "Aaa"));
-									BeanTestUtil.setProperty(${schemaVarName}2, entityFieldName, Collections.singletonMap("Bbb", "Bbb"));
+									if(BeanTestUtil.hasProperty(${schemaVarName}1, entityField.getName())) {
+										BeanTestUtil.setProperty(${schemaVarName}1, entityFieldName, Collections.singletonMap("Aaa", "Aaa"));
+									}
+									if(BeanTestUtil.hasProperty(${schemaVarName}2, entityField.getName())) {
+										BeanTestUtil.setProperty(${schemaVarName}2, entityFieldName, Collections.singletonMap("Bbb", "Bbb"));
+									}
 								}
 								else if (entityFieldName.contains("email")) {
-									BeanTestUtil.setProperty(${schemaVarName}1, entityFieldName, "aaa" + StringUtil.toLowerCase(RandomTestUtil.randomString()) + "@liferay.com");
-									BeanTestUtil.setProperty(${schemaVarName}2, entityFieldName, "bbb" + StringUtil.toLowerCase(RandomTestUtil.randomString()) + "@liferay.com");
+									if(BeanTestUtil.hasProperty(${schemaVarName}1, entityField.getName())) {
+										BeanTestUtil.setProperty(${schemaVarName}1, entityFieldName, "aaa" + StringUtil.toLowerCase(RandomTestUtil.randomString()) + "@liferay.com");
+									}
+									if(BeanTestUtil.hasProperty(${schemaVarName}2, entityField.getName())) {
+										BeanTestUtil.setProperty(${schemaVarName}2, entityFieldName, "bbb" + StringUtil.toLowerCase(RandomTestUtil.randomString()) + "@liferay.com");
+									}
 								}
 								else {
-									BeanTestUtil.setProperty(${schemaVarName}1, entityFieldName, "aaa" + StringUtil.toLowerCase(RandomTestUtil.randomString()));
-									BeanTestUtil.setProperty(${schemaVarName}2, entityFieldName, "bbb" + StringUtil.toLowerCase(RandomTestUtil.randomString()));
+									if(BeanTestUtil.hasProperty(${schemaVarName}1, entityField.getName())) {
+										BeanTestUtil.setProperty(${schemaVarName}1, entityFieldName, "aaa" + StringUtil.toLowerCase(RandomTestUtil.randomString()));
+									}
+									if(BeanTestUtil.hasProperty(${schemaVarName}2, entityField.getName())) {
+										BeanTestUtil.setProperty(${schemaVarName}2, entityFieldName, "bbb" + StringUtil.toLowerCase(RandomTestUtil.randomString()));
+									}
 								}
 							});
 					}
