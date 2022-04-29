@@ -21,7 +21,7 @@ String backURL = ParamUtil.getString(request, "backURL", String.valueOf(renderRe
 
 ObjectEntryDisplayContext objectEntryDisplayContext = (ObjectEntryDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
-ObjectEntry objectEntry = objectEntryDisplayContext.getObjectEntry();
+com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry = objectEntryDisplayContext.getObjectEntry();
 ObjectLayoutTab objectLayoutTab = objectEntryDisplayContext.getObjectLayoutTab();
 
 portletDisplay.setShowBackIcon(true);
@@ -34,7 +34,8 @@ portletDisplay.setURLBack(backURL);
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.ASSIGN %>" />
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 	<aui:input name="objectRelationshipId" type="hidden" value="<%= objectLayoutTab.getObjectRelationshipId() %>" />
-	<aui:input name="objectEntryId" type="hidden" value="<%= (objectEntry == null) ? 0 : objectEntry.getObjectEntryId() %>" />
+<%--	<aui:input name="objectEntryId" type="hidden" value="<%= (objectEntry == null) ? 0 : objectEntry.getObjectEntryId() %>" />--%>
+	<aui:input name="externalReferenceCode" type="hidden" value="<%= (objectEntry == null) ? 0 : objectEntry.getExternalReferenceCode() %>" />
 	<aui:input name="objectRelationshipPrimaryKey2" type="hidden" value="" />
 
 	<frontend-data-set:classic-display

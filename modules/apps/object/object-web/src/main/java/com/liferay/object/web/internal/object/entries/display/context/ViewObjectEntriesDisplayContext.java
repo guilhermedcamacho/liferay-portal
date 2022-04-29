@@ -144,7 +144,8 @@ public class ViewObjectEntriesDisplayContext {
 				).setMVCRenderCommandName(
 					"/object_entries/edit_object_entry"
 				).setParameter(
-					"objectEntryId", "{id}"
+//					"objectEntryId", "{id}"
+					"externalReferenceCode", "{externalReferenceCode}"
 				).buildString(),
 				"view", "view",
 				LanguageUtil.get(_objectRequestHelper.getRequest(), "view"),

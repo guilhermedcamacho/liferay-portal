@@ -1,4 +1,8 @@
 dependencies {
+	compileInclude group: "org.apache.httpcomponents", name: "httpclient", version: "4.5.13"
+	compileInclude group: "org.apache.httpcomponents", name: "httpcore", version: "4.4.14"
+	compileOnly group: "com.fasterxml.jackson.core", name: "jackson-core", version: "2.13.2"
+	compileOnly group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "2.13.2.2"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
 	compileOnly group: "io.swagger.core.v3", name: "swagger-annotations", version: "2.0.5"
@@ -20,6 +24,7 @@ dependencies {
 	compileOnly project(":apps:portal-odata:portal-odata-api")
 	compileOnly project(":apps:portal-search:portal-search-api")
 	compileOnly project(":apps:portal-vulcan:portal-vulcan-api")
+	compileOnly project(":core:osgi-service-tracker-collections")
 	compileOnly project(":core:petra:petra-function")
 	compileOnly project(":core:petra:petra-lang")
 	compileOnly project(":core:petra:petra-string")

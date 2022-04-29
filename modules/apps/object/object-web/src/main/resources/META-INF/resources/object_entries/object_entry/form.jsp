@@ -22,7 +22,7 @@ String backURL = ParamUtil.getString(request, "backURL", String.valueOf(renderRe
 ObjectEntryDisplayContext objectEntryDisplayContext = (ObjectEntryDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
 ObjectDefinition objectDefinition = objectEntryDisplayContext.getObjectDefinition();
-ObjectEntry objectEntry = objectEntryDisplayContext.getObjectEntry();
+com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry = objectEntryDisplayContext.getObjectEntry();
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(backURL);
@@ -36,7 +36,8 @@ portletDisplay.setURLBack(backURL);
 >
 	<liferay-frontend:edit-form-body>
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (objectEntry == null) ? Constants.ADD : Constants.UPDATE %>" />
-		<aui:input name="objectEntryId" type="hidden" value="<%= (objectEntry == null) ? 0 : objectEntry.getObjectEntryId() %>" />
+<%--		<aui:input name="objectEntryId" type="hidden" value="<%= (objectEntry == null) ? 0 : objectEntry.getObjectEntryId() %>" />--%>
+		<aui:input name="externalReferenceCode" type="hidden" value="<%= (objectEntry == null) ? 0 : objectEntry.getExternalReferenceCode() %>" />
 		<aui:input name="objectDefinitionId" type="hidden" value="<%= objectDefinition.getObjectDefinitionId() %>" />
 		<aui:input name="ddmFormValues" type="hidden" value="" />
 
@@ -64,13 +65,19 @@ portletDisplay.setURLBack(backURL);
 
 <c:if test="<%= !objectEntryDisplayContext.isReadOnly() %>">
 	<aui:script>
-		function <portlet:namespace />getObjectEntryId() {
-			return Number(
-				'<%= (objectEntry == null) ? 0 : objectEntry.getObjectEntryId() %>'
+<%--		function <portlet:namespace />getObjectEntryId() {--%>
+<%--			return Number(--%>
+<%--				'<%= (objectEntry == null) ? 0 : objectEntry.getObjectEntryId() %>'--%>
+<%--			);--%>
+<%--		}--%>
+
+		function <portlet:namespace />getExternalReferenceCode() {
+			return String(
+				'<%= (objectEntry == null) ? "" : objectEntry.getExternalReferenceCode() %>'
 			);
 		}
 
-		function <portlet:namespace />getPath(objectEntryId) {
+		function <portlet:namespace />getPath(externalReferenceCode) {
 			const scope = '<%= objectDefinition.getScope() %>';
 			const contextPath = '/o<%= objectDefinition.getRESTContextPath() %>';
 			const pathScopedBySite = contextPath.concat(
@@ -78,9 +85,9 @@ portletDisplay.setURLBack(backURL);
 			);
 
 			const postPath = scope === 'site' ? pathScopedBySite : contextPath;
-			const putPath = contextPath.concat('/', `\${objectEntryId}`);
+			const putPath = contextPath.concat('/by-external-reference-code/', `\${externalReferenceCode}`);
 
-			return objectEntryId ? putPath : postPath;
+			return externalReferenceCode ? putPath : postPath;
 		}
 
 		function <portlet:namespace />getValues(fields) {
@@ -129,8 +136,10 @@ portletDisplay.setURLBack(backURL);
 
 						if (shouldSubmitForm) {
 							const values = <portlet:namespace />getValues(fields);
-							const objectEntryId = <portlet:namespace />getObjectEntryId();
-							const path = <portlet:namespace />getPath(objectEntryId);
+<%--							const objectEntryId = <portlet:namespace />getObjectEntryId();--%>
+							const externalReferenceCode = <portlet:namespace />getExternalReferenceCode();
+							const path = <portlet:namespace />getPath(externalReferenceCode);
+							console.log(path);
 
 							Liferay.Util.fetch(path, {
 								body: JSON.stringify(values),
@@ -138,7 +147,7 @@ portletDisplay.setURLBack(backURL);
 									'Accept': 'application/json',
 									'Content-Type': 'application/json',
 								}),
-								method: objectEntryId ? 'PUT' : 'POST',
+								method: externalReferenceCode ? 'PUT' : 'POST',
 							})
 								.then((response) => {
 									if (response.status === 401) {

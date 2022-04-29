@@ -61,11 +61,14 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.ActionUtil;
 import com.liferay.portal.vulcan.util.GroupUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriInfo;
 import java.io.Serializable;
-
 import java.text.ParseException;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -74,17 +77,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
-
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Javier de Arcos
  */
-@Component(immediate = true, service = ObjectEntryManager.class)
+@Component(
+	immediate = true,
+	property = "object.entry.manager.key=" + "Liferay",
+	service = ObjectEntryManager.class
+)
 public class ObjectEntryManagerImpl implements ObjectEntryManager {
 
 	@Override

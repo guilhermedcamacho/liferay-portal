@@ -138,7 +138,7 @@ public class AttachmentObjectFieldBusinessType
 				return folder.getFolderId();
 			}
 		).put(
-			"objectEntryId", objectFieldRenderingContext.getObjectEntryId()
+			"externalReferenceCode", objectFieldRenderingContext.getExternalReferenceCode()
 		).put(
 			"objectFieldId", objectField.getObjectFieldId()
 		).put(

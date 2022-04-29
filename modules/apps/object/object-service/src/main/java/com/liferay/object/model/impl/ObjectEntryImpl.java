@@ -29,7 +29,6 @@ import com.liferay.portal.kernel.model.cache.CacheField;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 
 import java.io.Serializable;
-
 import java.util.HashMap;
 import java.util.Map;
 

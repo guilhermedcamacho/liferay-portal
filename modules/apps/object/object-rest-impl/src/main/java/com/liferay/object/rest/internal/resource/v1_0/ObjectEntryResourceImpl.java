@@ -18,6 +18,7 @@ import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.internal.odata.entity.v1_0.ObjectEntryEntityModel;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
+import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerServicesTracker;
 import com.liferay.object.rest.resource.v1_0.ObjectEntryResource;
 import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
@@ -33,18 +34,15 @@ import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-
-import java.io.Serializable;
-
-import java.util.Collection;
-import java.util.Map;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
-
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author Javier Gamarra
@@ -94,7 +92,9 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 	public void deleteByExternalReferenceCode(String externalReferenceCode)
 		throws Exception {
 
-		_objectEntryManager.deleteObjectEntry(
+		ObjectEntryManager objectEntryManagerSalesforce = _objectEntryManagerServicesTracker.getObjectEntryManager("Salesforce");
+
+		objectEntryManagerSalesforce.deleteObjectEntry(
 			externalReferenceCode, contextCompany.getCompanyId(),
 			_objectDefinition, null);
 	}
@@ -118,7 +118,9 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 	public ObjectEntry getByExternalReferenceCode(String externalReferenceCode)
 		throws Exception {
 
-		return _objectEntryManager.getObjectEntry(
+		ObjectEntryManager objectEntryManagerSalesforce = _objectEntryManagerServicesTracker.getObjectEntryManager("Salesforce");
+
+		return objectEntryManagerSalesforce.getObjectEntry(
 			_getDTOConverterContext(null), externalReferenceCode,
 			contextCompany.getCompanyId(), _objectDefinition, null);
 	}
@@ -136,13 +138,16 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
-		return _objectEntryManager.getObjectEntries(
+		ObjectEntryManager objectEntryManagerSalesforce = _objectEntryManagerServicesTracker.getObjectEntryManager("Salesforce");
+
+		return objectEntryManagerSalesforce.getObjectEntries(
 			contextCompany.getCompanyId(), _objectDefinition, null, aggregation,
 			_getDTOConverterContext(null), filter, pagination, search, sorts);
 	}
 
 	@Override
 	public ObjectEntry getObjectEntry(Long objectEntryId) throws Exception {
+
 		return _objectEntryManager.getObjectEntry(
 			_getDTOConverterContext(objectEntryId), _objectDefinition,
 			objectEntryId);
@@ -175,7 +180,9 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 	public ObjectEntry postObjectEntry(ObjectEntry objectEntry)
 		throws Exception {
 
-		return _objectEntryManager.addObjectEntry(
+		ObjectEntryManager objectEntryManagerSalesforce = _objectEntryManagerServicesTracker.getObjectEntryManager("Salesforce");
+
+		return objectEntryManagerSalesforce.addObjectEntry(
 			_getDTOConverterContext(null), _objectDefinition, objectEntry,
 			null);
 	}
@@ -195,7 +202,9 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 			String externalReferenceCode, ObjectEntry objectEntry)
 		throws Exception {
 
-		return _objectEntryManager.addOrUpdateObjectEntry(
+		ObjectEntryManager objectEntryManagerSalesforce = _objectEntryManagerServicesTracker.getObjectEntryManager("Salesforce");
+
+		return objectEntryManagerSalesforce.addOrUpdateObjectEntry(
 			_getDTOConverterContext(null), externalReferenceCode,
 			_objectDefinition, objectEntry, null);
 	}
@@ -314,5 +323,8 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 
 	@Reference
 	private ObjectScopeProviderRegistry _objectScopeProviderRegistry;
+
+	@Reference
+	private ObjectEntryManagerServicesTracker _objectEntryManagerServicesTracker;
 
 }

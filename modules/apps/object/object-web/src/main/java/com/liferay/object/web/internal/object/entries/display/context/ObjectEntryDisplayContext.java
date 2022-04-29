@@ -43,7 +43,6 @@ import com.liferay.object.field.business.type.ObjectFieldBusinessType;
 import com.liferay.object.field.business.type.ObjectFieldBusinessTypeServicesTracker;
 import com.liferay.object.field.render.ObjectFieldRenderingContext;
 import com.liferay.object.model.ObjectDefinition;
-import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectLayout;
 import com.liferay.object.model.ObjectLayoutBox;
@@ -51,6 +50,9 @@ import com.liferay.object.model.ObjectLayoutColumn;
 import com.liferay.object.model.ObjectLayoutRow;
 import com.liferay.object.model.ObjectLayoutTab;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.rest.dto.v1_0.ObjectEntry;
+import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
+import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerServicesTracker;
 import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -120,6 +122,7 @@ public class ObjectEntryDisplayContext {
 		ObjectFieldBusinessTypeServicesTracker
 			objectFieldBusinessTypeServicesTracker,
 		ObjectFieldLocalService objectFieldLocalService,
+		ObjectEntryManagerServicesTracker objectEntryManagerServicesTracker,
 		ObjectLayoutLocalService objectLayoutLocalService,
 		ObjectRelationshipLocalService objectRelationshipLocalService,
 		ObjectRelationshipService objectRelationshipService,
@@ -134,6 +137,7 @@ public class ObjectEntryDisplayContext {
 		_objectFieldBusinessTypeServicesTracker =
 			objectFieldBusinessTypeServicesTracker;
 		_objectFieldLocalService = objectFieldLocalService;
+		_objectEntryManagerServicesTracker = objectEntryManagerServicesTracker;
 		_objectLayoutLocalService = objectLayoutLocalService;
 		_objectRelationshipLocalService = objectRelationshipLocalService;
 		_objectRelationshipService = objectRelationshipService;
@@ -152,7 +156,7 @@ public class ObjectEntryDisplayContext {
 
 		NavigationItemList navigationItemList = new NavigationItemList();
 
-		ObjectEntry objectEntry = getObjectEntry();
+		com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry = getObjectEntry();
 
 		if (objectEntry == null) {
 			return navigationItemList;
@@ -211,33 +215,59 @@ public class ObjectEntryDisplayContext {
 			ObjectWebKeys.OBJECT_DEFINITION);
 	}
 
-	public ObjectEntry getObjectEntry() throws PortalException {
+	public com.liferay.object.rest.dto.v1_0.ObjectEntry getObjectEntry() throws PortalException {
 		if (_objectEntry != null) {
 			return _objectEntry;
 		}
 
-		long objectEntryId = ParamUtil.getLong(
-			_objectRequestHelper.getRequest(), "objectEntryId");
+		String externalReferenceCode = ParamUtil.getString(
+			_objectRequestHelper.getRequest(), "externalReferenceCode");
 
-		if (_readOnly && (objectEntryId == 0L)) {
-			HttpServletRequest httpServletRequest =
-				_objectRequestHelper.getRequest();
+//		if (_readOnly && (objectEntryId == 0L)) {
+//			HttpServletRequest httpServletRequest =
+//				_objectRequestHelper.getRequest();
+//
+//			objectEntryId = (long)httpServletRequest.getAttribute(
+//				"objectEntryId");
+//		}
 
-			objectEntryId = (long)httpServletRequest.getAttribute(
-				"objectEntryId");
-		}
+		ObjectEntryManager objectEntryManager = _objectEntryManagerServicesTracker.getObjectEntryManager("Salesforce");
 
 		try {
-			_objectEntry = _objectEntryService.fetchObjectEntry(objectEntryId);
+//			_objectEntry = _objectEntryService.fetchObjectEntry(externalReferenceCode);
+
+			ObjectDefinition objectDefinition = getObjectDefinition();
+
+			_objectEntry = objectEntryManager.getObjectEntry(null, externalReferenceCode,
+				_objectRequestHelper.getCompanyId(), objectDefinition, null);
+
+//			_objectEntry = _toObjectEntry(objectDefinition.getObjectDefinitionId(), objectEntry);
 		}
-		catch (PortalException portalException) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(portalException);
+				_log.warn(exception);
 			}
 		}
 
 		return _objectEntry;
 	}
+
+//	private DTOConverterContext _getDTOConverterContext() {
+//		return new DefaultDTOConverterContext(
+//			false, null, null, _httpServletRequest, null,
+//			_themeDisplay.getLocale(), null, _themeDisplay.getUser());
+//	}
+
+//	private ObjectEntry _toObjectEntry(
+//		long objectDefinitionId,
+//		com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry) {
+//
+//		ObjectEntry serviceBuilderObjectEntry = new ObjectEntryImpl();
+//
+//		serviceBuilderObjectEntry.setObjectDefinitionId(objectDefinitionId);
+//
+//		return serviceBuilderObjectEntry;
+//	}
 
 	public ObjectLayout getObjectLayout() throws PortalException {
 		ObjectDefinition objectDefinition = getObjectDefinition();
@@ -354,7 +384,7 @@ public class ObjectEntryDisplayContext {
 		throws PortalException {
 
 		return HashMapBuilder.put(
-			"objectEntryId", String.valueOf(_objectEntry.getObjectEntryId())
+			"externalReferenceCode", String.valueOf(_objectEntry.getExternalReferenceCode())
 		).put(
 			"objectRelationshipId",
 			() -> {
@@ -387,14 +417,15 @@ public class ObjectEntryDisplayContext {
 		}
 
 		try {
-			ObjectEntry objectEntry = getObjectEntry();
+			com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry = getObjectEntry();
 
 			if (objectEntry == null) {
 				return false;
 			}
 
-			return !_objectEntryService.hasModelResourcePermission(
-				objectEntry, ActionKeys.UPDATE);
+//			return !_objectEntryService.hasModelResourcePermission(
+//				objectEntry, ActionKeys.UPDATE);
+			return false;
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
@@ -417,7 +448,7 @@ public class ObjectEntryDisplayContext {
 
 		ddmFormRenderingContext.setContainerId("editObjectEntry");
 
-		ObjectEntry objectEntry = getObjectEntry();
+		com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry = getObjectEntry();
 
 		if (objectEntry != null) {
 			DDMFormValues ddmFormValues = _getDDMFormValues(
@@ -509,11 +540,13 @@ public class ObjectEntryDisplayContext {
 			_objectRequestHelper.getRequest());
 		objectFieldRenderingContext.setLocale(_objectRequestHelper.getLocale());
 
-		ObjectEntry objectEntry = getObjectEntry();
+		com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry = getObjectEntry();
 
 		if (objectEntry != null) {
-			objectFieldRenderingContext.setObjectEntryId(
-				objectEntry.getObjectEntryId());
+//			objectFieldRenderingContext.setObjectEntryId(
+//				objectEntry.getObjectEntryId());
+			objectFieldRenderingContext.setExternalReferenceCode(
+				objectEntry.getExternalReferenceCode());
 		}
 
 		objectFieldRenderingContext.setPortletId(
@@ -533,11 +566,12 @@ public class ObjectEntryDisplayContext {
 		boolean readOnly = _readOnly;
 
 		if (!readOnly) {
-			ObjectEntry objectEntry = getObjectEntry();
+			com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry = getObjectEntry();
 
 			if (objectEntry != null) {
-				readOnly = !_objectEntryService.hasModelResourcePermission(
-					objectEntry, ActionKeys.UPDATE);
+//				readOnly = !_objectEntryService.hasModelResourcePermission(
+//					objectEntry, ActionKeys.UPDATE);
+				readOnly = false;
 			}
 		}
 
@@ -712,7 +746,7 @@ public class ObjectEntryDisplayContext {
 	private DDMFormValues _getDDMFormValues(
 		DDMForm ddmForm, ObjectEntry objectEntry) {
 
-		Map<String, Serializable> values = objectEntry.getValues();
+		Map<String, Object> values = objectEntry.getProperties();
 
 		if (values.isEmpty()) {
 			return null;
@@ -791,7 +825,7 @@ public class ObjectEntryDisplayContext {
 	}
 
 	private String _getNavigationItemHref(
-		LiferayPortletResponse liferayPortletResponse, ObjectEntry objectEntry,
+		LiferayPortletResponse liferayPortletResponse, com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry,
 		ObjectLayoutTab objectLayoutTab) {
 
 		if (_readOnly) {
@@ -803,7 +837,8 @@ public class ObjectEntryDisplayContext {
 			return PortletURLBuilder.create(
 				liferayPortletURL
 			).setParameter(
-				"objectEntryId", objectEntry.getObjectEntryId()
+//				"objectEntryId", objectEntry.getObjectEntryId()
+				"externalReferenceCode", objectEntry.getExternalReferenceCode()
 			).setParameter(
 				"objectLayoutTabId", objectLayoutTab.getObjectLayoutTabId()
 			).buildString();
@@ -814,7 +849,8 @@ public class ObjectEntryDisplayContext {
 		).setMVCRenderCommandName(
 			"/object_entries/edit_object_entry"
 		).setParameter(
-			"objectEntryId", objectEntry.getObjectEntryId()
+//			"objectEntryId", objectEntry.getObjectEntryId()
+			"externalReferenceCode", objectEntry.getExternalReferenceCode()
 		).setParameter(
 			"objectLayoutTabId", objectLayoutTab.getObjectLayoutTabId()
 		).buildString();
@@ -868,7 +904,7 @@ public class ObjectEntryDisplayContext {
 	}
 
 	private List<DDMFormFieldValue> _getNestedDDMFormFieldValues(
-		List<DDMFormField> ddmFormFields, Map<String, Serializable> values) {
+		List<DDMFormField> ddmFormFields, Map<String, Object> values) {
 
 		return TransformUtil.transform(
 			ddmFormFields,
@@ -930,9 +966,9 @@ public class ObjectEntryDisplayContext {
 	}
 
 	private void _removeTimeFromDateString(
-		DDMFormField ddmFormField, Map<String, Serializable> values) {
+		DDMFormField ddmFormField, Map<String, Object> values) {
 
-		Serializable value = values.get(ddmFormField.getName());
+		Object value = values.get(ddmFormField.getName());
 
 		if (value == null) {
 			return;
@@ -947,7 +983,7 @@ public class ObjectEntryDisplayContext {
 	}
 
 	private void _setDateDDMFormFieldValue(
-		List<DDMFormField> ddmFormFields, Map<String, Serializable> values) {
+		List<DDMFormField> ddmFormFields, Map<String, Object> values) {
 
 		for (DDMFormField ddmFormField : ddmFormFields) {
 			if (StringUtil.equals(ddmFormField.getType(), "date")) {
@@ -962,9 +998,9 @@ public class ObjectEntryDisplayContext {
 
 	private void _setDDMFormFieldValueValue(
 		String ddmFormFieldName, DDMFormFieldValue ddmFormFieldValue,
-		Map<String, Serializable> values) {
+		Map<String, Object> values) {
 
-		Serializable serializable = values.get(ddmFormFieldName);
+		Object serializable = values.get(ddmFormFieldName);
 
 		if (serializable == null) {
 			ddmFormFieldValue.setValue(
@@ -983,12 +1019,15 @@ public class ObjectEntryDisplayContext {
 	private final ItemSelector _itemSelector;
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
 	private final ObjectDefinitionService _objectDefinitionService;
-	private ObjectEntry _objectEntry;
+	private com.liferay.object.rest.dto.v1_0.ObjectEntry _objectEntry;
 	private final ObjectEntryService _objectEntryService;
 	private final ObjectFieldBusinessTypeServicesTracker
 		_objectFieldBusinessTypeServicesTracker;
 	private final ObjectFieldLocalService _objectFieldLocalService;
 	private final Map<Long, String> _objectFieldNames = new HashMap<>();
+
+	private final ObjectEntryManagerServicesTracker
+		_objectEntryManagerServicesTracker;
 	private final ObjectLayoutLocalService _objectLayoutLocalService;
 	private final ObjectRelationshipLocalService
 		_objectRelationshipLocalService;
