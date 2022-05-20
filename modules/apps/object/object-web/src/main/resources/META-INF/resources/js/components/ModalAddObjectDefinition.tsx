@@ -46,7 +46,7 @@ const normalizeName: TNormalizeName = (str) => {
 
 const storageTypes = [
 	Liferay.Language.get('default'),
-	Liferay.Language.get('object-definition-salesforce'),
+	Liferay.Language.get('salesforce'),
 ];
 
 const ModalAddObjectDefinition: React.FC<IProps> = ({
@@ -68,19 +68,26 @@ const ModalAddObjectDefinition: React.FC<IProps> = ({
 		pluralLabel,
 		storageType,
 	}: TInitialValues) => {
-		const response = await fetch(apiURL, {
-			body: JSON.stringify({
-				label: {
-					[defaultLanguageId]: label,
-				},
-				name: name || normalizeName(label),
-				objectFields: [],
-				pluralLabel: {
-					[defaultLanguageId]: pluralLabel,
-				},
-				scope: 'company',
+		let objectDefinition: ObjectDefinition = {
+			label: {
+				[defaultLanguageId]: label,
+			},
+			name: name || normalizeName(label),
+			objectFields: [],
+			pluralLabel: {
+				[defaultLanguageId]: pluralLabel,
+			},
+			scope: 'company',
+		};
+
+		if (Liferay.FeatureFlags['LPS-135430']) {
+			objectDefinition = {
+				...objectDefinition,
 				storageType,
-			}),
+			};
+		}
+		const response = await fetch(apiURL, {
+			body: JSON.stringify(objectDefinition),
 			headers,
 			method: 'POST',
 		});
@@ -126,10 +133,13 @@ const ModalAddObjectDefinition: React.FC<IProps> = ({
 		validate,
 	});
 
-	const selectedStorageType = (storageType: string) =>
-		storageTypes
-			.map((type) => type.toLowerCase())
-			.indexOf(storageType.toLowerCase());
+	const selectedStorageType = (storageType: string) => {
+		const selected = storageType.toLowerCase();
+
+		return storageTypes.findIndex(
+			(type) => type.toLowerCase() === selected
+		);
+	};
 
 	return (
 		<ClayModal observer={observer}>
@@ -173,22 +183,23 @@ const ModalAddObjectDefinition: React.FC<IProps> = ({
 						value={values.name ?? normalizeName(values.label)}
 					/>
 
-					<Select
-						id="objectDefinitionStorageType"
-						label={Liferay.Language.get('storage-type')}
-						name="storageType"
-						onChange={({target: {value}}: any) => {
-							setValues({
-								...values,
-								storageType: storageTypes[value],
-							});
-						}}
-						options={storageTypes}
-						tooltip={Liferay.Language.get(
-							'object-definition-storage-type-tooltip'
-						)}
-						value={selectedStorageType(values.storageType)}
-					/>
+					{Liferay.FeatureFlags['LPS-135430'] && (
+						<Select
+							label={Liferay.Language.get('storage-type')}
+							name="storageType"
+							onChange={({target: {value}}: any) => {
+								setValues({
+									...values,
+									storageType: storageTypes[value],
+								});
+							}}
+							options={storageTypes}
+							tooltip={Liferay.Language.get(
+								'object-definition-storage-type-tooltip'
+							)}
+							value={selectedStorageType(values.storageType)}
+						/>
+					)}
 				</ClayModal.Body>
 
 				<ClayModal.Footer
@@ -223,6 +234,15 @@ type TInitialValues = {
 	name?: string;
 	pluralLabel: string;
 	storageType: string;
+};
+
+type ObjectDefinition = {
+	label: {[key: string]: string};
+	name?: string;
+	objectFields: unknown;
+	pluralLabel: {[key: string]: string};
+	scope: string;
+	storageType?: string | unknown;
 };
 
 type TNormalizeName = (str: string) => string;
