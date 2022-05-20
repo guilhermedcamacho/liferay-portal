@@ -135,10 +135,14 @@ public class DefaultObjectEntryManagerImpl implements ObjectEntryManager {
 
 	@Override
 	public ObjectEntry addOrUpdateObjectEntry(
-			DTOConverterContext dtoConverterContext,
+			long companyId, DTOConverterContext dtoConverterContext,
 			String externalReferenceCode, ObjectDefinition objectDefinition,
 			ObjectEntry objectEntry, String scopeKey)
 		throws Exception {
+
+		ServiceContext serviceContext = new ServiceContext();
+
+		serviceContext.setCompanyId(companyId);
 
 		return _toObjectEntry(
 			dtoConverterContext, objectDefinition,
@@ -149,7 +153,7 @@ public class DefaultObjectEntryManagerImpl implements ObjectEntryManager {
 					objectDefinition.getObjectDefinitionId(),
 					objectEntry.getProperties(),
 					dtoConverterContext.getLocale()),
-				new ServiceContext()));
+				serviceContext));
 	}
 
 	@Override
