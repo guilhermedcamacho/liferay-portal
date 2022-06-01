@@ -38,7 +38,6 @@ import org.osgi.service.component.annotations.Modified;
  * @author Guilherme Camacho
  */
 @Component(
-	configurationPid = "com.liferay.object.storage.salesforce.internal.configuration.SalesforceConfiguration",
 	enabled = false, immediate = true,
 	property = "object.entry.manager.storage.type=" + ObjectDefinitionConstants.STORAGE_TYPE_SALESFORCE,
 	service = ObjectEntryManager.class
@@ -167,14 +166,5 @@ public class SalesforceObjectEntryManagerImpl implements ObjectEntryManager {
 
 		return null;
 	}
-
-	@Activate
-	@Modified
-	protected void activate(Map<String, Object> properties) {
-		_salesforceConfiguration = ConfigurableUtil.createConfigurable(
-			SalesforceConfiguration.class, properties);
-	}
-
-	private volatile SalesforceConfiguration _salesforceConfiguration;
 
 }
