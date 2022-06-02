@@ -14,31 +14,41 @@
 
 package com.liferay.object.storage.salesforce.internal.rest.manager.v1_0;
 
+import com.liferay.headless.delivery.dto.v1_0.Creator;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
+import com.liferay.object.rest.dto.v1_0.Status;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
-import com.liferay.object.storage.salesforce.internal.configuration.SalesforceConfiguration;
+import com.liferay.object.storage.salesforce.internal.client.SalesforceClient;
 import com.liferay.petra.sql.dsl.expression.Predicate;
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.Map;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
-import org.osgi.service.component.annotations.Activate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Guilherme Camacho
  */
 @Component(
-	enabled = false, immediate = true,
+	enabled = true, immediate = true,
 	property = "object.entry.manager.storage.type=" + ObjectDefinitionConstants.STORAGE_TYPE_SALESFORCE,
 	service = ObjectEntryManager.class
 )
@@ -103,7 +113,13 @@ public class SalesforceObjectEntryManagerImpl implements ObjectEntryManager {
 			Filter filter, Pagination pagination, String search, Sort[] sorts)
 		throws Exception {
 
-		return null;
+		JSONObject responseJSONObject = _salesforceClient.query(
+			"SELECT FIELDS(ALL) FROM Manager__c LIMIT 20");
+
+		return Page.of(
+			_transformToObjectEntries(
+				responseJSONObject.getJSONArray("records")),
+			pagination, responseJSONObject.getInt("totalSize"));
 	}
 
 	@Override
@@ -166,5 +182,90 @@ public class SalesforceObjectEntryManagerImpl implements ObjectEntryManager {
 
 		return null;
 	}
+
+	private List<ObjectEntry> _transformToObjectEntries(JSONArray jsonArray)
+		throws Exception {
+
+		List<ObjectEntry> objectEntries = new ArrayList<>();
+
+		for (int i = 0; i < jsonArray.length(); i++) {
+			objectEntries.add(
+				_transformToObjectEntry(jsonArray.getJSONObject(i)));
+		}
+
+		return objectEntries;
+	}
+
+	private ObjectEntry _transformToObjectEntry(JSONObject jsonObject)
+		throws Exception {
+
+		ObjectEntry objectEntry = new ObjectEntry();
+
+		objectEntry.setActions(Collections.emptyMap());
+
+		String createdDate = jsonObject.getString("CreatedDate");
+
+		objectEntry.setDateCreated(_dateFormat.parse(createdDate));
+
+		String lastModifiedDate = jsonObject.getString("LastModifiedDate");
+
+		objectEntry.setDateModified(_dateFormat.parse(lastModifiedDate));
+
+		Creator creator = new Creator();
+
+		creator.setAdditionalName("");
+		creator.setContentType("UserAccount");
+		creator.setFamilyName("Test");
+		creator.setGivenName("Test");
+		creator.setId(20127L);
+		creator.setName("Test Test");
+
+		objectEntry.setCreator(creator);
+
+		//objectEntry.setId(42147L);
+
+		Status status = new Status();
+
+		status.setCode(0);
+		status.setLabel("approved");
+		status.setLabel_i18n("Approved");
+
+		objectEntry.setStatus(status);
+
+		Iterator<String> iterator = jsonObject.keys();
+
+		while (iterator.hasNext()) {
+			String key = iterator.next();
+
+			if (key.lastIndexOf("__c") != -1) {
+				String customFieldName = key.substring(
+					0, key.lastIndexOf("__c"));
+
+				customFieldName = StringUtil.removeSubstring(
+					customFieldName, "_");
+
+				customFieldName = StringUtil.lowerCaseFirstLetter(
+					customFieldName);
+
+				if (Validator.isNotNull(jsonObject.get(key))) {
+					objectEntry.getProperties(
+					).put(
+						customFieldName, jsonObject.get(key)
+					);
+				}
+			}
+			else if (key.equals("Id")) {
+				objectEntry.setExternalReferenceCode(jsonObject.getString(key));
+			}
+		}
+
+		return objectEntry;
+	}
+
+	private static final DateFormat _dateFormat = new SimpleDateFormat(
+		"yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+
+	@Reference
+	private SalesforceClient _salesforceClient;
 
 }
