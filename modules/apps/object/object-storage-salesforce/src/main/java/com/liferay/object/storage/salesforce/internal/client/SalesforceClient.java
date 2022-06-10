@@ -16,6 +16,7 @@ package com.liferay.object.storage.salesforce.internal.client;
 
 import com.liferay.object.storage.salesforce.internal.configuration.SalesforceConfiguration;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -23,6 +24,7 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -89,7 +91,43 @@ public class SalesforceClient {
 				_log.debug(
 					StringBundler.concat(
 						"Unable to get sObject: ", objectName,
-						"with identifier: ", identifier),
+						" with identifier: ", identifier),
+					exception);
+			}
+
+			return JSONFactoryUtil.createJSONObject();
+		}
+	}
+
+	public JSONObject updateSObject(
+		String identifier, JSONObject jsonObject, String objectName) {
+
+		try {
+			Http.Options options = new Http.Options();
+
+			options.addHeader(
+				"Authorization", "Bearer " + _getAccessToken(false));
+			options.addHeader("Content-Type", ContentTypes.APPLICATION_JSON);
+
+			options.setBody(
+				jsonObject.toString(), ContentTypes.APPLICATION_JSON,
+				StringPool.UTF8);
+
+			options.setLocation(
+				StringBundler.concat(
+					_instanceUrl, "/services/data/v54.0/sobjects/", objectName,
+					"/", identifier));
+
+			options.setPatch(true);
+
+			return _invoke(options);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					StringBundler.concat(
+						"Unable to update sObject: ", objectName,
+						" with identifier: ", identifier),
 					exception);
 			}
 

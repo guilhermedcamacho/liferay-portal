@@ -16,15 +16,18 @@ package com.liferay.object.storage.salesforce.internal.rest.manager.v1_0;
 
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectField;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.dto.v1_0.Status;
 import com.liferay.object.rest.dto.v1_0.util.CreatorUtil;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
+import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.storage.salesforce.internal.client.SalesforceClient;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.search.Sort;
@@ -44,6 +47,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
@@ -86,7 +90,15 @@ public class SalesforceObjectEntryManagerImpl implements ObjectEntryManager {
 			ObjectEntry objectEntry, String scopeKey)
 		throws Exception {
 
-		return null;
+		DateFormat dateFormat = new SimpleDateFormat(
+			"yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+
+		return _toObjectEntry(
+			companyId, dateFormat,
+			_salesforceClient.updateSObject(
+				externalReferenceCode,
+				_toSalesforceEntry(objectDefinition, objectEntry),
+				_getSalesforceObjectName(objectDefinition.getName())));
 	}
 
 	@Override
@@ -214,8 +226,21 @@ public class SalesforceObjectEntryManagerImpl implements ObjectEntryManager {
 		return null;
 	}
 
+	private ObjectField _getObjectField(
+		String name, List<ObjectField> objectFields) {
+
+		for (ObjectField objectField : objectFields) {
+			if (Objects.equals(name, objectField.getName())) {
+				return objectField;
+			}
+		}
+
+		return null;
+	}
+
 	private String _getSalesforceObjectName(String objectDefinitionName) {
-		return StringUtil.removeFirst(objectDefinitionName, "C_") + "__c";
+		return StringUtil.removeFirst(objectDefinitionName, "C_") +
+			_SOBJECT_NAME_SUFFIX;
 	}
 
 	private String _getSalesforcePagination(Pagination pagination) {
@@ -267,8 +292,11 @@ public class SalesforceObjectEntryManagerImpl implements ObjectEntryManager {
 		while (iterator.hasNext()) {
 			String key = iterator.next();
 
-			if (StringUtil.contains(key, "__c", StringPool.BLANK)) {
-				String customFieldName = StringUtil.removeLast(key, "__c");
+			if (StringUtil.contains(
+					key, _SOBJECT_NAME_SUFFIX, StringPool.BLANK)) {
+
+				String customFieldName = StringUtil.removeLast(
+					key, _SOBJECT_NAME_SUFFIX);
 
 				customFieldName = StringUtil.removeSubstring(
 					customFieldName, "_");
@@ -286,6 +314,46 @@ public class SalesforceObjectEntryManagerImpl implements ObjectEntryManager {
 
 		return objectEntry;
 	}
+
+	private JSONObject _toSalesforceEntry(
+		ObjectDefinition objectDefinition, ObjectEntry objectEntry) {
+
+		ObjectField titleObjectField =
+			_objectFieldLocalService.fetchObjectField(
+				objectDefinition.getTitleObjectFieldId());
+
+		List<ObjectField> objectFields =
+			_objectFieldLocalService.getObjectFields(
+				objectDefinition.getObjectDefinitionId());
+
+		JSONObject jsonObject = _jsonFactory.createJSONObject();
+
+		Map<String, Object> properties = objectEntry.getProperties();
+
+		for (Map.Entry<String, Object> entry : properties.entrySet()) {
+			ObjectField objectField = _getObjectField(
+				entry.getKey(), objectFields);
+
+			jsonObject.put(
+				entry.getKey() + _SOBJECT_NAME_SUFFIX, entry.getValue());
+
+			if ((titleObjectField != null) &&
+				Objects.equals(titleObjectField.getName(), entry.getKey())) {
+
+				jsonObject.put("Name", entry.getValue());
+			}
+		}
+
+		return jsonObject;
+	}
+
+	private static final String _SOBJECT_NAME_SUFFIX = "__c";
+
+	@Reference
+	private JSONFactory _jsonFactory;
+
+	@Reference
+	private ObjectFieldLocalService _objectFieldLocalService;
 
 	@Reference
 	private Portal _portal;
