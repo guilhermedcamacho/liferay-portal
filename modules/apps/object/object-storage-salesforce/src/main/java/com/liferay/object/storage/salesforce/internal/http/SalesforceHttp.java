@@ -33,12 +33,26 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Guilherme Camacho
  */
-@Component(enabled = false, immediate = true, service = SalesforceHttp.class)
+@Component(enabled = true, immediate = true, service = SalesforceHttp.class)
 public class SalesforceHttp {
 
 	public JSONObject get(long companyId, long groupId, String location) {
 		try {
 			return _invoke(companyId, groupId, location, Http.Method.GET, null);
+		}
+		catch (Exception exception) {
+			return ReflectionUtil.throwException(exception);
+		}
+	}
+
+	public JSONObject patch(
+		long companyId, long groupId, String location,
+		JSONObject bodyJSONObject) {
+
+		try {
+			return _invoke(
+				companyId, groupId, location, Http.Method.PATCH,
+				bodyJSONObject);
 		}
 		catch (Exception exception) {
 			return ReflectionUtil.throwException(exception);
