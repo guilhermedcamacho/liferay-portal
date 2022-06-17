@@ -36,6 +36,16 @@ import org.osgi.service.component.annotations.Reference;
 @Component(enabled = true, immediate = true, service = SalesforceHttp.class)
 public class SalesforceHttp {
 
+	public JSONObject delete(long companyId, long groupId, String location) {
+		try {
+			return _invoke(
+				companyId, groupId, location, Http.Method.DELETE, null);
+		}
+		catch (Exception exception) {
+			return ReflectionUtil.throwException(exception);
+		}
+	}
+
 	public JSONObject get(long companyId, long groupId, String location) {
 		try {
 			return _invoke(companyId, groupId, location, Http.Method.GET, null);

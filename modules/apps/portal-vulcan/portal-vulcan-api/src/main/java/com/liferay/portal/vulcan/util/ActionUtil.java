@@ -144,6 +144,55 @@ public class ActionUtil {
 			siteId, uriInfo);
 	}
 
+	public static String getHttpMethodName(Class<?> clazz, Method method)
+		throws Exception {
+
+		Class<?> superClass = clazz.getSuperclass();
+
+		Method superMethod = superClass.getMethod(
+			method.getName(), method.getParameterTypes());
+
+		for (Annotation annotation : superMethod.getAnnotations()) {
+			Class<? extends Annotation> annotationType =
+				annotation.annotationType();
+
+			Annotation[] annotations = annotationType.getAnnotationsByType(
+				HttpMethod.class);
+
+			if (annotations.length > 0) {
+				HttpMethod httpMethod = (HttpMethod)annotations[0];
+
+				return httpMethod.value();
+			}
+		}
+
+		return null;
+	}
+
+	public static Method getMethod(Class<?> clazz, String methodName) {
+		for (Method method : clazz.getMethods()) {
+			if (!methodName.equals(method.getName())) {
+				continue;
+			}
+
+			return method;
+		}
+
+		return null;
+	}
+
+	public static String getVersion(UriInfo uriInfo) {
+		String version = "";
+
+		List<String> matchedURIs = uriInfo.getMatchedURIs();
+
+		if (!matchedURIs.isEmpty()) {
+			version = matchedURIs.get(matchedURIs.size() - 1);
+		}
+
+		return version;
+	}
+
 	private static Map<String, String> _addAction(
 			String actionName, Class<?> clazz, Long id, String methodName,
 			ModelResourcePermission<?> modelResourcePermission, Object object,
@@ -188,9 +237,9 @@ public class ActionUtil {
 			return null;
 		}
 
-		Method method = _getMethod(clazz, methodName);
+		Method method = getMethod(clazz, methodName);
 
-		String httpMethodName = _getHttpMethodName(clazz, method);
+		String httpMethodName = getHttpMethodName(clazz, method);
 
 		if ((object != null) &&
 			OAuth2ProviderScopeLiferayAccessControlContext.
@@ -243,7 +292,7 @@ public class ActionUtil {
 				UriBuilder uriBuilder = UriInfoUtil.getBaseUriBuilder(uriInfo);
 
 				return uriBuilder.path(
-					_getVersion(uriInfo)
+					getVersion(uriInfo)
 				).path(
 					clazz.getSuperclass(), methodName
 				).resolveTemplates(
@@ -276,43 +325,6 @@ public class ActionUtil {
 
 				return null;
 			}
-		}
-
-		return null;
-	}
-
-	private static String _getHttpMethodName(Class<?> clazz, Method method)
-		throws Exception {
-
-		Class<?> superClass = clazz.getSuperclass();
-
-		Method superMethod = superClass.getMethod(
-			method.getName(), method.getParameterTypes());
-
-		for (Annotation annotation : superMethod.getAnnotations()) {
-			Class<? extends Annotation> annotationType =
-				annotation.annotationType();
-
-			Annotation[] annotations = annotationType.getAnnotationsByType(
-				HttpMethod.class);
-
-			if (annotations.length > 0) {
-				HttpMethod httpMethod = (HttpMethod)annotations[0];
-
-				return httpMethod.value();
-			}
-		}
-
-		return null;
-	}
-
-	private static Method _getMethod(Class<?> clazz, String methodName) {
-		for (Method method : clazz.getMethods()) {
-			if (!methodName.equals(method.getName())) {
-				continue;
-			}
-
-			return method;
 		}
 
 		return null;
@@ -354,18 +366,6 @@ public class ActionUtil {
 		}
 
 		return parameterMap;
-	}
-
-	private static String _getVersion(UriInfo uriInfo) {
-		String version = "";
-
-		List<String> matchedURIs = uriInfo.getMatchedURIs();
-
-		if (!matchedURIs.isEmpty()) {
-			version = matchedURIs.get(matchedURIs.size() - 1);
-		}
-
-		return version;
 	}
 
 	private static boolean _hasPermission(

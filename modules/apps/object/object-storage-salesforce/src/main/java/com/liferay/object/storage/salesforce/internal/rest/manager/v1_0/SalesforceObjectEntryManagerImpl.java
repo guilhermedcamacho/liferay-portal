@@ -22,6 +22,7 @@ import com.liferay.object.rest.dto.v1_0.Status;
 import com.liferay.object.rest.dto.v1_0.util.CreatorUtil;
 import com.liferay.object.rest.manager.v1_0.BaseObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
+import com.liferay.object.rest.resource.v1_0.ObjectEntryResource;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.storage.salesforce.internal.http.SalesforceHttp;
 import com.liferay.petra.sql.dsl.expression.Predicate;
@@ -34,6 +35,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -42,6 +44,10 @@ import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
+import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
+
+import java.lang.reflect.Method;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -53,6 +59,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.ws.rs.Path;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -129,6 +145,13 @@ public class SalesforceObjectEntryManagerImpl
 			String externalReferenceCode, long companyId,
 			ObjectDefinition objectDefinition, String scopeKey)
 		throws Exception {
+
+		_salesforceHttp.delete(
+			companyId, getGroupId(objectDefinition, scopeKey),
+			StringBundler.concat(
+				"sobjects/",
+				_getSalesforceObjectName(objectDefinition.getName()), "/",
+				externalReferenceCode));
 	}
 
 	@Override
@@ -173,8 +196,9 @@ public class SalesforceObjectEntryManagerImpl
 
 		return Page.of(
 			_toObjectEntries(
-				companyId, responseJSONObject1.getJSONArray("records"),
-				objectDefinition),
+				companyId, getGroupId(objectDefinition, scopeKey),
+				dtoConverterContext,
+				responseJSONObject1.getJSONArray("records"), objectDefinition),
 			pagination,
 			jsonArray.getJSONObject(
 				0
@@ -225,10 +249,12 @@ public class SalesforceObjectEntryManagerImpl
 			return null;
 		}
 
+		long groupId = getGroupId(objectDefinition, scopeKey);
+
 		return _toObjectEntry(
-			companyId, _getDateFormat(),
+			companyId, groupId, _getDateFormat(), dtoConverterContext,
 			_salesforceHttp.get(
-				companyId, getGroupId(objectDefinition, scopeKey),
+				companyId, groupId,
 				StringBundler.concat(
 					"sobjects/",
 					_getSalesforceObjectName(objectDefinition.getName()), "/",
@@ -256,8 +282,65 @@ public class SalesforceObjectEntryManagerImpl
 		return null;
 	}
 
+	private Map<String, String> _addAction(
+			Class<?> clazz, String externalReferenceCode, String methodName,
+			Long siteId, UriInfo uriInfo)
+		throws Exception {
+
+		if (uriInfo == null) {
+			return new HashMap<>();
+		}
+
+		return HashMapBuilder.put(
+			"href",
+			() -> {
+				UriBuilder uriBuilder = UriInfoUtil.getBaseUriBuilder(uriInfo);
+
+				return uriBuilder.path(
+					ActionUtil.getVersion(uriInfo)
+				).path(
+					clazz.getSuperclass(), methodName
+				).resolveTemplates(
+					_getParameterMap(
+						clazz, externalReferenceCode, methodName, siteId,
+						uriInfo)
+				).toTemplate();
+			}
+		).put(
+			"method",
+			ActionUtil.getHttpMethodName(
+				clazz, ActionUtil.getMethod(clazz, methodName))
+		).build();
+	}
+
 	private DateFormat _getDateFormat() {
 		return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+	}
+
+	private String _getFirstParameterNameFromPath(
+		Class<?> clazz, String methodName) {
+
+		Method[] methods = clazz.getMethods();
+
+		for (Method method : methods) {
+			if (Objects.equals(method.getName(), methodName)) {
+				Path path = method.getAnnotation(Path.class);
+
+				if (path == null) {
+					return null;
+				}
+
+				Matcher matcher = _pattern.matcher(path.value());
+
+				if (matcher.find()) {
+					return matcher.group(1);
+				}
+
+				return null;
+			}
+		}
+
+		return null;
 	}
 
 	private ObjectField _getObjectFieldByExternalReferenceCode(
@@ -287,6 +370,44 @@ public class SalesforceObjectEntryManagerImpl
 		return null;
 	}
 
+	private Map<String, Object> _getParameterMap(
+		Class<?> clazz, String externalReferenceCode, String methodName,
+		Long siteId, UriInfo uriInfo) {
+
+		MultivaluedMap<String, String> pathParameters =
+			uriInfo.getPathParameters();
+
+		Set<Map.Entry<String, List<String>>> entrySet =
+			pathParameters.entrySet();
+
+		Stream<Map.Entry<String, List<String>>> stream = entrySet.stream();
+
+		Map<String, Object> parameterMap = stream.collect(
+			Collectors.toMap(
+				Map.Entry::getKey,
+				entry -> {
+					List<String> value = entry.getValue();
+
+					return value.get(0);
+				}));
+
+		String firstParameterName = _getFirstParameterNameFromPath(
+			clazz.getSuperclass(), methodName);
+
+		if (Validator.isNull(firstParameterName)) {
+			return parameterMap;
+		}
+
+		if ((siteId != null) && Objects.equals(firstParameterName, "siteId")) {
+			parameterMap.put(firstParameterName, siteId);
+		}
+		else {
+			parameterMap.put(firstParameterName, externalReferenceCode);
+		}
+
+		return parameterMap;
+	}
+
 	private String _getSalesforceObjectName(String objectDefinitionName) {
 		return StringUtil.removeFirst(objectDefinitionName, "C_") +
 			CUSTOM_OBJECT_SUFFIX;
@@ -299,24 +420,31 @@ public class SalesforceObjectEntryManagerImpl
 	}
 
 	private List<ObjectEntry> _toObjectEntries(
-			long companyId, JSONArray jsonArray,
+			long companyId, long groupId,
+			DTOConverterContext dtoConverterContext, JSONArray jsonArray,
 			ObjectDefinition objectDefinition)
 		throws Exception {
 
 		return JSONUtil.toList(
 			jsonArray,
 			jsonObject -> _toObjectEntry(
-				companyId, _getDateFormat(), jsonObject, objectDefinition));
+				companyId, groupId, _getDateFormat(), dtoConverterContext,
+				jsonObject, objectDefinition));
 	}
 
 	private ObjectEntry _toObjectEntry(
-			long companyId, DateFormat dateFormat, JSONObject jsonObject,
+			long companyId, long groupId, DateFormat dateFormat,
+			DTOConverterContext dtoConverterContext, JSONObject jsonObject,
 			ObjectDefinition objectDefinition)
 		throws Exception {
 
 		ObjectEntry objectEntry = new ObjectEntry() {
 			{
-				actions = Collections.emptyMap();
+				_jsonFactory.createJSONObject();
+				actions = HashMapBuilder.put(
+					"delete",
+					Collections.<String, String>emptyMap()
+				).build();
 				creator = CreatorUtil.toCreator(
 					_portal, Optional.empty(),
 					_userLocalService.fetchUserByExternalReferenceCode(
@@ -406,8 +534,13 @@ public class SalesforceObjectEntryManagerImpl
 			_jsonFactory.looseSerialize(jsonObjectProperties));
 	}
 
+	private static final Pattern _pattern = Pattern.compile("\\{(.*?)\\}");
+
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private ObjectEntryResource _objectEntryResource;
 
 	@Reference
 	private ObjectFieldLocalService _objectFieldLocalService;
