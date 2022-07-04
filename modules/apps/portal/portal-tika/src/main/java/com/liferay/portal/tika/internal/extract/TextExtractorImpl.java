@@ -15,6 +15,7 @@
 package com.liferay.portal.tika.internal.extract;
 
 import com.liferay.petra.io.StreamUtil;
+import com.liferay.petra.io.security.SafePNGInputStream;
 import com.liferay.petra.io.unsync.UnsyncBufferedInputStream;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.process.ProcessCallable;
@@ -78,12 +79,10 @@ public class TextExtractorImpl implements TextExtractor {
 
 			boolean forkProcess = false;
 
-			if (!inputStream.markSupported()) {
-				inputStream = new UnsyncBufferedInputStream(inputStream);
-			}
-
 			if (PropsValues.TEXT_EXTRACTION_FORK_PROCESS_ENABLED) {
-				String mimeType = tika.detect(inputStream);
+				String mimeType = tika.detect(
+					inputStream.markSupported() ? inputStream :
+						new UnsyncBufferedInputStream(inputStream));
 
 				if (ArrayUtil.contains(
 						PropsValues.TEXT_EXTRACTION_FORK_PROCESS_MIME_TYPES,
@@ -122,6 +121,13 @@ public class TextExtractorImpl implements TextExtractor {
 
 	private static String _parseToString(Tika tika, InputStream inputStream)
 		throws IOException, TikaException {
+
+		final boolean sanitizedInputStream =
+			inputStream instanceof SafePNGInputStream ? true : false;
+
+		if (!inputStream.markSupported()) {
+			inputStream = new UnsyncBufferedInputStream(inputStream);
+		}
 
 		inputStream.mark(1);
 
@@ -172,6 +178,12 @@ public class TextExtractorImpl implements TextExtractor {
 							ContentHandler contentHandler, Metadata metadata,
 							boolean outputHtml)
 						throws IOException, SAXException {
+
+						if (sanitizedInputStream) {
+							super.parseEmbedded(
+								inputStream, contentHandler, metadata,
+								outputHtml);
+						}
 
 						String mimeType = tika.detect(inputStream);
 

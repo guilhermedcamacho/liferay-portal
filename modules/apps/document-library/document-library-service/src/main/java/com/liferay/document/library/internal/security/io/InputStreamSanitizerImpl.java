@@ -16,6 +16,7 @@ package com.liferay.document.library.internal.security.io;
 
 import com.liferay.document.library.internal.util.InputStreamUtil;
 import com.liferay.document.library.security.io.InputStreamSanitizer;
+import com.liferay.petra.io.security.SafePNGInputStream;
 
 import java.io.InputStream;
 

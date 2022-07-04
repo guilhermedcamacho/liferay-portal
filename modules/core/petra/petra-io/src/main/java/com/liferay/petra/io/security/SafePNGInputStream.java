@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.liferay.document.library.internal.security.io;
+package com.liferay.petra.io.security;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

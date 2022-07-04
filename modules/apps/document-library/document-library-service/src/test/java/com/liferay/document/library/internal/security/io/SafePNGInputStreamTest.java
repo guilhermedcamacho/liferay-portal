@@ -16,6 +16,7 @@ package com.liferay.document.library.internal.security.io;
 
 import com.liferay.document.library.internal.util.InputStreamUtil;
 import com.liferay.petra.io.StreamUtil;
+import com.liferay.petra.io.security.SafePNGInputStream;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.util.ArrayUtil;
