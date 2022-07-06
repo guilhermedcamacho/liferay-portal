@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.LocalRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.repository.capabilities.WorkflowSupport;
 import com.liferay.portal.repository.util.LocalRepositoryWrapper;
 
@@ -55,11 +56,18 @@ public class LiferayWorkflowLocalRepositoryWrapper
 			title, urlTitle, description, changeLog, file, expirationDate,
 			reviewDate, serviceContext);
 
-		DLAppHelperLocalServiceUtil.updateAsset(
-			userId, fileEntry, fileEntry.getFileVersion(),
-			serviceContext.getAssetCategoryIds(),
-			serviceContext.getAssetTagNames(),
-			serviceContext.getAssetLinkEntryIds());
+		try {
+			ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+			DLAppHelperLocalServiceUtil.updateAsset(
+				userId, fileEntry, fileEntry.getFileVersion(),
+				serviceContext.getAssetCategoryIds(),
+				serviceContext.getAssetTagNames(),
+				serviceContext.getAssetLinkEntryIds());
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
 
 		_workflowSupport.addFileEntry(userId, fileEntry, serviceContext);
 

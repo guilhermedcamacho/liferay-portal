@@ -44,6 +44,8 @@ import com.liferay.portal.kernel.security.permission.UserBag;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -165,6 +167,13 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 	@Override
 	public void updatePermissionFields(
 		String resourceName, String resourceClassPK) {
+
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if ((serviceContext != null) && !serviceContext.isIndexingEnabled()) {
+			return;
+		}
 
 		try {
 			Indexer<?> indexer = indexerRegistry.nullSafeGetIndexer(
