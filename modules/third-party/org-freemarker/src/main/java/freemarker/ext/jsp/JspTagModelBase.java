@@ -19,15 +19,15 @@
 
 package freemarker.ext.jsp;
 
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import freemarker.core._DelayedJQuote;
@@ -49,17 +49,22 @@ class JspTagModelBase {
     private final Class tagClass;
     private final Method dynaSetter;
     private final Map propertySetters = new HashMap();
-    
-    protected JspTagModelBase(String tagName, Class tagClass) throws IntrospectionException {
+
+    protected JspTagModelBase(String tagName, Class tagClass) {
         this.tagName = tagName;
         this.tagClass = tagClass;
-        BeanInfo bi = Introspector.getBeanInfo(tagClass);
-        PropertyDescriptor[] pda = bi.getPropertyDescriptors();
-        for (int i = 0; i < pda.length; i++) {
-            PropertyDescriptor pd = pda[i];
-            Method m = pd.getWriteMethod();
-            if (m != null) {
-                propertySetters.put(pd.getName(), m);
+        for (Field field : _getAllFields(tagClass)) {
+            Method setMethod = null;
+            try {
+                setMethod = tagClass.getMethod(
+                    "set" +
+                    Character.toUpperCase(field.getName( ).charAt(1)) +
+                    field.getName().substring(2), field.getType());
+            }
+            catch (NoSuchMethodException e) {
+            }
+            if (setMethod != null) {
+                propertySetters.put(field.getName().replaceFirst("_",""), setMethod);
             }
         }
         // Check to see if the tag implements the JSP2.0 DynamicAttributes
@@ -67,25 +72,25 @@ class JspTagModelBase {
         Method dynaSetter;
         try {
             dynaSetter = tagClass.getMethod("setDynamicAttribute",
-                            new Class[] {String.class, String.class, Object.class});
+                new Class[] {String.class, String.class, Object.class});
         } catch (NoSuchMethodException nsme) {
             dynaSetter = null;
         }
         this.dynaSetter = dynaSetter;
     }
-    
+
     Object getTagInstance() throws IllegalAccessException, InstantiationException {
         return tagClass.newInstance();
     }
-    
+
     void setupTag(Object tag, Map args, ObjectWrapper wrapper)
-    throws TemplateModelException, 
-        InvocationTargetException, 
+        throws TemplateModelException,
+        InvocationTargetException,
         IllegalAccessException {
         if (args != null && !args.isEmpty()) {
-            ObjectWrapperAndUnwrapper unwrapper = 
-                    wrapper instanceof ObjectWrapperAndUnwrapper ? (ObjectWrapperAndUnwrapper) wrapper
-                            : BeansWrapper.getDefaultInstance();  // [2.4] Throw exception in this case
+            ObjectWrapperAndUnwrapper unwrapper =
+                wrapper instanceof ObjectWrapperAndUnwrapper ? (ObjectWrapperAndUnwrapper) wrapper
+                    : BeansWrapper.getDefaultInstance();  // [2.4] Throw exception in this case
             final Object[] argArray = new Object[1];
             for (Iterator iter = args.entrySet().iterator(); iter.hasNext(); ) {
                 final Map.Entry entry = (Map.Entry) iter.next();
@@ -96,38 +101,38 @@ class JspTagModelBase {
                 if (setterMethod == null) {
                     if (dynaSetter == null) {
                         throw new TemplateModelException("Unknown property "
-                                + StringUtil.jQuote(paramName.toString())
-                                + " on instance of " + tagClass.getName());
+                                                         + StringUtil.jQuote(paramName.toString())
+                                                         + " on instance of " + tagClass.getName());
                     } else {
                         dynaSetter.invoke(tag, null, paramName, argArray[0]);
                     }
                 } else {
                     if (arg instanceof BigDecimal) {
                         argArray[0] = BeansWrapper.coerceBigDecimal(
-                                (BigDecimal) arg, setterMethod.getParameterTypes()[0]);
+                            (BigDecimal) arg, setterMethod.getParameterTypes()[0]);
                     }
                     try {
                         setterMethod.invoke(tag, argArray);
                     } catch (Exception e) {
                         final Class setterType = setterMethod.getParameterTypes()[0];
                         final _ErrorDescriptionBuilder desc = new _ErrorDescriptionBuilder(
-                                "Failed to set JSP tag parameter ", new _DelayedJQuote(paramName),
-                                " (declared type: ", new _DelayedShortClassName(setterType)
-                                + ", actual value's type: ",
-                                (argArray[0] != null
-                                        ? (Object) new _DelayedShortClassName(argArray[0].getClass()) : "Null"),
-                                "). See cause exception for the more specific cause...");
+                            "Failed to set JSP tag parameter ", new _DelayedJQuote(paramName),
+                            " (declared type: ", new _DelayedShortClassName(setterType)
+                                                 + ", actual value's type: ",
+                            (argArray[0] != null
+                                ? (Object) new _DelayedShortClassName(argArray[0].getClass()) : "Null"),
+                            "). See cause exception for the more specific cause...");
                         if (e instanceof IllegalArgumentException && !(setterType.isAssignableFrom(String.class))
-                                && argArray[0] != null && argArray[0] instanceof String) {
+                            && argArray[0] != null && argArray[0] instanceof String) {
                             desc.tip("This problem is often caused by unnecessary parameter quotation. Paramters "
-                                    + "aren't quoted in FTL, similarly as they aren't quoted in most languages. "
-                                    + "For example, these parameter assignments are wrong: ",
-                                    "<@my.tag p1=\"true\" p2=\"10\" p3=\"${someVariable}\" p4=\"${x+1}\" />",
-                                    ". The correct form is: ",
-                                    "<@my.tag p1=true p2=10 p3=someVariable p4=x+1 />",
-                                    ". Only string literals are quoted (regardless of where they occur): ",
-                                    "<@my.box style=\"info\" message=\"Hello ${name}!\" width=200 />",
-                                    ".");
+                                     + "aren't quoted in FTL, similarly as they aren't quoted in most languages. "
+                                     + "For example, these parameter assignments are wrong: ",
+                                "<@my.tag p1=\"true\" p2=\"10\" p3=\"${someVariable}\" p4=\"${x+1}\" />",
+                                ". The correct form is: ",
+                                "<@my.tag p1=true p2=10 p3=someVariable p4=x+1 />",
+                                ". Only string literals are quoted (regardless of where they occur): ",
+                                "<@my.box style=\"info\" message=\"Hello ${name}!\" width=200 />",
+                                ".");
                         }
                         throw new _TemplateModelException(e, null, desc);
                     }
@@ -147,8 +152,8 @@ class JspTagModelBase {
             return toTemplateModelExceptionOrRethrow(((TemplateExceptionWrapperJspException) e).getCause());
         }
         return new TemplateModelException(
-                "Error while invoking the " + StringUtil.jQuote(tagName) + " JSP custom tag; see cause exception",
-                e instanceof TemplateException, e);
+            "Error while invoking the " + StringUtil.jQuote(tagName) + " JSP custom tag; see cause exception",
+            e instanceof TemplateException, e);
     }
 
     /**
@@ -161,9 +166,22 @@ class JspTagModelBase {
         // We deliberately don't accept sub-classes. Those are possibly application specific and some want to catch them
         // outside the template.
         return eClass == NullPointerException.class
-                || eClass == IllegalArgumentException.class
-                || eClass == ClassCastException.class
-                || eClass == IndexOutOfBoundsException.class;
+               || eClass == IllegalArgumentException.class
+               || eClass == ClassCastException.class
+               || eClass == IndexOutOfBoundsException.class;
     }
-    
+
+    private List<Field> _getAllFields(Class clazz) {
+        List<Field> fields = new ArrayList<Field>();
+
+        while (clazz != Object.class) {
+            Collections.addAll(fields, clazz.getDeclaredFields());
+
+            clazz = clazz.getSuperclass();
+        }
+
+        return fields;
+    }
+
 }
+/* @generated */
