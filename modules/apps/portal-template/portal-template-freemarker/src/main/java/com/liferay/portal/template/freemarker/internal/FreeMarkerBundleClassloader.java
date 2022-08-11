@@ -21,8 +21,11 @@ import java.net.URLClassLoader;
 
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.osgi.framework.Bundle;
 
@@ -40,10 +43,22 @@ public class FreeMarkerBundleClassloader extends URLClassLoader {
 		}
 
 		Collections.addAll(_bundles, bundles);
+
+		for (Bundle bundle : bundles) {
+			String symbolicName = bundle.getSymbolicName();
+
+			if (symbolicName.startsWith("com.liferay.util.taglib")) {
+				_bundlesMap.put("com.liferay.taglib", bundle);
+			}
+			else {
+				_bundlesMap.put(bundle.getSymbolicName(), bundle);
+			}
+		}
 	}
 
 	public void addBundle(Bundle bundle) {
 		_bundles.add(bundle);
+		_bundlesMap.put(bundle.getSymbolicName(), bundle);
 	}
 
 	@Override
@@ -92,7 +107,17 @@ public class FreeMarkerBundleClassloader extends URLClassLoader {
 
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
-		for (Bundle bundle : _bundles) {
+		Set<Map.Entry<String, Bundle>> entry = _bundlesMap.entrySet();
+
+		Stream<Map.Entry<String, Bundle>> stream = entry.stream();
+
+		Map<String, Bundle> filteredMap = stream.filter(
+			x -> name.startsWith(x.getKey())
+		).collect(
+			Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
+		);
+
+		for (Bundle bundle : filteredMap.values()) {
 			try {
 				return bundle.loadClass(name);
 			}
@@ -115,6 +140,9 @@ public class FreeMarkerBundleClassloader extends URLClassLoader {
 
 		return clazz;
 	}
+
+	private static final Map<String, Bundle> _bundlesMap =
+		new ConcurrentHashMap<>();
 
 	private final Set<Bundle> _bundles = ConcurrentHashMap.newKeySet();
 
