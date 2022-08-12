@@ -14,6 +14,8 @@
 
 package com.liferay.portal.template.freemarker.internal;
 
+import com.liferay.petra.string.StringPool;
+
 import java.io.IOException;
 
 import java.net.URL;
@@ -21,8 +23,10 @@ import java.net.URLClassLoader;
 
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.osgi.framework.Bundle;
 
@@ -32,23 +36,35 @@ import org.osgi.framework.Bundle;
  */
 public class FreeMarkerBundleClassloader extends URLClassLoader {
 
-	public FreeMarkerBundleClassloader(Bundle... bundles) {
+	public FreeMarkerBundleClassloader(
+		String[] symbolicNameMappers, Bundle... bundles) {
+
 		super(new URL[0]);
+
+		if ((symbolicNameMappers != null) && (symbolicNameMappers.length > 0)) {
+			for (String symbolicNameMapper : symbolicNameMappers) {
+				String[] parts = symbolicNameMapper.split(StringPool.EQUAL);
+
+				_symbolicNameMappersMap.put(parts[0], parts[1]);
+			}
+		}
 
 		if (bundles.length == 0) {
 			throw new IllegalArgumentException("Bundles are empty");
 		}
 
-		Collections.addAll(_bundles, bundles);
+		for (Bundle bundle : bundles) {
+			_bundlesMap.put(_getBundleKey(bundle), bundle);
+		}
 	}
 
 	public void addBundle(Bundle bundle) {
-		_bundles.add(bundle);
+		_bundlesMap.put(_getBundleKey(bundle), bundle);
 	}
 
 	@Override
 	public URL findResource(String name) {
-		for (Bundle bundle : _bundles) {
+		for (Bundle bundle : _bundlesMap.values()) {
 			URL url = bundle.getResource(name);
 
 			if (url != null) {
@@ -61,7 +77,7 @@ public class FreeMarkerBundleClassloader extends URLClassLoader {
 
 	@Override
 	public Enumeration<URL> findResources(String name) {
-		for (Bundle bundle : _bundles) {
+		for (Bundle bundle : _bundlesMap.values()) {
 			try {
 				Enumeration<URL> enumeration = bundle.getResources(name);
 
@@ -87,12 +103,18 @@ public class FreeMarkerBundleClassloader extends URLClassLoader {
 	}
 
 	public void removeBundle(Bundle bundle) {
-		_bundles.remove(bundle);
+		_bundlesMap.remove(_getBundleKey(bundle));
 	}
 
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
-		for (Bundle bundle : _bundles) {
+		Map.Entry<String, Bundle> entry = null;
+
+		while ((entry = _getMatchedEntry(
+					(entry != null) ? entry.getKey() : null, name)) != null) {
+
+			Bundle bundle = entry.getValue();
+
 			try {
 				return bundle.loadClass(name);
 			}
@@ -116,6 +138,29 @@ public class FreeMarkerBundleClassloader extends URLClassLoader {
 		return clazz;
 	}
 
-	private final Set<Bundle> _bundles = ConcurrentHashMap.newKeySet();
+	private String _getBundleKey(Bundle bundle) {
+		return _symbolicNameMappersMap.getOrDefault(
+			bundle.getSymbolicName(), bundle.getSymbolicName());
+	}
+
+	private Map.Entry<String, Bundle> _getMatchedEntry(
+		String fromKey, String name) {
+
+		ConcurrentNavigableMap<String, Bundle> bundlesMap =
+			((fromKey == null) || fromKey.isEmpty()) ? _bundlesMap :
+				_bundlesMap.subMap(fromKey, false, _bundlesMap.lastKey(), true);
+
+		for (Map.Entry<String, Bundle> entry : bundlesMap.entrySet()) {
+			if (name.startsWith(entry.getKey())) {
+				return entry;
+			}
+		}
+
+		return null;
+	}
+
+	private final ConcurrentNavigableMap<String, Bundle> _bundlesMap =
+		new ConcurrentSkipListMap<>();
+	private final Map<String, String> _symbolicNameMappersMap = new HashMap<>();
 
 }

@@ -292,7 +292,8 @@ public class FreeMarkerManager extends BaseTemplateManager {
 		_bundle = bundleContext.getBundle();
 
 		_freeMarkerBundleClassloader = new FreeMarkerBundleClassloader(
-			_bundle, FrameworkUtil.getBundle(TagSupport.class));
+			_freeMarkerEngineConfiguration.symbolicNameMappers(), _bundle,
+			FrameworkUtil.getBundle(TagSupport.class));
 
 		int stateMask = ~Bundle.INSTALLED & ~Bundle.UNINSTALLED;
 
