@@ -88,6 +88,13 @@ public interface FreeMarkerEngineConfiguration {
 	public String[] restrictedVariables();
 
 	@Meta.AD(
+		deflt = "com.liferay.util.taglib=com.liferay.taglib",
+		description = "symbolic-name-mappers-description",
+		name = "symbolic-name-mappers-name", required = false
+	)
+	public String[] symbolicNameMappers();
+
+	@Meta.AD(
 		deflt = "rethrow", name = "template-exception-handler", required = false
 	)
 	public String templateExceptionHandler();
