@@ -1,0 +1,101 @@
+diff --git a/freemarker/ext/jsp/JspTagModelBase.java b/freemarker/ext/jsp/JspTagModelBase.java
+index 032cead0ab0e..9d69eed378d4 100644
+--- a/freemarker/ext/jsp/JspTagModelBase.java
++++ b/freemarker/ext/jsp/JspTagModelBase.java
+@@ -19,15 +19,15 @@
+ 
+ package freemarker.ext.jsp;
+ 
+-import java.beans.BeanInfo;
+-import java.beans.IntrospectionException;
+-import java.beans.Introspector;
+-import java.beans.PropertyDescriptor;
++import java.lang.reflect.Field;
+ import java.lang.reflect.InvocationTargetException;
+ import java.lang.reflect.Method;
++import java.lang.reflect.Modifier;
+ import java.math.BigDecimal;
++import java.util.ArrayList;
+ import java.util.HashMap;
+ import java.util.Iterator;
++import java.util.List;
+ import java.util.Map;
+ 
+ import freemarker.core._DelayedJQuote;
+@@ -49,19 +49,28 @@ class JspTagModelBase {
+     private final Class tagClass;
+     private final Method dynaSetter;
+     private final Map propertySetters = new HashMap();
+-    
+-    protected JspTagModelBase(String tagName, Class tagClass) throws IntrospectionException {
++
++    protected JspTagModelBase(String tagName, Class tagClass) {
+         this.tagName = tagName;
+         this.tagClass = tagClass;
+-        BeanInfo bi = Introspector.getBeanInfo(tagClass);
+-        PropertyDescriptor[] pda = bi.getPropertyDescriptors();
+-        for (int i = 0; i < pda.length; i++) {
+-            PropertyDescriptor pd = pda[i];
+-            Method m = pd.getWriteMethod();
+-            if (m != null) {
+-                propertySetters.put(pd.getName(), m);
++
++        for (Field field : _getAllFields(tagClass)) {
++            String name = field.getName();
++
++            if (name.startsWith("_")) {
++                name = name.substring(1);
++            }
++
++            Method setMethod = _getMethod(
++                tagClass,
++                "set" + Character.toUpperCase(name.charAt(0)) +
++                name.substring(1));
++
++            if (setMethod != null) {
++                propertySetters.put(name, setMethod);
+             }
+         }
++
+         // Check to see if the tag implements the JSP2.0 DynamicAttributes
+         // interface, to allow setting of arbitrary attributes
+         Method dynaSetter;
+@@ -165,5 +174,36 @@ class JspTagModelBase {
+                 || eClass == ClassCastException.class
+                 || eClass == IndexOutOfBoundsException.class;
+     }
+-    
++
++    private List<Field> _getAllFields(Class clazz) {
++        List<Field> fields = new ArrayList();
++
++        while (clazz != Object.class) {
++            for (Field field : clazz.getDeclaredFields()) {
++                if (Modifier.isStatic(field.getModifiers())) {
++                    continue;
++                }
++
++                fields.add(field);
++            }
++
++            clazz = clazz.getSuperclass();
++        }
++
++        return fields;
++    }
++
++    private Method _getMethod(Class<?> clazz, String name) {
++        for (Method method : clazz.getMethods()) {
++            if (name.equals(method.getName()) &&
++                (method.getParameterCount() == 1)) {
++
++                return method;
++            }
++        }
++
++        return null;
++    }
++
+ }
++/* @generated */
+\ No newline at end of file
