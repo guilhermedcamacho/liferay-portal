@@ -44,10 +44,10 @@ import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectLayoutBoxConstants;
 import com.liferay.object.model.ObjectDefinition;
-import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectLayout;
 import com.liferay.object.model.ObjectLayoutTab;
+import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerTracker;
 import com.liferay.object.scope.ObjectScopeProvider;
@@ -67,12 +67,10 @@ import com.liferay.portal.kernel.search.BooleanClauseFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.Hits;
-import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.search.generic.NestedQuery;
 import com.liferay.portal.kernel.search.generic.TermQueryImpl;
@@ -82,13 +80,14 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
+import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.util.TransformUtil;
 import com.liferay.portlet.asset.util.comparator.AssetTagNameComparator;
 
@@ -150,34 +149,23 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 
 			ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
 
-			Indexer<ObjectEntry> indexer = IndexerRegistryUtil.getIndexer(
-				_objectDefinition.getClassName());
+			Group scopeGroup = themeDisplay.getScopeGroup();
 
-			Hits hits = indexer.search(_buildSearchContext(collectionQuery));
+			Page<ObjectEntry> page = objectEntryManager.getObjectEntries(
+				themeDisplay.getCompanyId(), _objectDefinition,
+				scopeGroup.getGroupKey(), null,
+				_getDTOConverterContext(serviceContext, themeDisplay),
+				(Filter)null, null, null, null);
 
 			return InfoPage.of(
-				TransformUtil.transformToList(
-					hits.getDocs(),
-					document -> {
-						long classPK = GetterUtil.getLong(
-							document.get(Field.ENTRY_CLASS_PK));
-
-						return _toObjectEntry(
-							_objectDefinition.getObjectDefinitionId(),
-							objectEntryManager.fetchObjectEntry(
-								new DefaultDTOConverterContext(
-									true, Collections.emptyMap(), null, null,
-									classPK, serviceContext.getLocale(), null,
-									themeDisplay.getUser()),
-								_objectDefinition, classPK));
-					}),
-				collectionQuery.getPagination(), hits.getLength());
+				(List<ObjectEntry>)page.getItems(),
+				collectionQuery.getPagination(), 3);
 		}
-		catch (PortalException portalException) {
+		catch (Exception exception) {
 			throw new RuntimeException(
 				"Unable to get object entries for object definition " +
 					_objectDefinition.getObjectDefinitionId(),
-				portalException);
+				exception);
 		}
 	}
 
@@ -280,79 +268,6 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 		return true;
 	}
 
-	private SearchContext _buildSearchContext(CollectionQuery collectionQuery)
-		throws PortalException {
-
-		SearchContext searchContext = new SearchContext();
-
-		List<String> assetCategoryIds = new ArrayList<>();
-
-		Optional<Map<String, String[]>> configurationOptional =
-			collectionQuery.getConfigurationOptional();
-
-		Map<String, String[]> configuration = configurationOptional.orElse(
-			Collections.emptyMap());
-
-		ServiceContext serviceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
-		for (AssetVocabulary assetVocabulary :
-				_getAssetVocabularies(serviceContext)) {
-
-			String[] assetCategoryIdsArray = configuration.get(
-				String.valueOf(assetVocabulary.getVocabularyId()));
-
-			if ((assetCategoryIdsArray != null) &&
-				!StringUtil.equals(assetCategoryIdsArray[0], "null")) {
-
-				Collections.addAll(assetCategoryIds, assetCategoryIdsArray);
-			}
-		}
-
-		searchContext.setAssetCategoryIds(
-			ListUtil.toLongArray(assetCategoryIds, Long::parseLong));
-
-		String[] assetTagNames = configuration.get(Field.ASSET_TAG_NAMES);
-
-		if (ArrayUtil.isNotEmpty(assetTagNames) &&
-			Validator.isNotNull(assetTagNames[0])) {
-
-			searchContext.setAssetTagNames(assetTagNames);
-		}
-
-		searchContext.setAttribute(
-			Field.STATUS, WorkflowConstants.STATUS_APPROVED);
-		searchContext.setAttribute(
-			"objectDefinitionId", _objectDefinition.getObjectDefinitionId());
-		searchContext.setBooleanClauses(_getBooleanClauses(collectionQuery));
-		searchContext.setCompanyId(serviceContext.getCompanyId());
-
-		Pagination pagination = collectionQuery.getPagination();
-
-		searchContext.setEnd(pagination.getEnd());
-
-		searchContext.setGroupIds(new long[] {_getGroupId()});
-
-		Optional<KeywordsInfoFilter> keywordsInfoFilterOptional =
-			collectionQuery.getInfoFilterOptional(KeywordsInfoFilter.class);
-
-		if (keywordsInfoFilterOptional.isPresent()) {
-			KeywordsInfoFilter keywordsInfoFilter =
-				keywordsInfoFilterOptional.get();
-
-			searchContext.setKeywords(keywordsInfoFilter.getKeywords());
-		}
-
-		searchContext.setStart(pagination.getStart());
-
-		QueryConfig queryConfig = searchContext.getQueryConfig();
-
-		queryConfig.setHighlightEnabled(false);
-		queryConfig.setScoreEnabled(false);
-
-		return searchContext;
-	}
-
 	private List<AssetVocabulary> _getAssetVocabularies(
 		ServiceContext serviceContext) {
 
@@ -427,6 +342,14 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 			BooleanClauseFactoryUtil.create(
 				booleanQuery, BooleanClauseOccur.MUST.getName())
 		};
+	}
+
+	private DTOConverterContext _getDTOConverterContext(
+		ServiceContext serviceContext, ThemeDisplay themeDisplay) {
+
+		return new DefaultDTOConverterContext(
+			false, null, null, serviceContext.getRequest(), null,
+			themeDisplay.getLocale(), null, themeDisplay.getUser());
 	}
 
 	private String _getFieldName(ObjectField objectField) {
@@ -664,18 +587,6 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 		}
 
 		return false;
-	}
-
-	private ObjectEntry _toObjectEntry(
-		long objectDefinitionId,
-		com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry) {
-
-		ObjectEntry serviceBuilderObjectEntry =
-			_objectEntryLocalService.createObjectEntry(objectEntry.getId());
-
-		serviceBuilderObjectEntry.setObjectDefinitionId(objectDefinitionId);
-
-		return serviceBuilderObjectEntry;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
