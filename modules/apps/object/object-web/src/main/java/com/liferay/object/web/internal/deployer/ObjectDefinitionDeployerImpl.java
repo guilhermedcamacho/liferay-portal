@@ -185,9 +185,9 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				new ObjectEntryInfoItemFieldValuesProvider(
 					_assetDisplayPageFriendlyURLProvider,
 					_infoItemFieldReaderFieldSetProvider, _jsonFactory,
-					_listTypeEntryLocalService, _objectEntryLocalService,
-					_objectFieldLocalService, _templateInfoItemFieldSetProvider,
-					_userLocalService),
+					_listTypeEntryLocalService, objectDefinition,
+					_objectEntryLocalService, _objectFieldLocalService,
+					_templateInfoItemFieldSetProvider, _userLocalService),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"company.id", objectDefinition.getCompanyId()
 				).put(
@@ -204,7 +204,10 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				).build()),
 			_bundleContext.registerService(
 				InfoItemObjectProvider.class,
-				new ObjectEntryInfoItemObjectProvider(_objectEntryLocalService),
+				new ObjectEntryInfoItemObjectProvider(
+					objectDefinition,
+					_objectEntryManagerTracker.getObjectEntryManager(
+						objectDefinition.getStorageType())),
 				HashMapDictionaryBuilder.<String, Object>put(
 					Constants.SERVICE_RANKING, 100
 				).put(
@@ -243,7 +246,8 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 			_bundleContext.registerService(
 				InfoListRenderer.class,
 				new ObjectEntryTableInfoListRenderer(
-					_infoItemRendererTracker, _objectFieldLocalService),
+					_infoItemRendererTracker, objectDefinition,
+					_objectFieldLocalService),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"company.id", objectDefinition.getCompanyId()
 				).put(
