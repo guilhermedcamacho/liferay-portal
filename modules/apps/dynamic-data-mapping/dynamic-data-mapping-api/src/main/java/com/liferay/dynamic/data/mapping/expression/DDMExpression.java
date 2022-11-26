@@ -18,6 +18,7 @@ import com.liferay.dynamic.data.mapping.expression.model.Expression;
 
 import java.util.Map;
 
+import com.liferay.petra.sql.dsl.Column;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -27,6 +28,8 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface DDMExpression<T> {
 
 	public T evaluate() throws DDMExpressionException;
+
+	public T translate() throws DDMExpressionException;
 
 	public Expression getModel();
 

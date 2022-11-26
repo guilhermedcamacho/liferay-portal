@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.liferay.petra.sql.dsl.Column;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -54,6 +55,22 @@ public class DDMExpressionImpl<T> implements DDMExpression<T> {
 					_ddmExpressionObserver, _ddmExpressionParameterAccessor);
 
 			return (T)_expressionContext.accept(ddmExpressionEvaluatorVisitor);
+		}
+		catch (Exception exception) {
+			throw new DDMExpressionException(exception);
+		}
+	}
+
+	@Override
+	public T translate() throws DDMExpressionException {
+		try {
+			DDMExpressionDSLQueryTranslatorVisitor ddmExpressionDSLQueryTranslatorVisitor =
+				new DDMExpressionDSLQueryTranslatorVisitor(
+					_ddmExpressionFunctionFactories, _variables,
+					_ddmExpressionActionHandler, _ddmExpressionFieldAccessor,
+					_ddmExpressionObserver, _ddmExpressionParameterAccessor);
+
+			return (T)_expressionContext.accept(ddmExpressionDSLQueryTranslatorVisitor);
 		}
 		catch (Exception exception) {
 			throw new DDMExpressionException(exception);
