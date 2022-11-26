@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.liferay.petra.sql.dsl.Column;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -61,6 +62,22 @@ public class DDMExpressionImpl<T> implements DDMExpression<T> {
 	}
 
 	@Override
+	public T translate() throws DDMExpressionException {
+		try {
+			DDMExpressionDSLQueryTranslatorVisitor ddmExpressionDSLQueryTranslatorVisitor =
+				new DDMExpressionDSLQueryTranslatorVisitor(
+					_ddmExpressionFunctionFactories, _variables,
+					_ddmExpressionActionHandler, _ddmExpressionFieldAccessor,
+					_ddmExpressionObserver, _ddmExpressionParameterAccessor, _columns);
+
+			return (T)_expressionContext.accept(ddmExpressionDSLQueryTranslatorVisitor);
+		}
+		catch (Exception exception) {
+			throw new DDMExpressionException(exception);
+		}
+	}
+
+	@Override
 	public Expression getModel() {
 		return _expressionContext.accept(new DDMExpressionModelVisitor());
 	}
@@ -77,6 +94,11 @@ public class DDMExpressionImpl<T> implements DDMExpression<T> {
 	@Override
 	public void setVariables(Map<String, Object> variables) {
 		_variables.putAll(variables);
+	}
+
+	@Override
+	public void setColumns(Map<String, Column<?, Object>> columns) {
+		_columns.putAll(columns);
 	}
 
 	protected DDMExpressionImpl(
@@ -167,5 +189,7 @@ public class DDMExpressionImpl<T> implements DDMExpression<T> {
 	private DDMExpressionParameterAccessor _ddmExpressionParameterAccessor;
 	private final DDMExpressionParser.ExpressionContext _expressionContext;
 	private final Map<String, Object> _variables = new HashMap<>();
+
+	private final Map<String, Column<?, Object>> _columns = new HashMap<>();
 
 }
