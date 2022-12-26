@@ -485,8 +485,8 @@ public class ObjectActionLocalServiceImpl
 					existingNotificationTemplate =
 						_notificationTemplateLocalService.
 							addNotificationTemplate(
-								notificationTemplateExternalReferenceCode, type,
-								userId);
+								notificationTemplateExternalReferenceCode,
+								userId, type);
 				}
 
 				if (existingNotificationTemplate != null) {
