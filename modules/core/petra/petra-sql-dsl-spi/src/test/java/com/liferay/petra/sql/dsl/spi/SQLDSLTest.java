@@ -415,6 +415,46 @@ public class SQLDSLTest {
 	}
 
 	@Test
+	public void testDSLFunctionParentheses() {
+		Expression<Long> expression1 =
+			MainExampleTable.INSTANCE.mainExampleIdColumn;
+
+		DSLFunction<Long> expression2 =
+			(DSLFunction<Long>)DSLFunctionFactoryUtil.add(
+				MainExampleTable.INSTANCE.mainExampleIdColumn, 2L);
+
+		expression2 = expression2.withParentheses();
+
+		DSLFunction<Long> dslFunction =
+			(DSLFunction<Long>)DSLFunctionFactoryUtil.multiply(
+				expression1, expression2);
+
+		Assert.assertSame(expression1, dslFunction.getExpressions()[0]);
+		Assert.assertSame(expression2, dslFunction.getExpressions()[1]);
+
+		Assert.assertFalse(dslFunction.isWrapParentheses());
+
+		Assert.assertSame(expression2, expression2.withParentheses());
+
+		DSLQuery dslQuery = DSLQueryFactoryUtil.select(
+			dslFunction
+		).from(
+			MainExampleTable.INSTANCE
+		);
+
+		DefaultASTNodeListener defaultASTNodeListener =
+			new DefaultASTNodeListener();
+
+		Assert.assertEquals(
+			"select MainExample.mainExampleId * (MainExample.mainExampleId + " +
+				"?) from MainExample",
+			dslQuery.toSQL(defaultASTNodeListener));
+
+		Assert.assertEquals(
+			Arrays.asList(2L), defaultASTNodeListener.getScalarValues());
+	}
+
+	@Test
 	public void testElseEnd() {
 		WhenThenStep<String> whenThenStep = DSLFunctionFactoryUtil.caseWhenThen(
 			MainExampleTable.INSTANCE.mainExampleIdColumn.eq(
@@ -561,6 +601,13 @@ public class SQLDSLTest {
 				DSLFunctionFactoryUtil.multiply(
 					MainExampleTable.INSTANCE.mainExampleIdColumn,
 					ReferenceExampleTable.INSTANCE.referenceExampleIdColumn)));
+		Assert.assertEquals(
+			"MainExample.mainExampleId * MainExample.mainExampleId + ?",
+			String.valueOf(
+				DSLFunctionFactoryUtil.multiply(
+					MainExampleTable.INSTANCE.mainExampleIdColumn,
+					DSLFunctionFactoryUtil.add(
+						MainExampleTable.INSTANCE.mainExampleIdColumn, 2L))));
 		Assert.assertEquals(
 			"MainExample.mainExampleId - ?",
 			String.valueOf(
