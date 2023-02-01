@@ -30,13 +30,7 @@ public class DSLFunction<T>
 	public DSLFunction(
 		DSLFunctionType dslFunctionType, Expression<?>... expressions) {
 
-		_dslFunctionType = Objects.requireNonNull(dslFunctionType);
-
-		if (expressions.length == 0) {
-			throw new IllegalArgumentException("Expressions is empty");
-		}
-
-		_expressions = expressions;
+		this(dslFunctionType, expressions, false);
 	}
 
 	public DSLFunctionType getDslFunctionType() {
@@ -47,9 +41,25 @@ public class DSLFunction<T>
 		return _expressions;
 	}
 
+	public boolean isWrapParentheses() {
+		return _wrapParentheses;
+	}
+
+	public DSLFunction<T> withParentheses() {
+		if (_wrapParentheses) {
+			return this;
+		}
+
+		return new DSLFunction<>(_dslFunctionType, _expressions, true);
+	}
+
 	@Override
 	protected void doToSQL(
 		Consumer<String> consumer, ASTNodeListener astNodeListener) {
+
+		if (isWrapParentheses()) {
+			consumer.accept("(");
+		}
 
 		consumer.accept(_dslFunctionType.getPrefix());
 
@@ -62,9 +72,28 @@ public class DSLFunction<T>
 		}
 
 		consumer.accept(_dslFunctionType.getPostfix());
+
+		if (isWrapParentheses()) {
+			consumer.accept(")");
+		}
+	}
+
+	private DSLFunction(
+		DSLFunctionType dslFunctionType, Expression<?>[] expressions,
+		boolean wrapParentheses) {
+
+		_dslFunctionType = Objects.requireNonNull(dslFunctionType);
+
+		if (expressions.length == 0) {
+			throw new IllegalArgumentException("Expressions is empty");
+		}
+
+		_expressions = expressions;
+		_wrapParentheses = wrapParentheses;
 	}
 
 	private final DSLFunctionType _dslFunctionType;
 	private final Expression<?>[] _expressions;
+	private final boolean _wrapParentheses;
 
 }
