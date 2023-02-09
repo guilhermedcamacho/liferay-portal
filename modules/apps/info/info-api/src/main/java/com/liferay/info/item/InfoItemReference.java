@@ -34,6 +34,10 @@ public class InfoItemReference {
 		this(className, new ClassPKInfoItemIdentifier(classPK));
 	}
 
+	public InfoItemReference(String className, String classPKString) {
+		this(className, new ClassPKInfoItemIdentifier(classPKString));
+	}
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {

@@ -50,7 +50,7 @@ public class ObjectEntryInfoItemDetailsProvider
 			getInfoItemClassDetails(),
 			new InfoItemReference(
 				_objectDefinition.getClassName(),
-				objectEntry.getObjectEntryId()));
+				objectEntry.getExternalReferenceCode()));
 	}
 
 	private final ObjectDefinition _objectDefinition;

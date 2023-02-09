@@ -29,6 +29,12 @@ public class ClassPKInfoItemIdentifier extends BaseInfoItemIdentifier {
 
 	public ClassPKInfoItemIdentifier(long classPK) {
 		_classPK = classPK;
+		_classPKString = "";
+	}
+
+	public ClassPKInfoItemIdentifier(String classPKString) {
+		_classPKString = classPKString;
+		_classPK = 0;
 	}
 
 	@Override
@@ -51,6 +57,10 @@ public class ClassPKInfoItemIdentifier extends BaseInfoItemIdentifier {
 		return _classPK;
 	}
 
+	public String getClassPKString() {
+		return _classPKString;
+	}
+
 	@Override
 	public InfoItemServiceFilter getInfoItemServiceFilter() {
 		return INFO_ITEM_SERVICE_FILTER;
@@ -69,5 +79,7 @@ public class ClassPKInfoItemIdentifier extends BaseInfoItemIdentifier {
 	}
 
 	private final long _classPK;
+
+	private final String _classPKString;
 
 }

@@ -226,8 +226,15 @@ public class ObjectEntryInfoItemFieldValuesProvider
 
 		ThemeDisplay themeDisplay = _getThemeDisplay();
 
-		if (themeDisplay != null) {
+		if (themeDisplay == null) {
 			return Collections.emptyList();
+		}
+
+		if(_serviceBuilderObjectEntry != null
+		   && Objects.equals(_serviceBuilderObjectEntry.getExternalReferenceCode(), serviceBuilderObjectEntry.getExternalReferenceCode())
+			&& _objectEntryFieldValues != null) {
+
+			return _objectEntryFieldValues;
 		}
 
 		List<InfoFieldValue<Object>> objectEntryFieldValues = new ArrayList<>();
@@ -283,6 +290,9 @@ public class ObjectEntryInfoItemFieldValuesProvider
 						).build()
 					).build(),
 					_getValue(objectField, properties))));
+
+		_serviceBuilderObjectEntry = serviceBuilderObjectEntry;
+		_objectEntryFieldValues = objectEntryFieldValues;
 
 		return objectEntryFieldValues;
 	}
@@ -408,6 +418,9 @@ public class ObjectEntryInfoItemFieldValuesProvider
 
 		return null;
 	}
+
+	private ObjectEntry _serviceBuilderObjectEntry;
+	private List<InfoFieldValue<Object>> _objectEntryFieldValues;
 
 	private final AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
