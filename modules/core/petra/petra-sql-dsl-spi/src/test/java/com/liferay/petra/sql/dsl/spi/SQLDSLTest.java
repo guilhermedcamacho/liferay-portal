@@ -168,10 +168,30 @@ public class SQLDSLTest {
 	public void testAlias() {
 		String name = "alias";
 
-		Alias<String> alias = ReferenceExampleTable.INSTANCE.nameColumn.as(
+		Alias<String> alias1 = ReferenceExampleTable.INSTANCE.nameColumn.as(
 			name);
 
-		Assert.assertSame(name, alias.getName());
+		Assert.assertSame(name, alias1.getName());
+
+		Expression<Long> expression1 = new Scalar<>(2L);
+
+		Expression<Long> expression2 =
+			MainExampleTable.INSTANCE.mainExampleIdColumn;
+
+		DSLFunction<Long> dslFunction =
+			(DSLFunction<Long>)DSLFunctionFactoryUtil.subtract(
+				expression1, expression2);
+
+		Alias<Long> alias2 = dslFunction.as(Long.class, name, Types.BIGINT);
+
+		Assert.assertEquals(Long.class, alias2.getJavaType());
+		Assert.assertSame(name, alias2.getName());
+		Assert.assertEquals(Types.BIGINT, alias2.getSQLType());
+
+		Expression<Long> expression3 = alias2.getExpression();
+
+		Assert.assertEquals(
+			"? - MainExample.mainExampleId", expression3.toString());
 	}
 
 	@Test
