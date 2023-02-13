@@ -31,6 +31,7 @@ import com.liferay.petra.sql.dsl.spi.ast.DefaultASTNodeListener;
 import com.liferay.petra.sql.dsl.spi.expression.AggregateExpression;
 import com.liferay.petra.sql.dsl.spi.expression.DSLFunction;
 import com.liferay.petra.sql.dsl.spi.expression.DSLFunctionType;
+import com.liferay.petra.sql.dsl.spi.expression.Scalar;
 import com.liferay.petra.sql.dsl.spi.expression.TableStar;
 import com.liferay.petra.sql.dsl.spi.query.QueryTable;
 import com.liferay.petra.sql.dsl.spi.query.Select;
@@ -1158,6 +1159,10 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 				(dslFunctionType == DSLFunctionType.CAST_LONG)) {
 
 				return Type.LONG;
+			}
+
+			if (dslFunction.getExpressions()[0] instanceof Scalar) {
+				return _getType(dslFunction.getExpressions()[1]);
 			}
 
 			return _getType(dslFunction.getExpressions()[0]);
