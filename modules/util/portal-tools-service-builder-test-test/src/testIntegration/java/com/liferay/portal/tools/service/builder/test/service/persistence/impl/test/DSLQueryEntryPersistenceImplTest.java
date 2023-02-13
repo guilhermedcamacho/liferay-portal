@@ -32,6 +32,8 @@ import com.liferay.portal.tools.service.builder.test.model.DSLQueryStatusEntryTa
 import com.liferay.portal.tools.service.builder.test.service.persistence.DSLQueryEntryPersistence;
 import com.liferay.portal.tools.service.builder.test.service.persistence.DSLQueryStatusEntryPersistence;
 
+import java.sql.Types;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -359,6 +361,23 @@ public class DSLQueryEntryPersistenceImplTest {
 						DSLQueryStatusEntryTable.INSTANCE.dslQueryStatusEntryId
 					).as(
 						"alias"
+					)
+				).from(
+					DSLQueryStatusEntryTable.INSTANCE
+				).orderBy(
+					DSLQueryStatusEntryTable.INSTANCE.dslQueryStatusEntryId.
+						ascending()
+				)));
+
+		Assert.assertEquals(
+			Arrays.asList(2L, 1L, 0L),
+			_dslQueryEntryPersistence.dslQuery(
+				DSLQueryFactoryUtil.select(
+					DSLFunctionFactoryUtil.subtract(
+						new Scalar<>(3L),
+						DSLQueryStatusEntryTable.INSTANCE.dslQueryStatusEntryId
+					).as(
+						Long.class, "alias", Types.BIGINT
 					)
 				).from(
 					DSLQueryStatusEntryTable.INSTANCE
