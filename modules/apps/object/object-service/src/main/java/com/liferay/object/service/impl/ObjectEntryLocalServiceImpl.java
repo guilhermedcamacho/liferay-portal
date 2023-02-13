@@ -2493,9 +2493,25 @@ public class ObjectEntryLocalServiceImpl
 
 				ddmExpression.setVariables(columnMap);
 
-				Expression<?> expression = ddmExpression.getDSLExpression();
+				ObjectFieldSetting objectFieldSetting =
+					_objectFieldSettingPersistence.fetchByOFI_N(
+						objectField.getObjectFieldId(), "output");
 
-				selectExpressions.add(expression.as(objectField.getName()));
+				ObjectFieldBusinessType objectFieldBusinessType =
+					_objectFieldBusinessTypeRegistry.getObjectFieldBusinessType(
+						objectFieldSetting.getValue());
+
+				Expression<Object> expression =
+					(Expression<Object>)ddmExpression.getDSLExpression();
+
+				selectExpressions.add(
+					expression.as(
+						(Class<Object>)
+							DynamicObjectDefinitionTable.getJavaClass(
+								objectFieldBusinessType.getDBType()),
+						objectField.getName(),
+						DynamicObjectDefinitionTable.getSQLType(
+							objectFieldBusinessType.getDBType())));
 			}
 		}
 
