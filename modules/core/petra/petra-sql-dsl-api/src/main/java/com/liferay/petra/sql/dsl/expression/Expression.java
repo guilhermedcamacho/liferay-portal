@@ -23,6 +23,8 @@ import com.liferay.petra.sql.dsl.query.sort.OrderByExpression;
  */
 public interface Expression<T> extends ASTNode {
 
+	public Alias<T> as(Class<T> javaType, String name, int sqlType);
+
 	public Alias<T> as(String name);
 
 	public OrderByExpression ascending();
