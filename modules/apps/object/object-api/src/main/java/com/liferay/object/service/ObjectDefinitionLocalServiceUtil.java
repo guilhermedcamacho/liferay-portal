@@ -93,6 +93,19 @@ public class ObjectDefinitionLocalServiceUtil {
 	}
 
 	public static ObjectDefinition addSystemObjectDefinition(
+			long userId, boolean enableComments,
+			Map<java.util.Locale, String> labelMap, boolean modifiable,
+			String name, String panelAppOrder, String panelCategoryKey,
+			Map<java.util.Locale, String> pluralLabelMap, String scope,
+			List<com.liferay.object.model.ObjectField> objectFields)
+		throws PortalException {
+
+		return getService().addSystemObjectDefinition(
+			userId, enableComments, labelMap, modifiable, name, panelAppOrder,
+			panelCategoryKey, pluralLabelMap, scope, objectFields);
+	}
+
+	public static ObjectDefinition addSystemObjectDefinition(
 			long userId, String className, String dbTableName,
 			Map<java.util.Locale, String> labelMap, boolean modifiable,
 			String name, String pkObjectFieldDBColumnName,
