@@ -112,6 +112,10 @@ public interface ObjectDefinitionService extends BaseService {
 			long objectDefinitionId)
 		throws PortalException;
 
+	public ObjectDefinition publishSystemObjectDefinition(
+			long objectDefinitionId)
+		throws PortalException;
+
 	public ObjectDefinition updateCustomObjectDefinition(
 			String externalReferenceCode, long objectDefinitionId,
 			long accountEntryRestrictedObjectFieldId,

@@ -139,6 +139,13 @@ public class ObjectDefinitionServiceUtil {
 		return getService().publishCustomObjectDefinition(objectDefinitionId);
 	}
 
+	public static ObjectDefinition publishSystemObjectDefinition(
+			long objectDefinitionId)
+		throws PortalException {
+
+		return getService().publishSystemObjectDefinition(objectDefinitionId);
+	}
+
 	public static ObjectDefinition updateCustomObjectDefinition(
 			String externalReferenceCode, long objectDefinitionId,
 			long accountEntryRestrictedObjectFieldId,
