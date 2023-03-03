@@ -39,6 +39,7 @@ import com.liferay.object.exception.ObjectDefinitionNameException;
 import com.liferay.object.exception.ObjectDefinitionPluralLabelException;
 import com.liferay.object.exception.ObjectDefinitionScopeException;
 import com.liferay.object.exception.ObjectDefinitionStatusException;
+import com.liferay.object.exception.ObjectDefinitionSystemException;
 import com.liferay.object.exception.ObjectDefinitionVersionException;
 import com.liferay.object.exception.ObjectFieldRelationshipTypeException;
 import com.liferay.object.exception.RequiredObjectDefinitionException;
@@ -858,6 +859,7 @@ public class ObjectDefinitionLocalServiceImpl
 		_validateName(0, user.getCompanyId(), name, system);
 		_validatePluralLabel(pluralLabelMap);
 		_validateScope(scope);
+		_validateSystem(modifiable, system);
 		_validateVersion(system, version);
 
 		ObjectDefinition objectDefinition = objectDefinitionPersistence.create(
@@ -1621,6 +1623,22 @@ public class ObjectDefinitionLocalServiceImpl
 		catch (IllegalArgumentException illegalArgumentException) {
 			throw new ObjectDefinitionScopeException(
 				illegalArgumentException.getMessage());
+		}
+	}
+
+	private void _validateSystem(boolean modifiable, boolean system)
+		throws PortalException {
+
+		if (CompanyThreadLocal.isInitializingPortalInstance() ||
+			!FeatureFlagManagerUtil.isEnabled("LPS-167253")) {
+
+			return;
+		}
+
+		if (!modifiable && system) {
+			throw new ObjectDefinitionSystemException(
+				"System object definitions cannot be created when they are " +
+					"not modifiable");
 		}
 	}
 
