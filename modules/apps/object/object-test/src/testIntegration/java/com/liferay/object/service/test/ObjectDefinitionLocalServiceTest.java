@@ -434,6 +434,7 @@ public class ObjectDefinitionLocalServiceTest {
 		Assert.assertFalse(objectDefinition.isEnableCategorization());
 		Assert.assertFalse(objectDefinition.isEnableComments());
 		Assert.assertFalse(objectDefinition.isEnableObjectEntryHistory());
+		Assert.assertTrue(objectDefinition.isModifiable());
 		Assert.assertEquals(externalReferenceCode, objectDefinition.getName());
 		Assert.assertEquals(
 			externalReferenceCode, objectDefinition.getPluralLabel());
@@ -700,6 +701,25 @@ public class ObjectDefinitionLocalServiceTest {
 				objectDefinitionLabelException.getMessage());
 		}
 
+		// Modifiable is true
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.addSystemObjectDefinition(
+				TestPropsValues.getUserId(), "Test", null,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				true, "Test", null, null,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
+				Arrays.asList(
+					ObjectFieldUtil.createObjectField(
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING,
+						RandomTestUtil.randomString(), StringUtil.randomId())));
+
+		Assert.assertTrue(objectDefinition.isModifiable());
+
+		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
+
 		// Name is null
 
 		try {
@@ -794,11 +814,11 @@ public class ObjectDefinitionLocalServiceTest {
 
 		// Duplicate name
 
-		ObjectDefinition objectDefinition =
+		objectDefinition =
 			_objectDefinitionLocalService.addSystemObjectDefinition(
 				TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"Test", null, null,
+				false, "Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
 				Arrays.asList(
@@ -826,7 +846,7 @@ public class ObjectDefinitionLocalServiceTest {
 			_objectDefinitionLocalService.addSystemObjectDefinition(
 				TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"Test", null, null,
+				false, "Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"", null, 1,
 				Arrays.asList(
@@ -850,7 +870,7 @@ public class ObjectDefinitionLocalServiceTest {
 			_objectDefinitionLocalService.addSystemObjectDefinition(
 				TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"Test", null, null,
+				false, "Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				scope, null, 1, Collections.<ObjectField>emptyList());
 
@@ -868,7 +888,7 @@ public class ObjectDefinitionLocalServiceTest {
 			_objectDefinitionLocalService.addSystemObjectDefinition(
 				TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"Test", null, null,
+				false, "Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_COMPANY, null, -1,
 				Collections.<ObjectField>emptyList());
@@ -885,7 +905,7 @@ public class ObjectDefinitionLocalServiceTest {
 			_objectDefinitionLocalService.addSystemObjectDefinition(
 				TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"Test", null, null,
+				false, "Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_COMPANY, null, 0,
 				Collections.<ObjectField>emptyList());
@@ -904,7 +924,7 @@ public class ObjectDefinitionLocalServiceTest {
 			_objectDefinitionLocalService.addSystemObjectDefinition(
 				TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"Test", null, null,
+				false, "Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
 				Collections.<ObjectField>emptyList());
@@ -931,6 +951,10 @@ public class ObjectDefinitionLocalServiceTest {
 
 		Assert.assertNull(
 			_messageBus.getDestination(objectDefinition.getDestinationName()));
+
+		// Modifiable
+
+		Assert.assertFalse(objectDefinition.isModifiable());
 
 		// Resources
 
@@ -1067,7 +1091,7 @@ public class ObjectDefinitionLocalServiceTest {
 			_objectDefinitionLocalService.addSystemObjectDefinition(
 				TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"Test", null, null,
+				false, "Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
 				Collections.<ObjectField>emptyList());
@@ -1412,7 +1436,8 @@ public class ObjectDefinitionLocalServiceTest {
 			objectDefinition =
 				_objectDefinitionLocalService.addSystemObjectDefinition(
 					TestPropsValues.getUserId(), name, null,
-					LocalizedMapUtil.getLocalizedMap(label), name, null, null,
+					LocalizedMapUtil.getLocalizedMap(label), false, name, null,
+					null,
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
 					ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
