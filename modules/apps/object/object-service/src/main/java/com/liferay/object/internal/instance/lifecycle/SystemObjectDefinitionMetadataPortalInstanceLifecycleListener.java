@@ -19,6 +19,8 @@ import com.liferay.item.selector.ItemSelectorViewDescriptorRenderer;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.notification.handler.NotificationHandler;
 import com.liferay.notification.term.evaluator.NotificationTermEvaluator;
+import com.liferay.object.admin.rest.dto.v1_0.Status;
+import com.liferay.object.admin.rest.resource.v1_0.ObjectDefinitionResource;
 import com.liferay.object.internal.item.selector.SystemObjectEntryItemSelectorView;
 import com.liferay.object.internal.notification.handler.ObjectDefinitionNotificationHandler;
 import com.liferay.object.internal.notification.term.contributor.ObjectDefinitionNotificationTermEvaluator;
@@ -45,15 +47,26 @@ import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener
 import com.liferay.portal.instance.lifecycle.EveryNodeEveryStartup;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
 import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Release;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
+
+import java.util.List;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -81,6 +94,8 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 
 			_apply(company.getCompanyId(), systemObjectDefinitionMetadata);
 		}
+
+		_importJSONObjectDefinition(company);
 	}
 
 	@Activate
@@ -193,17 +208,81 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 		}
 	}
 
+	private void _importJSONObjectDefinition(Company company) {
+		JSONObject objectDefinitionJSONObject = null;
+
+		try {
+			objectDefinitionJSONObject = _jsonFactory.createJSONObject(
+				StringUtil.read(getClass(), "dependencies/bookmarks.json"));
+		}
+		catch (JSONException jsonException) {
+			throw new RuntimeException(jsonException);
+		}
+
+		List<User> users = _userLocalService.getCompanyUsers(
+			company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+
+		User currentUser = users.get(0);
+
+//		PermissionThreadLocal.setPermissionChecker(
+//			_defaultPermissionCheckerFactory.create(currentUser));
+//
+//		PrincipalThreadLocal.setName(currentUser.getUserId());
+
+		ObjectDefinitionResource.Builder objectDefinitionResourceBuilder =
+			_objectDefinitionResourceFactory.create();
+
+		ObjectDefinitionResource objectDefinitionResource =
+			objectDefinitionResourceBuilder.checkPermissions(
+				false
+			).user(
+				currentUser
+			).build();
+
+		com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition
+			objectDefinition =
+				com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition.toDTO(
+					objectDefinitionJSONObject.toString());
+
+		try {
+			objectDefinition =
+				objectDefinitionResource.
+					putObjectDefinitionByExternalReferenceCode(
+						objectDefinition.getExternalReferenceCode(),
+						objectDefinition);
+
+			Status status = objectDefinition.getStatus();
+
+			if (status.getCode() != 0) {
+				objectDefinitionResource.postObjectDefinitionPublish(
+					objectDefinition.getId());
+			}
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		SystemObjectDefinitionMetadataPortalInstanceLifecycleListener.class);
 
 	private BundleContext _bundleContext;
 
 	@Reference
+	private PermissionCheckerFactory _defaultPermissionCheckerFactory;
+
+	@Reference
 	private ItemSelectorViewDescriptorRenderer<InfoItemItemSelectorCriterion>
 		_itemSelectorViewDescriptorRenderer;
 
 	@Reference
+	private JSONFactory _jsonFactory;
+
+	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Reference
+	private ObjectDefinitionResource.Factory _objectDefinitionResourceFactory;
 
 	@Reference
 	private ObjectEntryLocalService _objectEntryLocalService;
