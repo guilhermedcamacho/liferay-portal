@@ -19,6 +19,8 @@ import com.liferay.item.selector.ItemSelectorViewDescriptorRenderer;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.notification.handler.NotificationHandler;
 import com.liferay.notification.term.evaluator.NotificationTermEvaluator;
+import com.liferay.object.admin.rest.dto.v1_0.Status;
+import com.liferay.object.admin.rest.resource.v1_0.ObjectDefinitionResource;
 import com.liferay.object.internal.item.selector.SystemObjectEntryItemSelectorView;
 import com.liferay.object.internal.notification.handler.ObjectDefinitionNotificationHandler;
 import com.liferay.object.internal.notification.term.contributor.ObjectDefinitionNotificationTermEvaluator;
@@ -48,6 +50,9 @@ import com.liferay.portal.instance.lifecycle.EveryNodeEveryStartup;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
 import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -58,6 +63,7 @@ import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -76,7 +82,9 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 	implements EveryNodeEveryStartup {
 
 	@Override
-	public void portalInstanceRegistered(Company company) {
+	public void portalInstanceRegistered(Company company)
+		throws PortalException {
+
 		if (_log.isDebugEnabled()) {
 			_log.debug("Registered portal instance " + company);
 		}
@@ -85,6 +93,10 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 				_serviceTrackerList) {
 
 			_apply(company.getCompanyId(), systemObjectDefinitionMetadata);
+		}
+
+		if (FeatureFlagManagerUtil.isEnabled("LPS-167253")) {
+			_importJSONObjectDefinition(company);
 		}
 	}
 
@@ -248,6 +260,86 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 		}
 	}
 
+	private void _importJSONObjectDefinition(Company company)
+		throws PortalException {
+
+		JSONObject objectDefinitionJSONObject = null;
+
+		objectDefinitionJSONObject = _jsonFactory.createJSONObject(
+			StringUtil.read(getClass(), "dependencies/bookmarks.json"));
+
+		//		String name = PrincipalThreadLocal.getName();
+		//
+
+		// 		PermissionChecker permissionChecker =
+
+		//			PermissionThreadLocal.getPermissionChecker();
+
+		//		User defaultUser = company.getDefaultUser();
+
+		//		try {
+		//			PrincipalThreadLocal.setName(defaultUser.getUserId());
+		//
+		//			PermissionThreadLocal.setPermissionChecker(
+		//				_defaultPermissionCheckerFactory.create(defaultUser));
+
+		//		PermissionThreadLocal.setAddResource(true);
+
+		ObjectDefinitionResource.Builder objectDefinitionResourceBuilder =
+			_objectDefinitionResourceFactory.create();
+
+		ObjectDefinitionResource objectDefinitionResource =
+			objectDefinitionResourceBuilder.checkPermissions(
+				false
+			).user(
+				company.getDefaultUser()
+			).build();
+
+		com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition
+			objectDefinition =
+				com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition.toDTO(
+					objectDefinitionJSONObject.toString());
+
+		ObjectDefinition bookmarkObjectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinition(
+				company.getCompanyId(), "C_" + objectDefinition.getName());
+
+		if (bookmarkObjectDefinition != null) {
+			return;
+		}
+
+		try {
+			objectDefinition = objectDefinitionResource.postObjectDefinition(
+				objectDefinition);
+
+			Status status = objectDefinition.getStatus();
+
+			if (status.getCode() != 0) {
+
+				//					Role role = _roleLocalService.getRole(company.getCompanyId(), RoleConstants.USER);
+
+				//
+				//					_resourcePermissionLocalService.addResourcePermission(
+				//						company.getCompanyId(), ObjectDefinition.class.getName(),
+				//						ResourceConstants.SCOPE_GROUP, String.valueOf(company.getGroupId()),
+				//						role.getRoleId(), ActionKeys.UPDATE);
+
+				objectDefinitionResource.postObjectDefinitionPublish(
+					objectDefinition.getId());
+			}
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
+		//		}
+		//		finally {
+		//			PrincipalThreadLocal.setName(name);
+		//
+		//			PermissionThreadLocal.setPermissionChecker(
+		//				permissionChecker);
+		//		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		SystemObjectDefinitionMetadataPortalInstanceLifecycleListener.class);
 
@@ -267,10 +359,16 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 		_itemSelectorViewDescriptorRenderer;
 
 	@Reference
+	private JSONFactory _jsonFactory;
+
+	@Reference
 	private ListTypeLocalService _listTypeLocalService;
 
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Reference
+	private ObjectDefinitionResource.Factory _objectDefinitionResourceFactory;
 
 	@Reference
 	private ObjectEntryLocalService _objectEntryLocalService;
@@ -299,6 +397,14 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 		target = "(&(release.bundle.symbolic.name=com.liferay.object.service)(release.schema.version>=1.0.0))"
 	)
 	private Release _release;
+
+	// 	@Reference
+
+	//	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	// 	@Reference
+
+	//	private RoleLocalService _roleLocalService;
 
 	private ServiceTrackerList<SystemObjectDefinitionMetadata>
 		_serviceTrackerList;
