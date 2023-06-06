@@ -1439,10 +1439,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 					entry.getValue(
 					).getAccountEntryRestrictedObjectFieldName());
 
-			if (Objects.equals(
-					serviceBuilderObjectDefinition.getStorageType(),
-					ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT)) {
-
+			if (serviceBuilderObjectDefinition.isDefaultStorageType()) {
 				_objectDefinitionLocalService.enableAccountEntryRestricted(
 					_objectRelationshipLocalService.
 						fetchObjectRelationshipByObjectFieldId2(
