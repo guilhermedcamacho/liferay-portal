@@ -642,12 +642,12 @@ public class ObjectRelatedModelsProviderTest {
 
 			ObjectDefinition objectDefinition = _addObjectDefinition();
 
-			ObjectDefinition systemObjectDefinition =
+			ObjectDefinition accountSystemObjectDefinition =
 				_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
 					companyId, AccountEntry.class.getName());
 
 			_addObjectRelationship(
-				objectDefinition, systemObjectDefinition,
+				objectDefinition, accountSystemObjectDefinition,
 				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 
@@ -661,7 +661,7 @@ public class ObjectRelatedModelsProviderTest {
 
 			_objectEntryLocalService.
 				addOrUpdateExtensionDynamicObjectDefinitionTableValues(
-					user.getUserId(), systemObjectDefinition,
+					user.getUserId(), accountSystemObjectDefinition,
 					accountEntry1.getAccountEntryId(),
 					HashMapBuilder.<String, Serializable>put(
 						_relationshipObjectField.getName(),
@@ -671,7 +671,7 @@ public class ObjectRelatedModelsProviderTest {
 
 			List<ObjectEntry> unrelatedObjectEntries =
 				_objectRelatedModelsProvider.getUnrelatedModels(
-					companyId, 0, systemObjectDefinition,
+					companyId, 0, accountSystemObjectDefinition,
 					objectEntry.getObjectEntryId(),
 					_objectRelationship.getObjectRelationshipId());
 
@@ -681,7 +681,7 @@ public class ObjectRelatedModelsProviderTest {
 
 			_objectEntryLocalService.
 				addOrUpdateExtensionDynamicObjectDefinitionTableValues(
-					user.getUserId(), systemObjectDefinition,
+					user.getUserId(), accountSystemObjectDefinition,
 					accountEntry2.getAccountEntryId(),
 					HashMapBuilder.<String, Serializable>put(
 						_relationshipObjectField.getName(),
@@ -691,7 +691,7 @@ public class ObjectRelatedModelsProviderTest {
 
 			unrelatedObjectEntries =
 				_objectRelatedModelsProvider.getUnrelatedModels(
-					companyId, 0, systemObjectDefinition,
+					companyId, 0, accountSystemObjectDefinition,
 					objectEntry.getObjectEntryId(),
 					_objectRelationship.getObjectRelationshipId());
 
@@ -875,12 +875,12 @@ public class ObjectRelatedModelsProviderTest {
 
 		long[] organizationIds = _addOrganizations(3);
 
-		ObjectDefinition systemObjectDefinition =
+		ObjectDefinition organizationSystemObjectDefinition =
 			_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
 				TestPropsValues.getCompanyId(), Organization.class.getName());
 
 		_addObjectRelationship(
-			_objectDefinition2, systemObjectDefinition,
+			_objectDefinition2, organizationSystemObjectDefinition,
 			ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 
@@ -892,7 +892,8 @@ public class ObjectRelatedModelsProviderTest {
 
 		_testSystemObjectEntry1toMObjectRelatedModels(
 			organization.getName(), objectEntry1.getObjectEntryId(),
-			organizationIds, systemObjectDefinition.getObjectDefinitionId());
+			organizationIds,
+			organizationSystemObjectDefinition.getObjectDefinitionId());
 
 		// Object relationship deletion type cascade
 
@@ -915,7 +916,8 @@ public class ObjectRelatedModelsProviderTest {
 		// Object relationship deletion type disassociate
 
 		_testSystemObjectEntry1toMDeletionTypeDisassociate(
-			organizationIds[0], systemObjectDefinition.getObjectDefinitionId());
+			organizationIds[0],
+			organizationSystemObjectDefinition.getObjectDefinitionId());
 
 		Assert.assertNotNull(
 			_organizationLocalService.fetchOrganization(organizationIds[0]));
@@ -923,7 +925,8 @@ public class ObjectRelatedModelsProviderTest {
 		// Object relationship deletion type prevent
 
 		_testSystemObjectEntry1toMDeletionTypePrevent(
-			organizationIds[0], systemObjectDefinition.getObjectDefinitionId());
+			organizationIds[0],
+			organizationSystemObjectDefinition.getObjectDefinitionId());
 
 		_objectRelationshipLocalService.deleteObjectRelationship(
 			_objectRelationship);
@@ -934,12 +937,12 @@ public class ObjectRelatedModelsProviderTest {
 
 		long[] organizationIds = _addOrganizations(3);
 
-		ObjectDefinition systemObjectDefinition =
+		ObjectDefinition organizationSystemObjectDefinition =
 			_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
 				TestPropsValues.getCompanyId(), Organization.class.getName());
 
 		_addObjectRelationship(
-			_objectDefinition1, systemObjectDefinition,
+			_objectDefinition1, organizationSystemObjectDefinition,
 			ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 			ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
 
@@ -1193,12 +1196,12 @@ public class ObjectRelatedModelsProviderTest {
 
 		long[] userIds = _addUsers(3);
 
-		ObjectDefinition systemObjectDefinition =
+		ObjectDefinition userSystemObjectDefinition =
 			_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
 				TestPropsValues.getCompanyId(), User.class.getName());
 
 		_addObjectRelationship(
-			_objectDefinition2, systemObjectDefinition,
+			_objectDefinition2, userSystemObjectDefinition,
 			ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 
@@ -1209,7 +1212,7 @@ public class ObjectRelatedModelsProviderTest {
 
 		_testSystemObjectEntry1toMObjectRelatedModels(
 			user.getFirstName(), objectEntry1.getObjectEntryId(), userIds,
-			systemObjectDefinition.getObjectDefinitionId());
+			userSystemObjectDefinition.getObjectDefinitionId());
 
 		// Object relationship deletion type cascade
 
@@ -1230,14 +1233,14 @@ public class ObjectRelatedModelsProviderTest {
 		// Object relationship deletion type disassociate
 
 		_testSystemObjectEntry1toMDeletionTypeDisassociate(
-			userIds[0], systemObjectDefinition.getObjectDefinitionId());
+			userIds[0], userSystemObjectDefinition.getObjectDefinitionId());
 
 		Assert.assertNotNull(_userLocalService.fetchUser(userIds[0]));
 
 		// Object relationship deletion type prevent
 
 		_testSystemObjectEntry1toMDeletionTypePrevent(
-			userIds[0], systemObjectDefinition.getObjectDefinitionId());
+			userIds[0], userSystemObjectDefinition.getObjectDefinitionId());
 
 		_objectRelationshipLocalService.deleteObjectRelationship(
 			_objectRelationship);
@@ -1248,12 +1251,12 @@ public class ObjectRelatedModelsProviderTest {
 
 		long[] userIds = _addUsers(3);
 
-		ObjectDefinition systemObjectDefinition =
+		ObjectDefinition userSystemObjectDefinition =
 			_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
 				TestPropsValues.getCompanyId(), User.class.getName());
 
 		_addObjectRelationship(
-			_objectDefinition1, systemObjectDefinition,
+			_objectDefinition1, userSystemObjectDefinition,
 			ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 			ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
 
