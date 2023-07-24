@@ -28,9 +28,12 @@ import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.NoSuchOrganizationException;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Organization;
+import com.liferay.portal.kernel.model.OrganizationConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
@@ -42,6 +45,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -50,6 +54,7 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -192,6 +197,7 @@ public class ObjectRelatedModelsProviderTest {
 
 		// Get related models with database
 
+		_testOrganizationSystemObjectEntry1toMObjectRelatedModelsProviderImpl();
 		_testUserSystemObjectEntry1toMObjectRelatedModelsProviderImpl();
 
 		_addObjectRelationship(
@@ -646,6 +652,20 @@ public class ObjectRelatedModelsProviderTest {
 			primaryKey2, ServiceContextTestUtil.getServiceContext());
 	}
 
+	private long[] _addOrganizations(int count) throws Exception {
+		long[] organizationIds = new long[count];
+
+		for (int i = 0; i < count; i++) {
+			Organization organization = OrganizationTestUtil.addOrganization(
+				OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
+				RandomTestUtil.randomString(), false);
+
+			organizationIds[i] = organization.getOrganizationId();
+		}
+
+		return organizationIds;
+	}
+
 	private long[] _addUsers(int count) throws Exception {
 		long[] userIds = new long[count];
 
@@ -977,6 +997,65 @@ public class ObjectRelatedModelsProviderTest {
 				reverseObjectRelationship.getObjectRelationshipId()));
 	}
 
+	private void _testOrganizationSystemObjectEntry1toMObjectRelatedModelsProviderImpl()
+		throws Exception {
+
+		long[] organizationIds = _addOrganizations(3);
+
+		ObjectDefinition systemObjectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
+				TestPropsValues.getCompanyId(), Organization.class.getName());
+
+		_addObjectRelationship(
+			_objectDefinition2, systemObjectDefinition,
+			ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
+			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition2.getObjectDefinitionId(), Collections.emptyMap());
+
+		Organization organization = _organizationLocalService.getOrganization(
+			organizationIds[2]);
+
+		_testSystemObjectEntry1toMObjectRelatedModels(
+			organization.getName(), objectEntry1.getObjectEntryId(),
+			organizationIds, systemObjectDefinition.getObjectDefinitionId());
+
+		// Object relationship deletion type cascade
+
+		_updateObjectRelationship(
+			ObjectRelationshipConstants.DELETION_TYPE_CASCADE);
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntry1);
+
+		AssertUtils.assertFailure(
+			NoSuchOrganizationException.class,
+			"No Organization exists with the primary key " + organizationIds[1],
+			() -> _organizationLocalService.getOrganization(
+				organizationIds[1]));
+		AssertUtils.assertFailure(
+			NoSuchOrganizationException.class,
+			"No Organization exists with the primary key " + organizationIds[2],
+			() -> _organizationLocalService.getOrganization(
+				organizationIds[2]));
+
+		// Object relationship deletion type disassociate
+
+		_testSystemObjectEntry1toMDeletionTypeDisassociate(
+			organizationIds[0], systemObjectDefinition.getObjectDefinitionId());
+
+		Assert.assertNotNull(
+			_organizationLocalService.fetchOrganization(organizationIds[0]));
+
+		// Object relationship deletion type prevent
+
+		_testSystemObjectEntry1toMDeletionTypePrevent(
+			organizationIds[0], systemObjectDefinition.getObjectDefinitionId());
+
+		_objectRelationshipLocalService.deleteObjectRelationship(
+			_objectRelationship);
+	}
+
 	private void _testSystemObjectEntry1toMDeletionTypeDisassociate(
 			long objectEntryId, long systemObjectDefinitionId)
 		throws Exception {
@@ -1196,6 +1275,9 @@ public class ObjectRelatedModelsProviderTest {
 
 	@Inject
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
+
+	@Inject
+	private OrganizationLocalService _organizationLocalService;
 
 	private ObjectField _relationshipObjectField;
 
