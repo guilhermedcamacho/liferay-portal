@@ -603,6 +603,19 @@ public class ObjectRelatedModelsProviderTest {
 			ResourceConstants.SCOPE_INDIVIDUAL);
 	}
 
+	private void _insertIntoOrUpdateExtensionTable(
+			long objectEntryId, long primaryKey, long systemObjectDefinitionId)
+		throws Exception {
+
+		_objectEntryLocalService.insertIntoOrUpdateExtensionTable(
+			TestPropsValues.getUserId(), systemObjectDefinitionId, primaryKey,
+			HashMapBuilder.<String, Serializable>put(
+				"textField", RandomTestUtil.randomString()
+			).put(
+				_relationshipObjectField.getName(), objectEntryId
+			).build());
+	}
+
 	private void _setUser(User user) {
 		PermissionThreadLocal.setPermissionChecker(
 			PermissionCheckerFactoryUtil.create(user));
@@ -1010,14 +1023,9 @@ public class ObjectRelatedModelsProviderTest {
 		ObjectEntry objectEntry2 = _addObjectEntry(
 			_objectDefinition2.getObjectDefinitionId(), Collections.emptyMap());
 
-		_objectEntryLocalService.insertIntoOrUpdateExtensionTable(
-			TestPropsValues.getUserId(), systemObjectDefinitionId, primaryKey,
-			HashMapBuilder.<String, Serializable>put(
-				"textField", RandomTestUtil.randomString()
-			).put(
-				_relationshipObjectField.getName(),
-				objectEntry2.getObjectEntryId()
-			).build());
+		_insertIntoOrUpdateExtensionTable(
+			objectEntry2.getObjectEntryId(), primaryKey,
+			systemObjectDefinitionId);
 
 		_assertGetRelatedModels(objectEntry2.getObjectEntryId(), 1);
 
@@ -1036,14 +1044,9 @@ public class ObjectRelatedModelsProviderTest {
 		ObjectEntry objectEntry3 = _addObjectEntry(
 			_objectDefinition2.getObjectDefinitionId(), Collections.emptyMap());
 
-		_objectEntryLocalService.insertIntoOrUpdateExtensionTable(
-			TestPropsValues.getUserId(), systemObjectDefinitionId, primaryKey,
-			HashMapBuilder.<String, Serializable>put(
-				"textField", RandomTestUtil.randomString()
-			).put(
-				_relationshipObjectField.getName(),
-				objectEntry3.getObjectEntryId()
-			).build());
+		_insertIntoOrUpdateExtensionTable(
+			objectEntry3.getObjectEntryId(), primaryKey,
+			systemObjectDefinitionId);
 
 		AssertUtils.assertFailure(
 			RequiredObjectRelationshipException.class,
@@ -1063,30 +1066,13 @@ public class ObjectRelatedModelsProviderTest {
 
 		_assertGetRelatedModels(objectEntryId, 0);
 
-		_objectEntryLocalService.insertIntoOrUpdateExtensionTable(
-			TestPropsValues.getUserId(), systemObjectDefinitionId,
-			primaryKeys[0],
-			HashMapBuilder.<String, Serializable>put(
-				"textField", RandomTestUtil.randomString()
-			).put(
-				_relationshipObjectField.getName(), objectEntryId
-			).build());
-		_objectEntryLocalService.insertIntoOrUpdateExtensionTable(
-			TestPropsValues.getUserId(), systemObjectDefinitionId,
-			primaryKeys[1],
-			HashMapBuilder.<String, Serializable>put(
-				"textField", RandomTestUtil.randomString()
-			).put(
-				_relationshipObjectField.getName(), objectEntryId
-			).build());
-		_objectEntryLocalService.insertIntoOrUpdateExtensionTable(
-			TestPropsValues.getUserId(), systemObjectDefinitionId,
-			primaryKeys[2],
-			HashMapBuilder.<String, Serializable>put(
-				"textField", RandomTestUtil.randomString()
-			).put(
-				_relationshipObjectField.getName(), objectEntryId
-			).build());
+		_insertIntoOrUpdateExtensionTable(
+			objectEntryId, primaryKeys[0], systemObjectDefinitionId);
+		_insertIntoOrUpdateExtensionTable(
+			objectEntryId, primaryKeys[1], systemObjectDefinitionId);
+
+		_insertIntoOrUpdateExtensionTable(
+			objectEntryId, primaryKeys[2], systemObjectDefinitionId);
 
 		_assertGetRelatedModels(objectEntryId, 3);
 
