@@ -414,6 +414,7 @@ public class ObjectRelatedModelsProviderTest {
 		_testObjectEntryMtoMObjectRelatedModelsProviderImpl(
 			_objectDefinition1, _objectDefinition2);
 
+		_testOrganizationSystemObjectEntryMtoMObjectRelatedModelsProviderImpl();
 		_testUserSystemObjectEntryMtoMObjectRelatedModelsProviderImpl();
 	}
 
@@ -915,8 +916,92 @@ public class ObjectRelatedModelsProviderTest {
 			_objectRelationship);
 	}
 
+	private void _testOrganizationSystemObjectEntryMtoMObjectRelatedModelsProviderImpl()
+		throws Exception {
+
+		long[] organizationIds = _addOrganizations(3);
+
+		ObjectDefinition systemObjectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
+				TestPropsValues.getCompanyId(), Organization.class.getName());
+
+		_addObjectRelationship(
+			_objectDefinition1, systemObjectDefinition,
+			ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
+			ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition1.getObjectDefinitionId(), Collections.emptyMap());
+
+		Organization organization = _organizationLocalService.getOrganization(
+			organizationIds[1]);
+
+		_testSystemObjectEntryMtoMObjectRelatedModels(
+			organization.getName(), objectEntry1.getObjectEntryId(),
+			organizationIds);
+
+		// Object relationship deletion type cascade
+
+		_updateObjectRelationship(
+			ObjectRelationshipConstants.DELETION_TYPE_CASCADE);
+
+		_organizationLocalService.deleteOrganization(organizationIds[1]);
+
+		Assert.assertNotNull(
+			_objectEntryLocalService.fetchObjectEntry(
+				objectEntry1.getObjectEntryId()));
+
+		AssertUtils.assertFailure(
+			NoSuchOrganizationException.class,
+			"No Organization exists with the primary key " + organizationIds[1],
+			() -> _organizationLocalService.getOrganization(
+				organizationIds[1]));
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntry1);
+
+		Assert.assertNull(
+			_objectEntryLocalService.fetchObjectEntry(
+				objectEntry1.getObjectEntryId()));
+
+		AssertUtils.assertFailure(
+			NoSuchOrganizationException.class,
+			"No Organization exists with the primary key " + organizationIds[0],
+			() -> _organizationLocalService.getOrganization(
+				organizationIds[0]));
+
+		// Object relationship deletion type disassociate
+
+		_testSystemObjectEntryMtoMDeletionTypeDisassociate(organizationIds[2]);
+
+		Assert.assertNotNull(
+			_organizationLocalService.fetchOrganization(organizationIds[2]));
+
+		// Object relationship deletion type prevent
+
+		ObjectEntry objectEntry3 = _addObjectEntry(
+			_objectDefinition1.getObjectDefinitionId(),
+			HashMapBuilder.<String, Serializable>put(
+				"able", "Entry"
+			).build());
+
+		_testSystemObjectEntryMtoMDeletionTypePrevent(
+			objectEntry3.getObjectEntryId(), organizationIds[2]);
+
+		// Reverse object relationship
+
+		_testSystemObjectEntryMtoMReverse(
+			objectEntry3.getObjectEntryId(), organizationIds[2]);
+
+		_objectRelationshipLocalService.deleteObjectRelationships(
+			_objectDefinition1.getObjectDefinitionId());
+
+		Assert.assertNull(
+			_objectRelationshipLocalService.fetchObjectRelationship(
+				_objectRelationship.getObjectRelationshipId()));
+	}
+
 	private void _testSystemObjectEntry1toMDeletionTypeDisassociate(
-			long objectEntryId, long systemObjectDefinitionId)
+			long primaryKey, long systemObjectDefinitionId)
 		throws Exception {
 
 		_updateObjectRelationship(
@@ -926,8 +1011,7 @@ public class ObjectRelatedModelsProviderTest {
 			_objectDefinition2.getObjectDefinitionId(), Collections.emptyMap());
 
 		_objectEntryLocalService.insertIntoOrUpdateExtensionTable(
-			TestPropsValues.getUserId(), systemObjectDefinitionId,
-			objectEntryId,
+			TestPropsValues.getUserId(), systemObjectDefinitionId, primaryKey,
 			HashMapBuilder.<String, Serializable>put(
 				"textField", RandomTestUtil.randomString()
 			).put(
@@ -943,7 +1027,7 @@ public class ObjectRelatedModelsProviderTest {
 	}
 
 	private void _testSystemObjectEntry1toMDeletionTypePrevent(
-			long objectEntryId, long systemObjectDefinitionId)
+			long primaryKey, long systemObjectDefinitionId)
 		throws Exception {
 
 		_updateObjectRelationship(
@@ -953,8 +1037,7 @@ public class ObjectRelatedModelsProviderTest {
 			_objectDefinition2.getObjectDefinitionId(), Collections.emptyMap());
 
 		_objectEntryLocalService.insertIntoOrUpdateExtensionTable(
-			TestPropsValues.getUserId(), systemObjectDefinitionId,
-			objectEntryId,
+			TestPropsValues.getUserId(), systemObjectDefinitionId, primaryKey,
 			HashMapBuilder.<String, Serializable>put(
 				"textField", RandomTestUtil.randomString()
 			).put(
@@ -1026,7 +1109,7 @@ public class ObjectRelatedModelsProviderTest {
 	}
 
 	private void _testSystemObjectEntryMtoMDeletionTypeDisassociate(
-			long objectEntryId)
+			long primaryKey)
 		throws Exception {
 
 		_updateObjectRelationship(
@@ -1036,7 +1119,7 @@ public class ObjectRelatedModelsProviderTest {
 			_objectDefinition1.getObjectDefinitionId(), Collections.emptyMap());
 
 		_addObjectRelationshipMappingTableValues(
-			objectEntry2.getObjectEntryId(), objectEntryId);
+			objectEntry2.getObjectEntryId(), primaryKey);
 
 		_assertGetRelatedModels(objectEntry2.getObjectEntryId(), 1);
 
