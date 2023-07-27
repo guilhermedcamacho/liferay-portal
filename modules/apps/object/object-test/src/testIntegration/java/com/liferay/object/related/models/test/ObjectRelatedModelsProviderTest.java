@@ -25,6 +25,8 @@ import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
+import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -900,18 +902,11 @@ public class ObjectRelatedModelsProviderTest {
 		_updateObjectRelationship(
 			ObjectRelationshipConstants.DELETION_TYPE_CASCADE);
 
-		_objectEntryLocalService.deleteObjectEntry(objectEntry1);
-
-		AssertUtils.assertFailure(
+		_testSystemObjectEntryDeletionTypeCascade(
 			NoSuchOrganizationException.class,
-			"No Organization exists with the primary key " + organizationIds[1],
-			() -> _organizationLocalService.getOrganization(
-				organizationIds[1]));
-		AssertUtils.assertFailure(
-			NoSuchOrganizationException.class,
-			"No Organization exists with the primary key " + organizationIds[2],
-			() -> _organizationLocalService.getOrganization(
-				organizationIds[2]));
+			"No Organization exists with the primary key ", objectEntry1,
+			new long[] {organizationIds[1], organizationIds[2]},
+			_organizationLocalService::getOrganization);
 
 		// Object relationship deletion type disassociate
 
@@ -958,32 +953,19 @@ public class ObjectRelatedModelsProviderTest {
 
 		// Object relationship deletion type cascade
 
-		_updateObjectRelationship(
-			ObjectRelationshipConstants.DELETION_TYPE_CASCADE);
-
-		_organizationLocalService.deleteOrganization(organizationIds[1]);
-
-		Assert.assertNotNull(
-			_objectEntryLocalService.fetchObjectEntry(
-				objectEntry1.getObjectEntryId()));
-
-		AssertUtils.assertFailure(
+		_testSystemObjectEntryMtoMDeletionTypeCascade(
 			NoSuchOrganizationException.class,
+			_organizationLocalService::deleteOrganization,
 			"No Organization exists with the primary key " + organizationIds[1],
+			objectEntry1.getObjectEntryId(), organizationIds[1],
 			() -> _organizationLocalService.getOrganization(
 				organizationIds[1]));
 
-		_objectEntryLocalService.deleteObjectEntry(objectEntry1);
-
-		Assert.assertNull(
-			_objectEntryLocalService.fetchObjectEntry(
-				objectEntry1.getObjectEntryId()));
-
-		AssertUtils.assertFailure(
+		_testSystemObjectEntryDeletionTypeCascade(
 			NoSuchOrganizationException.class,
-			"No Organization exists with the primary key " + organizationIds[0],
-			() -> _organizationLocalService.getOrganization(
-				organizationIds[0]));
+			"No Organization exists with the primary key ", objectEntry1,
+			new long[] {organizationIds[0]},
+			_organizationLocalService::getOrganization);
 
 		// Object relationship deletion type disassociate
 
@@ -1095,6 +1077,45 @@ public class ObjectRelatedModelsProviderTest {
 			primaryKeys[0]);
 
 		_assertGetRelatedModels(objectEntryId, 2);
+	}
+
+	private void _testSystemObjectEntryDeletionTypeCascade(
+			Class<?> clazz, String message, ObjectEntry objectEntry,
+			long[] primaryKeys,
+			UnsafeFunction<Long, Object, Exception> unsafeFunction)
+		throws Exception {
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntry);
+
+		Assert.assertNull(
+			_objectEntryLocalService.fetchObjectEntry(
+				objectEntry.getObjectEntryId()));
+
+		for (int i = 0; i < primaryKeys.length; i++) {
+			int index = i;
+
+			AssertUtils.assertFailure(
+				clazz, message + primaryKeys[index],
+				() -> unsafeFunction.apply(primaryKeys[index]));
+		}
+	}
+
+	private void _testSystemObjectEntryMtoMDeletionTypeCascade(
+			Class<?> clazz,
+			UnsafeFunction<Long, Object, Exception> deleteUnsafeFunction,
+			String message, long objectEntryId, long primaryKey,
+			UnsafeRunnable<Exception> unsafeRunnable)
+		throws Exception {
+
+		_updateObjectRelationship(
+			ObjectRelationshipConstants.DELETION_TYPE_CASCADE);
+
+		deleteUnsafeFunction.apply(primaryKey);
+
+		Assert.assertNotNull(
+			_objectEntryLocalService.fetchObjectEntry(objectEntryId));
+
+		AssertUtils.assertFailure(clazz, message, unsafeRunnable);
 	}
 
 	private void _testSystemObjectEntryMtoMDeletionTypeDisassociate(
@@ -1219,16 +1240,10 @@ public class ObjectRelatedModelsProviderTest {
 		_updateObjectRelationship(
 			ObjectRelationshipConstants.DELETION_TYPE_CASCADE);
 
-		_objectEntryLocalService.deleteObjectEntry(objectEntry1);
-
-		AssertUtils.assertFailure(
-			NoSuchUserException.class,
-			"No User exists with the primary key " + userIds[1],
-			() -> _userLocalService.getUser(userIds[1]));
-		AssertUtils.assertFailure(
-			NoSuchUserException.class,
-			"No User exists with the primary key " + userIds[2],
-			() -> _userLocalService.getUser(userIds[2]));
+		_testSystemObjectEntryDeletionTypeCascade(
+			NoSuchUserException.class, "No User exists with the primary key ",
+			objectEntry1, new long[] {userIds[1], userIds[2]},
+			_userLocalService::getUser);
 
 		// Object relationship deletion type disassociate
 
@@ -1270,30 +1285,15 @@ public class ObjectRelatedModelsProviderTest {
 
 		// Object relationship deletion type cascade
 
-		_updateObjectRelationship(
-			ObjectRelationshipConstants.DELETION_TYPE_CASCADE);
-
-		_userLocalService.deleteUser(userIds[1]);
-
-		Assert.assertNotNull(
-			_objectEntryLocalService.fetchObjectEntry(
-				objectEntry1.getObjectEntryId()));
-
-		AssertUtils.assertFailure(
-			NoSuchUserException.class,
+		_testSystemObjectEntryMtoMDeletionTypeCascade(
+			NoSuchUserException.class, _userLocalService::deleteUser,
 			"No User exists with the primary key " + userIds[1],
+			objectEntry1.getObjectEntryId(), userIds[1],
 			() -> _userLocalService.getUser(userIds[1]));
 
-		_objectEntryLocalService.deleteObjectEntry(objectEntry1);
-
-		Assert.assertNull(
-			_objectEntryLocalService.fetchObjectEntry(
-				objectEntry1.getObjectEntryId()));
-
-		AssertUtils.assertFailure(
-			NoSuchUserException.class,
-			"No User exists with the primary key " + userIds[0],
-			() -> _userLocalService.getUser(userIds[0]));
+		_testSystemObjectEntryDeletionTypeCascade(
+			NoSuchUserException.class, "No User exists with the primary key ",
+			objectEntry1, new long[] {userIds[0]}, _userLocalService::getUser);
 
 		// Object relationship deletion type disassociate
 
