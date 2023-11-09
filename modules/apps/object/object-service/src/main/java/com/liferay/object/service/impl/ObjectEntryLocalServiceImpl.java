@@ -2763,7 +2763,14 @@ public class ObjectEntryLocalServiceImpl
 									objectField.getDBColumnName());
 					}
 
-					return column.eq(related ? primaryKey : 0L);
+					if (related) {
+						return column.eq(primaryKey);
+					}
+
+					return column.isNull(
+					).or(
+						column.eq(0L)
+					).withParentheses();
 				}
 			).and(
 				() ->
