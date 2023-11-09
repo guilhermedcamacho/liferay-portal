@@ -3053,22 +3053,12 @@ public class ObjectEntryLocalServiceImpl
 	 * @see com.liferay.portal.upgrade.util.Table#getValue
 	 */
 	private Object _getValue(Object object, int sqlType) throws SQLException {
-		if (_isNumeric(sqlType)) {
+		if (sqlType == Types.BIGINT) {
 			if (object == null) {
 				return null;
 			}
-			else if (sqlType == Types.BIGINT) {
-				return GetterUtil.getLong(object);
-			}
-			else if (sqlType == Types.DECIMAL) {
-				return object;
-			}
-			else if (sqlType == Types.DOUBLE) {
-				return GetterUtil.getDouble(object);
-			}
-			else if (sqlType == Types.INTEGER) {
-				return GetterUtil.getInteger(object);
-			}
+
+			return GetterUtil.getLong(object);
 		}
 		else if (sqlType == Types.BOOLEAN) {
 			return GetterUtil.getBoolean(object);
@@ -3084,6 +3074,23 @@ public class ObjectEntryLocalServiceImpl
 			Date date = (Date)object;
 
 			return new Timestamp(date.getTime());
+		}
+		else if (sqlType == Types.DECIMAL) {
+			return object;
+		}
+		else if (sqlType == Types.DOUBLE) {
+			if (object == null) {
+				return null;
+			}
+
+			return GetterUtil.getDouble(object);
+		}
+		else if (sqlType == Types.INTEGER) {
+			if (object == null) {
+				return null;
+			}
+
+			return GetterUtil.getInteger(object);
 		}
 		else if (sqlType == Types.VARCHAR) {
 			return object;
@@ -3404,16 +3411,6 @@ public class ObjectEntryLocalServiceImpl
 		}
 	}
 
-	private boolean _isNumeric(int sqlType) {
-		if ((sqlType == Types.BIGINT) || (sqlType == Types.DECIMAL) ||
-			(sqlType == Types.DOUBLE) || (sqlType == Types.INTEGER)) {
-
-			return true;
-		}
-
-		return false;
-	}
-
 	private List<Object[]> _list(
 			DSLQuery dslQuery, long objectDefinitionId,
 			Expression<?>[] selectExpressions)
@@ -3635,26 +3632,12 @@ public class ObjectEntryLocalServiceImpl
 			Object value)
 		throws Exception {
 
-		if (_isNumeric(sqlType)) {
-			if ((value == null) || StringPool.BLANK.equals(value)) {
-				preparedStatement.setNull(index, sqlType);
-			}
-			else if (sqlType == Types.BIGINT) {
-				preparedStatement.setLong(index, GetterUtil.getLong(value));
-			}
-			else if (sqlType == Types.DECIMAL) {
-				preparedStatement.setBigDecimal(
-					index,
-					new BigDecimal(_toPeriodSeparator(String.valueOf(value))));
-			}
-			else if (sqlType == Types.DOUBLE) {
-				preparedStatement.setDouble(
-					index,
-					GetterUtil.getDouble(
-						_toPeriodSeparator(String.valueOf(value))));
+		if (sqlType == Types.BIGINT) {
+			if (Validator.isNull(value)) {
+				preparedStatement.setNull(index, Types.BIGINT);
 			}
 			else {
-				preparedStatement.setInt(index, GetterUtil.getInteger(value));
+				preparedStatement.setLong(index, GetterUtil.getLong(value));
 			}
 		}
 		else if (sqlType == Types.BLOB) {
@@ -3702,6 +3685,35 @@ public class ObjectEntryLocalServiceImpl
 
 				preparedStatement.setTimestamp(
 					index, new Timestamp(date.getTime()));
+			}
+		}
+		else if (sqlType == Types.DECIMAL) {
+			if (Validator.isNull(String.valueOf(value))) {
+				preparedStatement.setNull(index, Types.DECIMAL);
+			}
+			else {
+				preparedStatement.setBigDecimal(
+					index,
+					new BigDecimal(_toPeriodSeparator(String.valueOf(value))));
+			}
+		}
+		else if (sqlType == Types.DOUBLE) {
+			if (Validator.isNull(value)) {
+				preparedStatement.setNull(index, Types.DOUBLE);
+			}
+			else {
+				preparedStatement.setDouble(
+					index,
+					GetterUtil.getDouble(
+						_toPeriodSeparator(String.valueOf(value))));
+			}
+		}
+		else if (sqlType == Types.INTEGER) {
+			if (Validator.isNull(value)) {
+				preparedStatement.setNull(index, Types.INTEGER);
+			}
+			else {
+				preparedStatement.setInt(index, GetterUtil.getInteger(value));
 			}
 		}
 		else if (sqlType == Types.VARCHAR) {
