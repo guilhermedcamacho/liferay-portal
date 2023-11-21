@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-package com.liferay.object.web.internal.info.item.provider;
+package com.liferay.object.internal.info.item.provider;
 
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.util.DLURLHelper;
@@ -34,6 +34,8 @@ import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
+import com.liferay.object.rest.model.ProxyObjectEntry;
+import com.liferay.object.rest.util.ObjectEntryUtil;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -41,9 +43,6 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.util.ObjectFieldDBTypeUtil;
-import com.liferay.object.web.internal.info.field.converter.ObjectFieldInfoFieldConverter;
-import com.liferay.object.rest.model.ProxyObjectEntry;
-import com.liferay.object.rest.util.ObjectEntryUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
@@ -52,6 +51,7 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -68,6 +68,7 @@ import com.liferay.template.info.item.provider.TemplateInfoItemFieldSetProvider;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -75,10 +76,10 @@ import java.util.Objects;
 /**
  * @author Guilherme Camacho
  */
-public class ObjectEntryInfoItemFieldValuesProvider
-	implements InfoItemFieldValuesProvider<ObjectEntry> {
+public class ObjectEntrySystemInfoItemFieldValuesProvider
+	implements InfoItemFieldValuesProvider<BaseModel<?>> {
 
-	public ObjectEntryInfoItemFieldValuesProvider(
+	public ObjectEntrySystemInfoItemFieldValuesProvider(
 		CompanyLocalService companyLocalService,
 		DisplayPageInfoItemFieldSetProvider displayPageInfoItemFieldSetProvider,
 		DLAppLocalService dlAppLocalService, DLURLHelper dlURLHelper,
@@ -87,7 +88,6 @@ public class ObjectEntryInfoItemFieldValuesProvider
 		ObjectActionLocalService objectActionLocalService,
 		ObjectDefinition objectDefinition,
 		ObjectDefinitionLocalService objectDefinitionLocalService,
-		ObjectFieldInfoFieldConverter objectFieldInfoFieldConverter,
 		ObjectEntryLocalService objectEntryLocalService,
 		ObjectEntryManagerRegistry objectEntryManagerRegistry,
 		ObjectFieldLocalService objectFieldLocalService,
@@ -107,7 +107,6 @@ public class ObjectEntryInfoItemFieldValuesProvider
 		_objectActionLocalService = objectActionLocalService;
 		_objectDefinition = objectDefinition;
 		_objectDefinitionLocalService = objectDefinitionLocalService;
-		_objectFieldInfoFieldConverter = objectFieldInfoFieldConverter;
 		_objectEntryLocalService = objectEntryLocalService;
 		_objectEntryManagerRegistry = objectEntryManagerRegistry;
 		_objectFieldLocalService = objectFieldLocalService;
@@ -118,25 +117,32 @@ public class ObjectEntryInfoItemFieldValuesProvider
 	}
 
 	@Override
-	public InfoItemFieldValues getInfoItemFieldValues(ObjectEntry objectEntry) {
+	public InfoItemFieldValues getInfoItemFieldValues(BaseModel<?> baseModel) {
 		try {
 			return InfoItemFieldValues.builder(
 			).infoFieldValues(
-				_getInfoFieldValues(objectEntry)
-			).infoFieldValues(
-				_displayPageInfoItemFieldSetProvider.getInfoFieldValues(
-					_getInfoItemReference(objectEntry), StringPool.BLANK,
-					ObjectEntry.class.getSimpleName(), objectEntry,
-					_getThemeDisplay())
-			).infoFieldValues(
-				_infoItemFieldReaderFieldSetProvider.getInfoFieldValues(
-					objectEntry.getModelClassName(), objectEntry)
-			).infoFieldValues(
-				_templateInfoItemFieldSetProvider.getInfoFieldValues(
-					objectEntry.getModelClassName(), objectEntry)
+				_getInfoFieldValues(baseModel)
 			).infoItemReference(
-				_getInfoItemReference(objectEntry)
+				_getInfoItemReference(baseModel)
 			).build();
+
+//			return InfoItemFieldValues.builder(
+//			).infoFieldValues(
+//				_getInfoFieldValues(objectEntry)
+//			).infoFieldValues(
+//				_displayPageInfoItemFieldSetProvider.getInfoFieldValues(
+//					_getInfoItemReference(objectEntry), StringPool.BLANK,
+//					ObjectEntry.class.getSimpleName(), objectEntry,
+//					_getThemeDisplay())
+//			).infoFieldValues(
+//				_infoItemFieldReaderFieldSetProvider.getInfoFieldValues(
+//					objectEntry.getModelClassName(), objectEntry)
+//			).infoFieldValues(
+//				_templateInfoItemFieldSetProvider.getInfoFieldValues(
+//					objectEntry.getModelClassName(), objectEntry)
+//			).infoItemReference(
+//				_getInfoItemReference(objectEntry)
+//			).build();
 		}
 		catch (Exception exception) {
 			throw new RuntimeException("Unexpected exception", exception);
@@ -244,6 +250,108 @@ public class ObjectEntryInfoItemFieldValuesProvider
 		}
 
 		return infoFieldValues;
+	}
+
+	private List<InfoFieldValue<Object>> _getInfoFieldValues(
+		BaseModel<?> baseModel) {
+
+		Map<String, Object> baseModelAttributes = baseModel.getModelAttributes();
+
+		List<InfoFieldValue<Object>> baseModelFieldValues = new ArrayList<>();
+
+//		baseModelFieldValues.add(
+//			new InfoFieldValue<>(
+//				ObjectEntryInfoItemFields.authorInfoField,
+//				objectEntry.getUserName()));
+//		baseModelFieldValues.add(
+//			new InfoFieldValue<>(
+//				ObjectEntryInfoItemFields.createDateInfoField,
+//				baseModelAttributes.get("createDate")));
+//		baseModelFieldValues.add(
+//			new InfoFieldValue<>(
+//				ObjectEntryInfoItemFields.externalReferenceCodeInfoField,
+//				baseModelAttributes.get("externalReferenceCode")));
+//		baseModelFieldValues.add(
+//			new InfoFieldValue<>(
+//				ObjectEntryInfoItemFields.modifiedDateInfoField,
+//				baseModelAttributes.get("modifiedDate")));
+//		baseModelFieldValues.add(
+//			new InfoFieldValue<>(
+//				ObjectEntryInfoItemFields.objectEntryIdInfoField,
+//				objectEntry.getObjectEntryId()));
+//		baseModelFieldValues.add(
+//			new InfoFieldValue<>(
+//				ObjectEntryInfoItemFields.publishDateInfoField,
+//				objectEntry.getLastPublishDate()));
+//		baseModelFieldValues.add(
+//			new InfoFieldValue<>(
+//				ObjectEntryInfoItemFields.statusInfoField,
+//				WorkflowConstants.getStatusLabel(objectEntry.getStatus())));
+//		baseModelFieldValues.add(
+//			new InfoFieldValue<>(
+//				ObjectEntryInfoItemFields.userProfileImageInfoField,
+//				_getWebImage(objectEntry.getUserId())));
+
+//		List<InfoFieldValue<Object>> objectFieldsInfoFieldValues =
+//			new ArrayList<>();
+
+		for (ObjectField objectField :
+			_objectFieldLocalService.getObjectFields(
+				_objectDefinition.getObjectDefinitionId())) {
+
+			if (!objectField.isSystem()) {
+				continue;
+			}
+
+//			Object value = GetterUtil.getObject(
+//				baseModelAttributes.get(objectField.getDBColumnName()),
+//				primaryKey);
+
+			Object value = GetterUtil.getObject(
+				baseModelAttributes.get(objectField.getDBColumnName()));
+
+//			if (value instanceof String) {
+//				value = _localization.getLocalization(
+//					(String)value, null, true);
+//			}
+
+			baseModelFieldValues.add(
+				new InfoFieldValue<>(
+					InfoField.builder(
+					).infoFieldType(
+						ObjectFieldDBTypeUtil.getInfoFieldType(objectField)
+					).namespace(
+						ObjectField.class.getSimpleName()
+					).name(
+						objectField.getName()
+					).labelInfoLocalizedValue(
+						InfoLocalizedValue.<String>builder(
+						).defaultLocale(
+							LocaleUtil.fromLanguageId(
+								objectField.getDefaultLanguageId())
+						).values(
+							objectField.getLabelMap()
+						).build()
+					).build(),
+					value));
+
+//			objectFieldsInfoFieldValues.addAll(
+//				_getAttachmentInfoFieldValues(objectField, value));
+//
+//			objectFieldsInfoFieldValues.addAll(
+//				_getRelatedObjectEntryFieldValues(
+//					objectField, themeDisplay, objectEntry.getProperties()));
+		}
+
+//
+//		baseModelFieldValues.addAll(
+//			_getObjectFieldsInfoFieldValues(
+//				_getObjectEntry(_objectDefinition, objectEntry, themeDisplay),
+//				_objectFieldLocalService.getObjectFields(
+//					objectEntry.getObjectDefinitionId(), false),
+//				themeDisplay));
+
+		return baseModelFieldValues;
 	}
 
 	private List<InfoFieldValue<Object>> _getInfoFieldValues(
@@ -399,6 +507,12 @@ public class ObjectEntryInfoItemFieldValuesProvider
 		return objectEntryFieldValues;
 	}
 
+	private InfoItemReference _getInfoItemReference(BaseModel<?> baseModel) {
+		return new InfoItemReference(
+			_objectDefinition.getClassName(),
+			new ClassPKInfoItemIdentifier((long)baseModel.getPrimaryKeyObj()));
+	}
+
 	private InfoItemReference _getInfoItemReference(ObjectEntry objectEntry) {
 		if (_objectDefinition.isDefaultStorageType()) {
 			return new InfoItemReference(
@@ -480,8 +594,22 @@ public class ObjectEntryInfoItemFieldValuesProvider
 
 			objectFieldsInfoFieldValues.add(
 				new InfoFieldValue<>(
-					_objectFieldInfoFieldConverter.getInfoField(
-						false, ObjectField.class.getSimpleName(), objectField),
+					InfoField.builder(
+					).infoFieldType(
+						ObjectFieldDBTypeUtil.getInfoFieldType(objectField)
+					).namespace(
+						ObjectField.class.getSimpleName()
+					).name(
+						objectField.getName()
+					).labelInfoLocalizedValue(
+						InfoLocalizedValue.<String>builder(
+						).defaultLocale(
+							LocaleUtil.fromLanguageId(
+								objectField.getDefaultLanguageId())
+						).values(
+							objectField.getLabelMap()
+						).build()
+					).build(),
 					value));
 			objectFieldsInfoFieldValues.addAll(
 				_getAttachmentInfoFieldValues(objectField, value));
@@ -534,13 +662,25 @@ public class ObjectEntryInfoItemFieldValuesProvider
 			_objectFieldLocalService.getObjectFields(
 				serviceBuilderObjectEntry.getObjectDefinitionId(), false),
 			relatedObjectField -> new InfoFieldValue<>(
-				_objectFieldInfoFieldConverter.getInfoField(
-					false,
+				InfoField.builder(
+				).infoFieldType(
+					ObjectFieldDBTypeUtil.getInfoFieldType(relatedObjectField)
+				).namespace(
 					StringBundler.concat(
 						ObjectRelationship.class.getSimpleName(),
 						StringPool.POUND, objectDefinition.getName(),
-						StringPool.POUND, objectRelationship.getName()),
-					relatedObjectField),
+						StringPool.POUND, objectRelationship.getName())
+				).name(
+					relatedObjectField.getName()
+				).labelInfoLocalizedValue(
+					InfoLocalizedValue.<String>builder(
+					).defaultLocale(
+						LocaleUtil.fromLanguageId(
+							relatedObjectField.getDefaultLanguageId())
+					).values(
+						relatedObjectField.getLabelMap()
+					).build()
+				).build(),
 				_getValue(objectEntry, relatedObjectField, themeDisplay)));
 	}
 
@@ -631,7 +771,7 @@ public class ObjectEntryInfoItemFieldValuesProvider
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
-		ObjectEntryInfoItemFieldValuesProvider.class);
+		ObjectEntrySystemInfoItemFieldValuesProvider.class);
 
 	private final CompanyLocalService _companyLocalService;
 	private final DisplayPageInfoItemFieldSetProvider
@@ -646,7 +786,6 @@ public class ObjectEntryInfoItemFieldValuesProvider
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
 	private final ObjectEntryLocalService _objectEntryLocalService;
 	private final ObjectEntryManagerRegistry _objectEntryManagerRegistry;
-	private final ObjectFieldInfoFieldConverter _objectFieldInfoFieldConverter;
 	private final ObjectFieldLocalService _objectFieldLocalService;
 	private final ObjectRelationshipLocalService
 		_objectRelationshipLocalService;

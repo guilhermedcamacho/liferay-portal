@@ -26,6 +26,7 @@ Export-Package:\
 	com.liferay.object.field.setting.util,\
 	com.liferay.object.field.util,\
 	com.liferay.object.filter.util,\
+	com.liferay.object.info.item,\
 	com.liferay.object.jaxrs.exception.mapper.util,\
 	com.liferay.object.model,\
 	com.liferay.object.model.listener,\
@@ -39,6 +40,7 @@ Export-Package:\
 	com.liferay.object.service.persistence,\
 	com.liferay.object.system,\
 	com.liferay.object.tree,\
+	com.liferay.object.util,\
 	com.liferay.object.tree.constants,\
 	com.liferay.object.util.comparator,\
 	com.liferay.object.validation.rule,\
