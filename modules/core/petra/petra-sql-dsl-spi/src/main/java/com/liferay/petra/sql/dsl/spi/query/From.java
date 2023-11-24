@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 /**
  * @author Preston Crary
  */
-public class From extends BaseASTNode implements DefaultJoinStep {
+public class From extends BaseASTNode implements DefaultIndexHintStep {
 
 	public From(FromStep fromStep, Table<?> table) {
 		super(fromStep);

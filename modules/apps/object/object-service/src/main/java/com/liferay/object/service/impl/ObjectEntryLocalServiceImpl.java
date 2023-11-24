@@ -1150,21 +1150,29 @@ public class ObjectEntryLocalServiceImpl
 				extensionDynamicObjectDefinitionTable.getPrimaryKeyColumn()),
 			_EXPRESSIONS);
 
+		String indexHint = "ignore index (PRIMARY)";
+
 		List<Object[]> rows = _list(
 			DSLQueryFactoryUtil.select(
 				selectExpressions
 			).from(
 				dynamicObjectDefinitionTable
+			).indexHint(
+				indexHint
 			).innerJoinON(
 				extensionDynamicObjectDefinitionTable,
 				extensionDynamicObjectDefinitionTable.getPrimaryKeyColumn(
 				).eq(
 					dynamicObjectDefinitionTable.getPrimaryKeyColumn()
 				)
+			).indexHint(
+				indexHint
 			).innerJoinON(
 				ObjectEntryTable.INSTANCE,
 				ObjectEntryTable.INSTANCE.objectEntryId.eq(
 					dynamicObjectDefinitionTable.getPrimaryKeyColumn())
+			).indexHint(
+				indexHint
 			).innerJoinON(
 				rootDynamicObjectDefinitionTable,
 				_getInnerJoinRootObjectDefinitionTablePredicate(

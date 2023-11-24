@@ -7,6 +7,7 @@ package com.liferay.petra.sql.dsl.spi.query;
 
 import com.liferay.petra.sql.dsl.Table;
 import com.liferay.petra.sql.dsl.expression.Predicate;
+import com.liferay.petra.sql.dsl.query.IndexHintStep;
 import com.liferay.petra.sql.dsl.query.JoinStep;
 
 /**
@@ -15,18 +16,26 @@ import com.liferay.petra.sql.dsl.query.JoinStep;
 public interface DefaultJoinStep extends DefaultWhereStep, JoinStep {
 
 	@Override
-	public default JoinStep innerJoinON(Table<?> table, Predicate predicate) {
+	public default IndexHintStep innerJoinON(
+		Table<?> table, Predicate predicate) {
+
+		// TODO: improve this
+
 		if (predicate == null) {
-			return this;
+			return (IndexHintStep)this;
 		}
 
 		return new Join(this, JoinType.INNER, table, predicate);
 	}
 
 	@Override
-	public default JoinStep leftJoinOn(Table<?> table, Predicate predicate) {
+	public default IndexHintStep leftJoinOn(
+		Table<?> table, Predicate predicate) {
+
+		// TODO: improve this
+
 		if (predicate == null) {
-			return this;
+			return (IndexHintStep)this;
 		}
 
 		return new Join(this, JoinType.LEFT, table, predicate);

@@ -5,13 +5,11 @@
 
 package com.liferay.petra.sql.dsl.query;
 
-import com.liferay.petra.sql.dsl.Table;
-
 /**
- * @author Preston Crary
+ * @author Guilherme Cmaacho
  */
-public interface FromStep extends DSLQuery {
+public interface IndexHintStep extends JoinStep {
 
-	public IndexHintStep from(Table<?> table);
+	public JoinStep indexHint(String indexHint);
 
 }

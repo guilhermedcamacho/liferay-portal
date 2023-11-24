@@ -13,8 +13,8 @@ import com.liferay.petra.sql.dsl.expression.Predicate;
  */
 public interface JoinStep extends WhereStep {
 
-	public JoinStep innerJoinON(Table<?> table, Predicate predicate);
+	public IndexHintStep innerJoinON(Table<?> table, Predicate predicate);
 
-	public JoinStep leftJoinOn(Table<?> table, Predicate predicate);
+	public IndexHintStep leftJoinOn(Table<?> table, Predicate predicate);
 
 }

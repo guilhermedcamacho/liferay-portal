@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 /**
  * @author Preston Crary
  */
-public class Join extends BaseASTNode implements DefaultJoinStep {
+public class Join extends BaseASTNode implements DefaultIndexHintStep {
 
 	public Join(
 		JoinStep joinStep, JoinType joinType, Table<?> table,

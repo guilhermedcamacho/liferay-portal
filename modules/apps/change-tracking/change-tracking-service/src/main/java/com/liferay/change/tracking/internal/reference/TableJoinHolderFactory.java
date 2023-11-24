@@ -15,6 +15,7 @@ import com.liferay.petra.sql.dsl.expression.Expression;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.sql.dsl.query.FromStep;
+import com.liferay.petra.sql.dsl.query.IndexHintStep;
 import com.liferay.petra.sql.dsl.query.JoinStep;
 import com.liferay.petra.sql.dsl.query.WhereStep;
 import com.liferay.petra.sql.dsl.spi.expression.DSLFunction;
@@ -538,7 +539,7 @@ public class TableJoinHolderFactory {
 		}
 
 		@Override
-		public JoinStep from(Table<?> table) {
+		public IndexHintStep from(Table<?> table) {
 			return new From(this, table);
 		}
 
