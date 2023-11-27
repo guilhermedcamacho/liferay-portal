@@ -23,11 +23,19 @@ public class Join extends BaseASTNode implements DefaultJoinStep {
 		JoinStep joinStep, JoinType joinType, Table<?> table,
 		Predicate onPredicate) {
 
+		this(joinStep, joinType, table, onPredicate, null);
+	}
+
+	public Join(
+		JoinStep joinStep, JoinType joinType, Table<?> table,
+		Predicate onPredicate, String indexHint) {
+
 		super(joinStep);
 
 		_joinType = Objects.requireNonNull(joinType);
 		_table = Objects.requireNonNull(table);
 		_onPredicate = Objects.requireNonNull(onPredicate);
+		_indexHint = indexHint;
 	}
 
 	public JoinType getJoinType() {
@@ -50,11 +58,16 @@ public class Join extends BaseASTNode implements DefaultJoinStep {
 
 		_table.toSQL(consumer, astNodeListener);
 
+		if (_indexHint != null) {
+			consumer.accept(" ".concat(_indexHint));
+		}
+
 		consumer.accept(" on ");
 
 		_onPredicate.toSQL(consumer, astNodeListener);
 	}
 
+	private final String _indexHint;
 	private final JoinType _joinType;
 	private final Predicate _onPredicate;
 	private final Table<?> _table;

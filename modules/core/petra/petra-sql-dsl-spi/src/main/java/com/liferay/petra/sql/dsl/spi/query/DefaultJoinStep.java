@@ -24,12 +24,34 @@ public interface DefaultJoinStep extends DefaultWhereStep, JoinStep {
 	}
 
 	@Override
+	public default JoinStep innerJoinON(
+		Table<?> table, Predicate predicate, String indexHint) {
+
+		if (predicate == null) {
+			return this;
+		}
+
+		return new Join(this, JoinType.INNER, table, predicate, indexHint);
+	}
+
+	@Override
 	public default JoinStep leftJoinOn(Table<?> table, Predicate predicate) {
 		if (predicate == null) {
 			return this;
 		}
 
 		return new Join(this, JoinType.LEFT, table, predicate);
+	}
+
+	@Override
+	public default JoinStep leftJoinOn(
+		Table<?> table, Predicate predicate, String indexHint) {
+
+		if (predicate == null) {
+			return this;
+		}
+
+		return new Join(this, JoinType.LEFT, table, predicate, indexHint);
 	}
 
 }

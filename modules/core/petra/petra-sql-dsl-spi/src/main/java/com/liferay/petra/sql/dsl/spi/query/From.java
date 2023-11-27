@@ -19,9 +19,14 @@ import java.util.function.Consumer;
 public class From extends BaseASTNode implements DefaultJoinStep {
 
 	public From(FromStep fromStep, Table<?> table) {
+		this(fromStep, table, null);
+	}
+
+	public From(FromStep fromStep, Table<?> table, String indexHint) {
 		super(fromStep);
 
 		_table = Objects.requireNonNull(table);
+		_indexHint = indexHint;
 	}
 
 	public Table<?> getTable() {
@@ -35,8 +40,13 @@ public class From extends BaseASTNode implements DefaultJoinStep {
 		consumer.accept("from ");
 
 		_table.toSQL(consumer, astNodeListener);
+
+		if (_indexHint != null) {
+			consumer.accept(" ".concat(_indexHint.concat(" ")));
+		}
 	}
 
+	private final String _indexHint;
 	private final Table<?> _table;
 
 }

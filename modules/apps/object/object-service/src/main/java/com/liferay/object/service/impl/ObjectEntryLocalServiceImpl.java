@@ -1228,24 +1228,29 @@ public class ObjectEntryLocalServiceImpl
 		DynamicObjectDefinitionTable rootDynamicObjectDefinitionTable =
 			_getRootDynamicObjectDefinitionTable(objectDefinitionId);
 
+		String indexHint = "ignore index (PRIMARY)";
+
 		DSLQuery dslQuery = DSLQueryFactoryUtil.countDistinct(
 			ObjectEntryTable.INSTANCE.objectEntryId
 		).from(
-			dynamicObjectDefinitionTable
+			dynamicObjectDefinitionTable, indexHint
 		).innerJoinON(
 			extensionDynamicObjectDefinitionTable,
 			extensionDynamicObjectDefinitionTable.getPrimaryKeyColumn(
 			).eq(
 				dynamicObjectDefinitionTable.getPrimaryKeyColumn()
-			)
+			),
+			indexHint
 		).innerJoinON(
 			ObjectEntryTable.INSTANCE,
 			ObjectEntryTable.INSTANCE.objectEntryId.eq(
-				dynamicObjectDefinitionTable.getPrimaryKeyColumn())
+				dynamicObjectDefinitionTable.getPrimaryKeyColumn()),
+			indexHint
 		).innerJoinON(
 			rootDynamicObjectDefinitionTable,
 			_getInnerJoinRootObjectDefinitionTablePredicate(
-				rootDynamicObjectDefinitionTable)
+				rootDynamicObjectDefinitionTable),
+			indexHint
 		).leftJoinOn(
 			dynamicObjectDefinitionLocalizationTable,
 			_getLeftJoinLocalizationTablePredicate(

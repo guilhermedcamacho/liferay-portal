@@ -19,4 +19,8 @@ public interface DefaultFromStep extends DefaultDSLQuery, FromStep {
 		return new From(this, table);
 	}
 
+	public default JoinStep from(Table<?> table, String indexHint) {
+		return new From(this, table, indexHint);
+	}
+
 }

@@ -15,6 +15,12 @@ public interface JoinStep extends WhereStep {
 
 	public JoinStep innerJoinON(Table<?> table, Predicate predicate);
 
+	public JoinStep innerJoinON(
+		Table<?> table, Predicate predicate, String indexHint);
+
 	public JoinStep leftJoinOn(Table<?> table, Predicate predicate);
+
+	public JoinStep leftJoinOn(
+		Table<?> table, Predicate predicate, String indexHint);
 
 }

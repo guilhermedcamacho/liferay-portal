@@ -543,6 +543,11 @@ public class TableJoinHolderFactory {
 		}
 
 		@Override
+		public JoinStep from(Table<?> table, String indexHint) {
+			return new From(this, table, indexHint);
+		}
+
+		@Override
 		public void toSQL(
 			Consumer<String> consumer, ASTNodeListener astNodeListener) {
 

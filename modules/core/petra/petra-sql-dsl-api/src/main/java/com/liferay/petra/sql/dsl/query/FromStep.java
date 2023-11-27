@@ -14,4 +14,6 @@ public interface FromStep extends DSLQuery {
 
 	public JoinStep from(Table<?> table);
 
+	public JoinStep from(Table<?> table, String indexHint);
+
 }
