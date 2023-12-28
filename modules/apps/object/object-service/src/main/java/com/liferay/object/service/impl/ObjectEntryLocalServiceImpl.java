@@ -2920,32 +2920,35 @@ public class ObjectEntryLocalServiceImpl
 			if (selectExpression instanceof Alias) {
 				Alias<?> alias = (Alias<?>)selectExpression;
 
-				result = _getValue(
-					entryValues,
-					DynamicObjectDefinitionTableUtil.getSQLType(
-						_getDBType(alias, objectDefinitionId)));
+				int sqlType = 0;
+
+				if (Validator.isNull(alias.getJavaType())) {
+					sqlType = DynamicObjectDefinitionTableUtil.getSQLType(
+						_getDBType(alias, objectDefinitionId));
+				}
+				else {
+					sqlType = alias.getSQLType();
+				}
+
+				result = _getValue(entryValues, sqlType);
+
+				if (selectExpression instanceof ScalarDSLQueryAlias) {
+					if (result == null) {
+						result = "0";
+					}
+					else {
+						BigDecimal bigDecimal = new BigDecimal(
+							result.toString());
+
+						result = String.valueOf(
+							BigDecimalUtil.stripTrailingZeros(bigDecimal));
+					}
+				}
 			}
 			else if (selectExpression instanceof Column) {
 				Column<?, ?> column = (Column<?, ?>)selectExpression;
 
 				result = _getValue(entryValues, column.getSQLType());
-			}
-			else if (selectExpression instanceof ScalarDSLQueryAlias) {
-				ScalarDSLQueryAlias scalarDSLQueryAlias =
-					(ScalarDSLQueryAlias)selectExpression;
-
-				result = _getValue(
-					entryValues, scalarDSLQueryAlias.getSQLType());
-
-				if (result == null) {
-					result = "0";
-				}
-				else {
-					BigDecimal bigDecimal = new BigDecimal(result.toString());
-
-					result = String.valueOf(
-						BigDecimalUtil.stripTrailingZeros(bigDecimal));
-				}
 			}
 		}
 		catch (SQLException sqlException) {
@@ -3160,21 +3163,20 @@ public class ObjectEntryLocalServiceImpl
 
 				columnName = alias.getName();
 
-				javaTypeClass = DynamicObjectDefinitionTableUtil.getJavaClass(
-					_getDBType(alias, objectDefinitionId));
+				if (Validator.isNull(alias.getJavaType())) {
+					javaTypeClass =
+						DynamicObjectDefinitionTableUtil.getJavaClass(
+							_getDBType(alias, objectDefinitionId));
+				}
+				else {
+					javaTypeClass = alias.getJavaType();
+				}
 			}
 			else if (selectExpression instanceof Column) {
 				Column<?, ?> column = (Column<?, ?>)selectExpressions[i];
 
 				columnName = column.getName();
 				javaTypeClass = column.getJavaType();
-			}
-			else if (selectExpression instanceof ScalarDSLQueryAlias) {
-				ScalarDSLQueryAlias scalarDSLQueryAlias =
-					(ScalarDSLQueryAlias)selectExpressions[i];
-
-				columnName = scalarDSLQueryAlias.getName();
-				javaTypeClass = scalarDSLQueryAlias.getJavaType();
 			}
 
 			if (columnName.endsWith(StringPool.UNDERLINE)) {

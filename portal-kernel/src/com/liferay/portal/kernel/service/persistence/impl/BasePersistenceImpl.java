@@ -72,6 +72,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyFactory;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
@@ -256,15 +257,15 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 					if (expression instanceof Alias) {
 						Alias<?> alias = (Alias<?>)expression;
 
-						if (alias.getJavaType() != null) {
+						if (Validator.isNull(alias.getJavaType())) {
 							sqlQuery.addScalar(
 								alias.getName(),
-								_types.get(alias.getJavaType()));
+								_getType(alias.getExpression()));
 						}
 						else {
 							sqlQuery.addScalar(
 								alias.getName(),
-								_getType(alias.getExpression()));
+								_types.get(alias.getJavaType()));
 						}
 					}
 					else if (expression instanceof Column) {
