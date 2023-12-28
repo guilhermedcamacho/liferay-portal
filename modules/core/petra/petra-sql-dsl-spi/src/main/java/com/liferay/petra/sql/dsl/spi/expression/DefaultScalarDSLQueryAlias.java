@@ -8,7 +8,6 @@ package com.liferay.petra.sql.dsl.spi.expression;
 import com.liferay.petra.sql.dsl.ast.ASTNodeListener;
 import com.liferay.petra.sql.dsl.expression.ScalarDSLQueryAlias;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
-import com.liferay.petra.sql.dsl.spi.ast.BaseASTNode;
 
 import java.util.function.Consumer;
 
@@ -16,16 +15,14 @@ import java.util.function.Consumer;
  * @author Marco Leo
  */
 public class DefaultScalarDSLQueryAlias<T>
-	extends BaseASTNode
-	implements DefaultExpression<T>, ScalarDSLQueryAlias<T> {
+	extends DefaultAlias<T> implements ScalarDSLQueryAlias<T> {
 
 	public DefaultScalarDSLQueryAlias(
 		DSLQuery dslQuery, Class<T> javaType, String name, int sqlType) {
 
+		super(null, javaType, name, sqlType);
+
 		_dslQuery = dslQuery;
-		_javaType = javaType;
-		_name = name;
-		_sqlType = sqlType;
 	}
 
 	@Override
@@ -34,32 +31,14 @@ public class DefaultScalarDSLQueryAlias<T>
 	}
 
 	@Override
-	public Class<T> getJavaType() {
-		return _javaType;
-	}
-
-	@Override
-	public String getName() {
-		return _name;
-	}
-
-	@Override
-	public int getSQLType() {
-		return _sqlType;
-	}
-
-	@Override
 	protected void doToSQL(
 		Consumer<String> consumer, ASTNodeListener astNodeListener) {
 
 		consumer.accept("(");
 		consumer.accept(_dslQuery.toSQL(astNodeListener));
-		consumer.accept(") as " + _name);
+		consumer.accept(") as " + getName());
 	}
 
 	private final DSLQuery _dslQuery;
-	private final Class<T> _javaType;
-	private final String _name;
-	private final int _sqlType;
 
 }

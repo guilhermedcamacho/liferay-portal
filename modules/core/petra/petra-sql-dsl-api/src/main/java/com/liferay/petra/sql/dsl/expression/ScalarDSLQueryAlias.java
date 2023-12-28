@@ -10,14 +10,8 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 /**
  * @author Marco Le
  */
-public interface ScalarDSLQueryAlias<T> extends Expression<T> {
+public interface ScalarDSLQueryAlias<T> extends Alias<T> {
 
 	public DSLQuery getDSLQuery();
-
-	public Class<T> getJavaType();
-
-	public String getName();
-
-	public int getSQLType();
 
 }
