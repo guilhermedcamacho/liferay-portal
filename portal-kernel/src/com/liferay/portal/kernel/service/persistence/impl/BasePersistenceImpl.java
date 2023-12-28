@@ -12,7 +12,6 @@ import com.liferay.petra.sql.dsl.Table;
 import com.liferay.petra.sql.dsl.ast.ASTNode;
 import com.liferay.petra.sql.dsl.expression.Alias;
 import com.liferay.petra.sql.dsl.expression.Expression;
-import com.liferay.petra.sql.dsl.expression.ScalarDSLQueryAlias;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.sql.dsl.query.FromStep;
 import com.liferay.petra.sql.dsl.query.GroupByStep;
@@ -272,14 +271,6 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 						Column<?, ?> column = (Column<?, ?>)expression;
 
 						sqlQuery.addScalar(column.getName(), _getType(column));
-					}
-					else if (expression instanceof ScalarDSLQueryAlias) {
-						ScalarDSLQueryAlias<?> scalarDSLQueryAlias =
-							(ScalarDSLQueryAlias<?>)expression;
-
-						sqlQuery.addScalar(
-							scalarDSLQueryAlias.getName(),
-							_types.get(scalarDSLQueryAlias.getJavaType()));
 					}
 					else {
 						throw new IllegalArgumentException(
