@@ -9,6 +9,7 @@ import com.liferay.petra.sql.dsl.ast.ASTNodeListener;
 import com.liferay.petra.sql.dsl.expression.Alias;
 import com.liferay.petra.sql.dsl.expression.Expression;
 import com.liferay.petra.sql.dsl.spi.ast.BaseASTNode;
+import com.liferay.petra.sql.dsl.spi.expression.DefaultScalarDSLQueryAlias;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -56,7 +57,9 @@ public class Select extends BaseASTNode implements DefaultFromStep {
 			while (iterator.hasNext()) {
 				Expression<?> expression = iterator.next();
 
-				if (expression instanceof Alias) {
+				if ((expression instanceof Alias) &&
+					!(expression instanceof DefaultScalarDSLQueryAlias)) {
+
 					Alias<?> alias = (Alias<?>)expression;
 
 					Expression<?> unwrappedExpression = alias.getExpression();

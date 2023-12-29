@@ -6,6 +6,7 @@
 package com.liferay.petra.sql.dsl.spi.expression;
 
 import com.liferay.petra.sql.dsl.ast.ASTNodeListener;
+import com.liferay.petra.sql.dsl.expression.Expression;
 import com.liferay.petra.sql.dsl.expression.ScalarDSLQueryAlias;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 
@@ -20,7 +21,7 @@ public class DefaultScalarDSLQueryAlias<T>
 	public DefaultScalarDSLQueryAlias(
 		DSLQuery dslQuery, Class<T> javaType, String name, int sqlType) {
 
-		super(null, javaType, name, sqlType);
+		super((Expression<T>)NullExpression.INSTANCE, javaType, name, sqlType);
 
 		_dslQuery = dslQuery;
 	}
@@ -28,6 +29,13 @@ public class DefaultScalarDSLQueryAlias<T>
 	@Override
 	public DSLQuery getDSLQuery() {
 		return _dslQuery;
+	}
+
+	@Override
+	public void toSQL(
+		Consumer<String> consumer, ASTNodeListener astNodeListener) {
+
+		doToSQL(consumer, astNodeListener);
 	}
 
 	@Override
