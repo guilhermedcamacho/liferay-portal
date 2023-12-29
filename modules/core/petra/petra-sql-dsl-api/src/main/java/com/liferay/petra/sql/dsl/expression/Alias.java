@@ -12,6 +12,10 @@ public interface Alias<T> extends Expression<T> {
 
 	public Expression<T> getExpression();
 
+	public Class<T> getJavaType();
+
 	public String getName();
+
+	public int getSQLType();
 
 }
