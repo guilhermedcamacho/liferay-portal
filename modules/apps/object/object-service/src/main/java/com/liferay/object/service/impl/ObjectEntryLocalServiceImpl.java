@@ -3092,10 +3092,30 @@ public class ObjectEntryLocalServiceImpl
 
 				ddmExpression.setVariables(columns);
 
-				try {
-					Expression<?> expression = ddmExpression.getDSLExpression();
+				String dbType = null;
 
-					selectExpressions.add(expression.as(objectField.getName()));
+				if (StringUtil.equals(
+						String.valueOf(objectFieldSettingsValues.get("output")),
+						ObjectFieldConstants.BUSINESS_TYPE_DECIMAL)) {
+
+					dbType = ObjectFieldConstants.DB_TYPE_DOUBLE;
+				}
+				else {
+					dbType = ObjectFieldConstants.DB_TYPE_INTEGER;
+				}
+
+				try {
+					Expression<Number> expression =
+						(Expression<Number>)ddmExpression.getDSLExpression();
+
+					selectExpressions.add(
+						expression.as(
+							(Class<Number>)
+								DynamicObjectDefinitionTableUtil.getJavaClass(
+									dbType),
+							objectField.getName(),
+							DynamicObjectDefinitionTableUtil.getSQLType(
+								dbType)));
 				}
 				catch (Exception exception) {
 					_log.error(exception);
