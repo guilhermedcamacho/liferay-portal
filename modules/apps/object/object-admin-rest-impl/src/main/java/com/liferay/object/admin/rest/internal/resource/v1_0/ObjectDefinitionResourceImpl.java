@@ -41,7 +41,6 @@ import com.liferay.object.model.ObjectFolder;
 import com.liferay.object.model.ObjectRelationshipModel;
 import com.liferay.object.model.ObjectValidationRuleModel;
 import com.liferay.object.service.ObjectActionLocalService;
-import com.liferay.object.service.ObjectActionService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectDefinitionService;
 import com.liferay.object.service.ObjectFieldLocalService;
@@ -52,7 +51,6 @@ import com.liferay.object.service.ObjectLayoutLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.ObjectValidationRuleLocalService;
 import com.liferay.object.service.ObjectViewLocalService;
-import com.liferay.object.service.ObjectViewService;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
 import com.liferay.object.system.SystemObjectDefinitionManager;
 import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
@@ -1287,9 +1285,6 @@ public class ObjectDefinitionResourceImpl
 	private ObjectActionResource.Factory _objectActionResourceFactory;
 
 	@Reference
-	private ObjectActionService _objectActionService;
-
-	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Reference
@@ -1352,9 +1347,6 @@ public class ObjectDefinitionResourceImpl
 
 	@Reference
 	private ObjectViewResource.Factory _objectViewResourceFactory;
-
-	@Reference
-	private ObjectViewService _objectViewService;
 
 	@Reference
 	private SystemObjectDefinitionManagerRegistry
