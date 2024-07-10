@@ -86,7 +86,6 @@ public class SalesforceObjectEntryManagerImplTest
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		adminUser = TestPropsValues.getUser();
-
 		companyId = TestPropsValues.getCompanyId();
 
 		_configurationProvider.saveCompanyConfiguration(
