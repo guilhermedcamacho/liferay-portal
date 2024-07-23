@@ -1,0 +1,262 @@
+{
+	"configuration": {
+		"className": "com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition",
+		"multiCompany": true,
+		"parameters": {
+			"containsHeaders": "true",
+			"createStrategy": "UPSERT",
+			"importStrategy": "ON_ERROR_FAIL",
+			"updateStrategy": "PARTIAL_UPDATE"
+		},
+		"taskItemDelegateName": "DEFAULT",
+		"userId": 0,
+		"version": "v1.0"
+	},
+	"items": [
+		{
+			"accountEntryRestricted": false,
+			"accountEntryRestrictedObjectFieldName": "",
+			"defaultLanguageId": "en_US",
+			"enableCategorization": true,
+			"enableComments": false,
+			"enableIndexSearch": true,
+			"enableLocalization": false,
+			"enableObjectEntryDraft": false,
+			"enableObjectEntryHistory": false,
+			"externalReferenceCode": "ERC_PARENT",
+			"label": {
+				"en_US": "Parent"
+			},
+			"modifiable": true,
+			"name": "Parent",
+			"objectFields": [
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "9b94e2ae-3fd3-7997-894b-d63759a15676",
+					"indexed": false,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "",
+					"label": {
+						"en_US": "Author"
+					},
+					"localized": false,
+					"name": "creator",
+					"objectFieldSettings": [
+					],
+					"readOnly": "true",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Date",
+					"businessType": "Date",
+					"externalReferenceCode": "bfdeacd3-f2fa-2c30-76b3-212b8920583b",
+					"indexed": false,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "",
+					"label": {
+						"en_US": "Create Date"
+					},
+					"localized": false,
+					"name": "createDate",
+					"objectFieldSettings": [
+					],
+					"readOnly": "true",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Date",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "d1499d92-c642-618d-ca4f-5a23c5c26e5d",
+					"indexed": false,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "",
+					"label": {
+						"en_US": "External Reference Code"
+					},
+					"localized": false,
+					"name": "externalReferenceCode",
+					"objectFieldSettings": [
+					],
+					"readOnly": "false",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "Long",
+					"businessType": "LongInteger",
+					"externalReferenceCode": "5d265ead-c2ee-c8dc-5ae3-c86da4f58901",
+					"indexed": true,
+					"indexedAsKeyword": true,
+					"indexedLanguageId": "",
+					"label": {
+						"en_US": "ID"
+					},
+					"localized": false,
+					"name": "id",
+					"objectFieldSettings": [
+					],
+					"readOnly": "true",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Long",
+					"unique": false
+				},
+				{
+					"DBType": "Date",
+					"businessType": "Date",
+					"externalReferenceCode": "f421bcb7-1b6b-4f96-b9a6-a3b6b26d6441",
+					"indexed": false,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "",
+					"label": {
+						"en_US": "Modified Date"
+					},
+					"localized": false,
+					"name": "modifiedDate",
+					"objectFieldSettings": [
+					],
+					"readOnly": "true",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Date",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "03d536e2-7119-dfdf-7b15-d7979e3fe052",
+					"indexed": false,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "",
+					"label": {
+						"en_US": "Status"
+					},
+					"localized": false,
+					"name": "status",
+					"objectFieldSettings": [
+					],
+					"readOnly": "true",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "String",
+					"unique": false
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "49a805f4-4dbb-4382-3d01-1981a323c25a",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"indexedLanguageId": "en_US",
+					"label": {
+						"en_US": "Name"
+					},
+					"localized": false,
+					"name": "name",
+					"objectFieldSettings": [
+					],
+					"readOnly": "false",
+					"readOnlyConditionExpression": "",
+					"required": false,
+					"state": false,
+					"system": false,
+					"type": "String",
+					"unique": false
+				}
+			],
+			"objectFolderExternalReferenceCode": "default",
+			"objectRelationships": [
+				{
+					"deletionType": "cascade",
+					"edge": true,
+					"externalReferenceCode": "d1a04414-6b23-31bb-3f2c-c46d79e4fc03",
+					"label": {
+						"en_US": "Parent Child"
+					},
+					"name": "parentChild",
+					"objectDefinitionExternalReferenceCode1": "ERC_PARENT",
+					"objectDefinitionExternalReferenceCode2": "ERC_CHILD",
+					"objectDefinitionModifiable2": true,
+					"objectDefinitionName2": "Child",
+					"objectDefinitionSystem2": false,
+					"objectField": {
+						"DBType": "Long",
+						"businessType": "Relationship",
+						"externalReferenceCode": "ded41de1-94a6-7c19-6a67-af6a06cea92e",
+						"indexed": true,
+						"indexedAsKeyword": false,
+						"indexedLanguageId": "",
+						"label": {
+							"en_US": "Parent"
+						},
+						"localized": false,
+						"name": "r_parentChild_c_parentId",
+						"objectDefinitionExternalReferenceCode1": "ERC_PARENT",
+						"objectFieldSettings": [
+							{
+								"name": "objectDefinition1ShortName",
+								"value": "Parent"
+							},
+							{
+								"name": "objectRelationshipERCObjectFieldName",
+								"value": "r_parentChild_c_parentERC"
+							}
+						],
+						"objectRelationshipExternalReferenceCode": "d1a04414-6b23-31bb-3f2c-c46d79e4fc03",
+						"readOnly": "false",
+						"readOnlyConditionExpression": "",
+						"relationshipType": "oneToMany",
+						"required": true,
+						"state": false,
+						"system": false,
+						"type": "Long",
+						"unique": false
+					},
+					"parameterObjectFieldId": 0,
+					"parameterObjectFieldName": "",
+					"reverse": false,
+					"system": false,
+					"type": "oneToMany"
+				}
+			],
+			"panelCategoryKey": "",
+			"parameterRequired": false,
+			"pluralLabel": {
+				"en_US": "Parents"
+			},
+			"portlet": true,
+			"restContextPath": "/o/c/parents",
+			"rootObjectDefinitionExternalReferenceCode": "ERC_PARENT",
+			"scope": "company",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			},
+			"storageType": "default",
+			"system": false,
+			"titleObjectFieldName": "id"
+		}
+	]
+}

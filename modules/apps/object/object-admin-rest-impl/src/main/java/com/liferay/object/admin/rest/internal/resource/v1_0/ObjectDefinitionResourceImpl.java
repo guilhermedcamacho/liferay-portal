@@ -488,7 +488,11 @@ public class ObjectDefinitionResourceImpl
 		int statusInt = serviceBuilderObjectDefinition.getStatus();
 
 		if ((objectDefinition.getStatus() != null) &&
-			Validator.isNull(rootObjectDefinitionExternalReferenceCode)) {
+			(Validator.isNull(rootObjectDefinitionExternalReferenceCode) ||
+			 (ObjectDefinitionUtil.isInvokerBundleAllowed() &&
+			  Objects.equals(
+				  objectDefinition.getExternalReferenceCode(),
+				  rootObjectDefinitionExternalReferenceCode)))) {
 
 			Status status = objectDefinition.getStatus();
 
@@ -776,7 +780,13 @@ public class ObjectDefinitionResourceImpl
 			_objectRelationshipLocalService.disableEdge(
 				serviceBuilderObjectDefinition.getObjectDefinitionId());
 
-			statusInt = WorkflowConstants.STATUS_DRAFT;
+			if (!(ObjectDefinitionUtil.isInvokerBundleAllowed() &&
+				  Objects.equals(
+					  objectDefinition.getExternalReferenceCode(),
+					  rootObjectDefinitionExternalReferenceCode))) {
+
+				statusInt = WorkflowConstants.STATUS_DRAFT;
+			}
 		}
 
 		_addObjectDefinitionResources(
@@ -820,6 +830,16 @@ public class ObjectDefinitionResourceImpl
 		}
 
 		return postObjectDefinition(objectDefinition);
+	}
+
+	@Override
+	protected void preparePatch(
+		ObjectDefinition objectDefinition,
+		ObjectDefinition existingObjectDefinition) {
+
+		if (objectDefinition.getStatus() != null) {
+			existingObjectDefinition.setStatus(objectDefinition::getStatus);
+		}
 	}
 
 	private void _addListTypeDefinition(ObjectDefinition objectDefinition)
