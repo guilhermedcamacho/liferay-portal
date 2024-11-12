@@ -1,0 +1,15 @@
+assemble:
+    - fromTask: bootJar
+liferay-categories-spring-boot-oauth-application-user-agent:
+    .serviceAddress: localhost:58081
+    .serviceScheme: http
+    name: Liferay Categories Spring Boot OAuth Application User Agent
+    scopes:
+        - Liferay.Headless.Admin.User.everything
+        - Liferay.Headless.Admin.Workflow.everything
+    type: oAuthApplicationUserAgent
+liferay-categories-spring-boot-object-entry-manager:
+    name: Liferay Categories Spring Boot Object Entry Manager
+    oAuth2ApplicationExternalReferenceCode: liferay-categories-spring-boot-oauth-application-user-agent
+    resourcePath: /categories
+    type: objectEntryManager
