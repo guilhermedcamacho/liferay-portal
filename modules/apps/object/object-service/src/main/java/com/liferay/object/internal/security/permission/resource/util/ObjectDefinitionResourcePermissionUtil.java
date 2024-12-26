@@ -152,14 +152,18 @@ public class ObjectDefinitionResourcePermissionUtil {
 			List<ObjectAction> standaloneObjectActions)
 		throws Exception {
 
+		String modelResources = StringPool.BLANK;
+
+		if (rootNodeObjectDefinition.getRootObjectDefinitionId() == 0) {
+			return modelResources;
+		}
+
 		int weight = _INITIAL_WEIGHT;
 
 		Tree tree = objectDefinitionTreeFactory.create(
 			rootNodeObjectDefinition.getObjectDefinitionId());
 
 		Iterator<Node> iterator = tree.iterator();
-
-		String modelResources = StringPool.BLANK;
 
 		while (iterator.hasNext()) {
 			Node node = iterator.next();
