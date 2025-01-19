@@ -18,7 +18,7 @@ import org.osgi.service.component.runtime.ServiceComponentRuntime;
  * @author Javier Gamarra
  */
 @Component(
-	property = "model.class.name=com.liferay.portal.vulcan.internal.configuration.VulcanConfiguration",
+	property = "model.class.name=com.liferay.portal.vulcan.configuration.VulcanConfiguration",
 	service = ConfigurationModelListener.class
 )
 public class VulcanConfigurationModelListener

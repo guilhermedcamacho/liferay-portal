@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-package com.liferay.portal.vulcan.internal.configuration.util;
+package com.liferay.portal.vulcan.configuration.util;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.vulcan.internal.configuration.VulcanCompanyConfiguration;
-import com.liferay.portal.vulcan.internal.configuration.VulcanConfiguration;
+import com.liferay.portal.vulcan.configuration.VulcanCompanyConfiguration;
+import com.liferay.portal.vulcan.configuration.VulcanConfiguration;
 
 import java.util.Dictionary;
 import java.util.HashSet;

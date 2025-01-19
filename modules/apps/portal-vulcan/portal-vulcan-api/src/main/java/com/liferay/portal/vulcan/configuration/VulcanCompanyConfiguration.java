@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-package com.liferay.portal.vulcan.internal.configuration;
+package com.liferay.portal.vulcan.configuration;
 
 import aQute.bnd.annotation.metatype.Meta;
 
@@ -18,7 +18,7 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 )
 @Meta.OCD(
 	factory = true,
-	id = "com.liferay.portal.vulcan.internal.configuration.VulcanCompanyConfiguration",
+	id = "com.liferay.portal.vulcan.configuration.VulcanCompanyConfiguration",
 	localization = "content/Language",
 	name = "headless-api-endpoint-company-configuration-name"
 )

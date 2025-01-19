@@ -12,8 +12,8 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.vulcan.internal.configuration.VulcanCompanyConfiguration;
-import com.liferay.portal.vulcan.internal.configuration.VulcanConfiguration;
+import com.liferay.portal.vulcan.configuration.VulcanCompanyConfiguration;
+import com.liferay.portal.vulcan.configuration.VulcanConfiguration;
 
 import java.util.Collection;
 import java.util.Dictionary;
