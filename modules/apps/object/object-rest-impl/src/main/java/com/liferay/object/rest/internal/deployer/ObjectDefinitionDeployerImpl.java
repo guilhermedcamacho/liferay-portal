@@ -272,7 +272,7 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 
 		try {
 			String factoryPid =
-				"com.liferay.portal.vulcan.internal.configuration." +
+				"com.liferay.portal.vulcan.configuration." +
 					"VulcanCompanyConfiguration";
 
 			Configuration configuration = _getConfiguration(
