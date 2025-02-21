@@ -3487,7 +3487,7 @@
 					"type": "string"
 				},
 				"pid": {
-					"const": "com.liferay.portal.vulcan.internal.configuration.VulcanCompanyConfiguration",
+					"const": "com.liferay.portal.vulcan.configuration.VulcanCompanyConfiguration",
 					"title": "Headless API Endpoint"
 				},
 				"restEnabled": {
@@ -4297,8 +4297,8 @@
 				"com.liferay.portal.security.ldap.exportimport.configuration.LDAPExportConfiguration",
 				"com.liferay.portal.security.ldap.exportimport.configuration.LDAPImportConfiguration",
 				"com.liferay.portal.security.sso.openid.connect.internal.configuration.OpenIdConnectProviderConfiguration",
+				"com.liferay.portal.vulcan.configuration.VulcanCompanyConfiguration",
 				"com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration",
-				"com.liferay.portal.vulcan.internal.configuration.VulcanCompanyConfiguration",
 				"com.liferay.product.navigation.applications.menu.configuration.ApplicationsMenuInstanceConfiguration",
 				"com.liferay.product.navigation.personal.menu.configuration.PersonalMenuConfiguration",
 				"com.liferay.redirect.internal.configuration.RedirectURLConfiguration",
