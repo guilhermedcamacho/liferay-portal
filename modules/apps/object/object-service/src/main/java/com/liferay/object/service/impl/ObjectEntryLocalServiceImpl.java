@@ -430,6 +430,14 @@ public class ObjectEntryLocalServiceImpl
 		finally {
 			ObjectActionThreadLocal.setClearObjectEntryIdsMap(
 				clearObjectEntryIdsMap);
+
+			for (Map.Entry<Long, DLFolder> dlFileEntry :
+					_dlFileEntries.entrySet()) {
+
+				TempFileEntryUtil.deleteTempFileEntry(dlFileEntry.getKey());
+
+				_dlFileEntries.clear();
+			}
 		}
 
 		return _addObjectEntryVersion(objectEntry);
@@ -1997,11 +2005,8 @@ public class ObjectEntryLocalServiceImpl
 				values.put(objectField.getName(), fileEntry.getFileEntryId());
 			}
 		}
-		finally {
-			if (dlFileEntry != null) {
-				TempFileEntryUtil.deleteTempFileEntry(
-					dlFileEntry.getFileEntryId());
-			}
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
 		}
 	}
 
@@ -5630,6 +5635,11 @@ public class ObjectEntryLocalServiceImpl
 					dlFileEntry, objectDefinition, objectEntryId, objectField,
 					serviceContext, userId, values);
 
+				if (!_dlFileEntries.containsValue(dlFileEntry.getFolder())) {
+					_dlFileEntries.put(
+						dlFileEntry.getFileEntryId(), dlFileEntry.getFolder());
+				}
+
 				return;
 			}
 
@@ -5906,6 +5916,8 @@ public class ObjectEntryLocalServiceImpl
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
+
+	private final Map<Long, DLFolder> _dlFileEntries = new HashMap<>();
 
 	@Reference
 	private DLFileEntryLocalService _dlFileEntryLocalService;
