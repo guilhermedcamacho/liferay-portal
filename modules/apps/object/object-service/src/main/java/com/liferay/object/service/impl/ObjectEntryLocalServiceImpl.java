@@ -1967,21 +1967,21 @@ public class ObjectEntryLocalServiceImpl
 			_objectFieldLocalService.getObjectFields(
 				objectDefinition.getObjectDefinitionId());
 
-		List<ObjectEntryValuesException> fieldExceptions = new ArrayList<>();
+		List<ObjectEntryValuesException> objectEntryValuesExceptions = new ArrayList<>();
 
 		for (ObjectField objectField : objectFields) {
 			if (!objectField.isLocalized() &&
 				values.containsKey(objectField.getName())) {
 
-				fieldExceptions.addAll(
+				objectEntryValuesExceptions.addAll(
 					_validateValues(
 						dlFileEntries, tempDLFileEntryIds, existingObjectEntry,
 						guestUser, groupId, objectDefinition, objectField,
 						serviceContext, userId, validation,
 						values.get(objectField.getName()), StringPool.BLANK));
 
-				if (ListUtil.isNotEmpty(fieldExceptions) && !validation) {
-					return fieldExceptions;
+				if (ListUtil.isNotEmpty(objectEntryValuesExceptions) && !validation) {
+					return objectEntryValuesExceptions;
 				}
 
 				continue;
@@ -2004,8 +2004,8 @@ public class ObjectEntryLocalServiceImpl
 			}
 		}
 
-		if (ListUtil.isNotEmpty(fieldExceptions) && validation) {
-			return fieldExceptions;
+		if (ListUtil.isNotEmpty(objectEntryValuesExceptions) && validation) {
+			return objectEntryValuesExceptions;
 		}
 
 		return Collections.emptyList();
@@ -5729,7 +5729,7 @@ public class ObjectEntryLocalServiceImpl
 			Set<Long> tempDLFileEntryIds, ObjectEntry existingObjectEntry,
 			boolean guestUser, long groupId, ObjectDefinition objectDefinition,
 			ObjectField objectField, ServiceContext serviceContext, long userId,
-			boolean check, Serializable value, String valueLanguageId)
+			boolean throwError, Serializable value, String valueLanguageId)
 		throws PortalException {
 
 		_objectEntryValuesException.clear();
@@ -5957,7 +5957,7 @@ public class ObjectEntryLocalServiceImpl
 				userId, value, valueLanguageId);
 		}
 
-		if (check) {
+		if (throwError) {
 			return _objectEntryValuesException;
 		}
 
