@@ -1039,8 +1039,7 @@ public class ObjectEntryResourceTest {
 
 		// Site scope external reference code
 
-		Group group = _groupLocalService.fetchGroup(
-			TestPropsValues.getGroupId());
+		Group group = _groupLocalService.fetchGroup(_testGroupId);
 
 		_siteScopedObjectEntry1 = ObjectEntryTestUtil.addObjectEntry(
 			_siteScopedObjectDefinition1, _OBJECT_FIELD_NAME_1,
@@ -6361,8 +6360,7 @@ public class ObjectEntryResourceTest {
 					JSONUtil.put(
 						"externalReferenceCode", externalReferenceCode
 					).toString(),
-					_getEndpoint(
-						_objectDefinition1, TestPropsValues.getGroupId()),
+					_getEndpoint(_objectDefinition1, _testGroupId),
 					Http.Method.POST);
 
 				jsonObject = HTTPTestUtil.invokeToJSONObject(
@@ -6370,9 +6368,8 @@ public class ObjectEntryResourceTest {
 						_getPermissionsJSONObject(new String[0], role.getName())
 					).toString(),
 					StringBundler.concat(
-						_getEndpoint(
-							_objectDefinition1, TestPropsValues.getGroupId()),
-						"/", jsonObject.getString("id"), "/permissions"),
+						_getEndpoint(_objectDefinition1, _testGroupId), "/",
+						jsonObject.getString("id"), "/permissions"),
 					Http.Method.PUT);
 
 				Assert.assertNotEquals(
@@ -6566,8 +6563,7 @@ public class ObjectEntryResourceTest {
 		JSONObject scopeJSONObject = JSONUtil.put(
 			"externalReferenceCode",
 			() -> {
-				Group group = _groupLocalService.getGroup(
-					TestPropsValues.getGroupId());
+				Group group = _groupLocalService.getGroup(_testGroupId);
 
 				return group.getExternalReferenceCode();
 			}
@@ -6696,8 +6692,7 @@ public class ObjectEntryResourceTest {
 				_OBJECT_FIELD_NAME_ATTACHMENT_DOCS_AND_MEDIA_SOURCE,
 				dlFileEntry.getFileEntryId()
 			).toString(),
-			_getEndpoint(
-				_siteScopedObjectDefinition1, TestPropsValues.getGroupId()),
+			_getEndpoint(_siteScopedObjectDefinition1, _testGroupId),
 			Http.Method.POST);
 
 		_assertAttachmentJSONObject(
@@ -7237,8 +7232,7 @@ public class ObjectEntryResourceTest {
 				StringBundler.concat(
 					"http://localhost:8080/o",
 					_siteScopedObjectDefinition1.getRESTContextPath(),
-					"/scopes/", TestPropsValues.getGroupId(),
-					"/by-external-reference-code/",
+					"/scopes/", _testGroupId, "/by-external-reference-code/",
 					jsonObject.getString("externalReferenceCode"),
 					"/object-actions/", objectAction.getName()),
 				actionJSONObject.getString("href")));
@@ -7479,8 +7473,7 @@ public class ObjectEntryResourceTest {
 
 		// Site scope external reference code
 
-		Group group = _groupLocalService.fetchGroup(
-			TestPropsValues.getGroupId());
+		Group group = _groupLocalService.fetchGroup(_testGroupId);
 
 		String objectFieldValue = RandomTestUtil.randomString();
 
@@ -7606,8 +7599,7 @@ public class ObjectEntryResourceTest {
 			_siteScopedObjectDefinition1, _OBJECT_FIELD_NAME_1,
 			_OBJECT_FIELD_VALUE_1);
 
-		Group group = _groupLocalService.fetchGroup(
-			TestPropsValues.getGroupId());
+		Group group = _groupLocalService.fetchGroup(_testGroupId);
 
 		jsonObject = HTTPTestUtil.invokeToJSONObject(
 			null,
@@ -8321,8 +8313,7 @@ public class ObjectEntryResourceTest {
 								"-private"
 							).build()))));
 
-		String endpoint = _getEndpoint(
-			objectDefinition, TestPropsValues.getGroupId());
+		String endpoint = _getEndpoint(objectDefinition, _testGroupId);
 
 		HTTPTestUtil.invokeToJSONObject(
 			JSONFactoryUtil.getNullJSON(), endpoint, Http.Method.POST);
@@ -8631,8 +8622,7 @@ public class ObjectEntryResourceTest {
 				).put(
 					"externalReferenceCode", _ERC_VALUE_1
 				).toString(),
-				_getEndpoint(
-					_siteScopedObjectDefinition1, TestPropsValues.getGroupId()),
+				_getEndpoint(_siteScopedObjectDefinition1, _testGroupId),
 				Http.Method.POST));
 
 		Assert.assertEquals(
@@ -8643,8 +8633,7 @@ public class ObjectEntryResourceTest {
 				).put(
 					"externalReferenceCode", _ERC_VALUE_1
 				).toString(),
-				_getEndpoint(
-					_siteScopedObjectDefinition1, TestPropsValues.getGroupId()),
+				_getEndpoint(_siteScopedObjectDefinition1, _testGroupId),
 				Http.Method.POST));
 	}
 
@@ -8839,8 +8828,7 @@ public class ObjectEntryResourceTest {
 
 		jsonObject = HTTPTestUtil.invokeToJSONObject(
 			objectEntryJSONObject.toString(),
-			_getEndpoint(
-				_siteScopedObjectDefinition1, TestPropsValues.getGroupId()),
+			_getEndpoint(_siteScopedObjectDefinition1, _testGroupId),
 			Http.Method.POST);
 
 		Assert.assertEquals(
@@ -8954,8 +8942,7 @@ public class ObjectEntryResourceTest {
 
 		jsonObject = HTTPTestUtil.invokeToJSONObject(
 			objectEntryJSONObject.toString(),
-			_getEndpoint(
-				_siteScopedObjectDefinition2, TestPropsValues.getGroupId()),
+			_getEndpoint(_siteScopedObjectDefinition2, _testGroupId),
 			Http.Method.POST);
 
 		Assert.assertEquals(
@@ -9070,8 +9057,7 @@ public class ObjectEntryResourceTest {
 
 		jsonObject = HTTPTestUtil.invokeToJSONObject(
 			objectEntryJSONObject.toString(),
-			_getEndpoint(
-				_siteScopedObjectDefinition1, TestPropsValues.getGroupId()),
+			_getEndpoint(_siteScopedObjectDefinition1, _testGroupId),
 			Http.Method.POST);
 
 		Assert.assertEquals(
@@ -9326,8 +9312,7 @@ public class ObjectEntryResourceTest {
 
 		// Site scope external reference code
 
-		Group group = _groupLocalService.fetchGroup(
-			TestPropsValues.getGroupId());
+		Group group = _groupLocalService.fetchGroup(_testGroupId);
 
 		String objectFieldValue = RandomTestUtil.randomString();
 
@@ -9379,8 +9364,7 @@ public class ObjectEntryResourceTest {
 
 	@Test
 	public void testPostScopeScopeKeyValidate() throws Exception {
-		Group group = _groupLocalService.fetchGroup(
-			TestPropsValues.getGroupId());
+		Group group = _groupLocalService.fetchGroup(_testGroupId);
 
 		_testPostValidate(
 			group.getExternalReferenceCode(), _siteScopedObjectDefinition1,
@@ -10313,8 +10297,7 @@ public class ObjectEntryResourceTest {
 
 		com.liferay.object.rest.dto.v1_0.FileEntry fileEntry3 = _toFileEntry(
 			content -> null, StringPool.BLANK,
-			existingDLFileEntry.getFileName(), null,
-			TestPropsValues.getGroupId());
+			existingDLFileEntry.getFileName(), null, _testGroupId);
 
 		fileEntry3.setExternalReferenceCode(
 			existingDLFileEntry.getExternalReferenceCode());
@@ -10686,8 +10669,7 @@ public class ObjectEntryResourceTest {
 						_NEW_OBJECT_FIELD_VALUE_1, _NEW_OBJECT_FIELD_VALUE_2
 					})
 			).toString(),
-			_getEndpoint(
-				_siteScopedObjectDefinition1, TestPropsValues.getGroupId()),
+			_getEndpoint(_siteScopedObjectDefinition1, _testGroupId),
 			Http.Method.POST);
 
 		JSONObject putJSONObject = HTTPTestUtil.invokeToJSONObject(
@@ -10716,8 +10698,7 @@ public class ObjectEntryResourceTest {
 
 	@Test
 	public void testSortByCustomObjectField() throws Exception {
-		String endpoint = _getEndpoint(
-			_objectDefinition1, TestPropsValues.getGroupId());
+		String endpoint = _getEndpoint(_objectDefinition1, _testGroupId);
 
 		_objectRelationship1 = ObjectRelationshipTestUtil.addObjectRelationship(
 			_objectDefinition2, _objectDefinition1, TestPropsValues.getUserId(),
@@ -10914,12 +10895,9 @@ public class ObjectEntryResourceTest {
 			_objectDefinition2, _objectDefinition3, TestPropsValues.getUserId(),
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 
-		String endpoint1 = _getEndpoint(
-			_objectDefinition1, TestPropsValues.getGroupId());
-		String endpoint2 = _getEndpoint(
-			_objectDefinition2, TestPropsValues.getGroupId());
-		String endpoint3 = _getEndpoint(
-			_objectDefinition3, TestPropsValues.getGroupId());
+		String endpoint1 = _getEndpoint(_objectDefinition1, _testGroupId);
+		String endpoint2 = _getEndpoint(_objectDefinition2, _testGroupId);
+		String endpoint3 = _getEndpoint(_objectDefinition3, _testGroupId);
 
 		BigDecimal randomBigDecimal = new BigDecimal(
 			RandomTestUtil.randomDouble());
@@ -11395,12 +11373,9 @@ public class ObjectEntryResourceTest {
 			_objectDefinition3, _objectDefinition2, TestPropsValues.getUserId(),
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 
-		String endpoint1 = _getEndpoint(
-			_objectDefinition1, TestPropsValues.getGroupId());
-		String endpoint2 = _getEndpoint(
-			_objectDefinition2, TestPropsValues.getGroupId());
-		String endpoint3 = _getEndpoint(
-			_objectDefinition3, TestPropsValues.getGroupId());
+		String endpoint1 = _getEndpoint(_objectDefinition1, _testGroupId);
+		String endpoint2 = _getEndpoint(_objectDefinition2, _testGroupId);
+		String endpoint3 = _getEndpoint(_objectDefinition3, _testGroupId);
 
 		BigDecimal randomBigDecimal = new BigDecimal(
 			RandomTestUtil.randomDouble());
@@ -11920,12 +11895,9 @@ public class ObjectEntryResourceTest {
 			_objectDefinitionLocalService.updateObjectDefinition(
 				_objectDefinition3);
 
-		String endpoint1 = _getEndpoint(
-			_objectDefinition1, TestPropsValues.getGroupId());
-		String endpoint2 = _getEndpoint(
-			_objectDefinition2, TestPropsValues.getGroupId());
-		String endpoint3 = _getEndpoint(
-			_objectDefinition3, TestPropsValues.getGroupId());
+		String endpoint1 = _getEndpoint(_objectDefinition1, _testGroupId);
+		String endpoint2 = _getEndpoint(_objectDefinition2, _testGroupId);
+		String endpoint3 = _getEndpoint(_objectDefinition3, _testGroupId);
 
 		JSONObject[] manyToOneDepth1JSONObjects = new JSONObject[2];
 
@@ -12264,12 +12236,9 @@ public class ObjectEntryResourceTest {
 			_objectDefinition2, _objectDefinition3, TestPropsValues.getUserId(),
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 
-		String endpoint1 = _getEndpoint(
-			_objectDefinition1, TestPropsValues.getGroupId());
-		String endpoint2 = _getEndpoint(
-			_objectDefinition2, TestPropsValues.getGroupId());
-		String endpoint3 = _getEndpoint(
-			_objectDefinition3, TestPropsValues.getGroupId());
+		String endpoint1 = _getEndpoint(_objectDefinition1, _testGroupId);
+		String endpoint2 = _getEndpoint(_objectDefinition2, _testGroupId);
+		String endpoint3 = _getEndpoint(_objectDefinition3, _testGroupId);
 
 		BigDecimal randomBigDecimal = new BigDecimal(
 			RandomTestUtil.randomDouble());
@@ -12957,12 +12926,9 @@ public class ObjectEntryResourceTest {
 			_objectDefinitionLocalService.updateObjectDefinition(
 				_objectDefinition3);
 
-		String endpoint1 = _getEndpoint(
-			_objectDefinition1, TestPropsValues.getGroupId());
-		String endpoint2 = _getEndpoint(
-			_objectDefinition2, TestPropsValues.getGroupId());
-		String endpoint3 = _getEndpoint(
-			_objectDefinition3, TestPropsValues.getGroupId());
+		String endpoint1 = _getEndpoint(_objectDefinition1, _testGroupId);
+		String endpoint2 = _getEndpoint(_objectDefinition2, _testGroupId);
+		String endpoint3 = _getEndpoint(_objectDefinition3, _testGroupId);
 
 		JSONObject[] oneToManyDepth1JSONObjects = new JSONObject[4];
 
@@ -13348,8 +13314,7 @@ public class ObjectEntryResourceTest {
 			_objectDefinition1, _objectDefinition2, TestPropsValues.getUserId(),
 			ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
 
-		String endpoint = _getEndpoint(
-			_objectDefinition1, TestPropsValues.getGroupId());
+		String endpoint = _getEndpoint(_objectDefinition1, _testGroupId);
 
 		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
 				"com.liferay.portal.vulcan.internal.jaxrs.exception.mapper." +
@@ -13396,8 +13361,7 @@ public class ObjectEntryResourceTest {
 			_objectDefinitionLocalService.updateObjectDefinition(
 				_objectDefinition1);
 
-		String endpoint = _getEndpoint(
-			_objectDefinition1, TestPropsValues.getGroupId());
+		String endpoint = _getEndpoint(_objectDefinition1, _testGroupId);
 
 		JSONObject[] jsonObjects = new JSONObject[2];
 
@@ -13553,8 +13517,8 @@ public class ObjectEntryResourceTest {
 		throws Exception {
 
 		_resourcePermissionLocalService.addModelResourcePermissions(
-			TestPropsValues.getCompanyId(), TestPropsValues.getGroupId(),
-			userId, className, String.valueOf(objectEntryId),
+			TestPropsValues.getCompanyId(), _testGroupId, userId, className,
+			String.valueOf(objectEntryId),
 			ModelPermissionsFactory.create(
 				HashMapBuilder.put(
 					RoleConstants.USER, actionIds
@@ -13688,7 +13652,7 @@ public class ObjectEntryResourceTest {
 					name = StringUtil.toLowerCase(
 						RandomTestUtil.randomString());
 					numberOfTaxonomyCategories = RandomTestUtil.randomInt();
-					siteId = TestPropsValues.getGroupId();
+					siteId = _testGroupId;
 					taxonomyCategoryUsageCount = RandomTestUtil.randomInt();
 					taxonomyVocabularyId = RandomTestUtil.randomLong();
 				}
@@ -13700,7 +13664,7 @@ public class ObjectEntryResourceTest {
 		throws Exception {
 
 		return TempFileEntryUtil.addTempFileEntry(
-			TestPropsValues.getGroupId(), TestPropsValues.getUserId(),
+			_testGroupId, TestPropsValues.getUserId(),
 			objectDefinition.getPortletId(),
 			TempFileEntryUtil.getTempFileName(title + ".txt"),
 			FileUtil.createTempFile(content.getBytes()),
@@ -14066,7 +14030,7 @@ public class ObjectEntryResourceTest {
 				objectDefinition.getScope());
 
 		if (objectScopeProvider.isGroupAware()) {
-			groupId = TestPropsValues.getGroupId();
+			groupId = _testGroupId;
 		}
 		else {
 			Company company = _companyLocalService.getCompany(
@@ -14160,7 +14124,7 @@ public class ObjectEntryResourceTest {
 									objectDefinition.getScope(),
 									ObjectDefinitionConstants.SCOPE_SITE)) {
 
-								repositoryId = TestPropsValues.getGroupId();
+								repositoryId = _testGroupId;
 							}
 							else {
 								Company company =
@@ -14525,7 +14489,7 @@ public class ObjectEntryResourceTest {
 		return HTTPTestUtil.invokeToJSONObject(
 			permissionsJSONArray.toString(),
 			StringBundler.concat(
-				_getEndpoint(_objectDefinition1, TestPropsValues.getGroupId()),
+				_getEndpoint(_objectDefinition1, _testGroupId),
 				StringPool.SLASH, id, "/permissions"),
 			Http.Method.PUT);
 	}
@@ -14734,8 +14698,7 @@ public class ObjectEntryResourceTest {
 			JSONUtil.put(
 				_OBJECT_FIELD_NAME_1, "value"
 			).toString(),
-			_getEndpoint(objectDefinition, TestPropsValues.getGroupId()),
-			Http.Method.POST);
+			_getEndpoint(objectDefinition, _testGroupId), Http.Method.POST);
 
 		JSONObject actionsJSONObject = jsonObject.getJSONObject("actions");
 
@@ -15148,7 +15111,7 @@ public class ObjectEntryResourceTest {
 		// File from URL
 
 		FileEntry customFileEntry1 = TempFileEntryUtil.addTempFileEntry(
-			TestPropsValues.getGroupId(), TestPropsValues.getUserId(),
+			_testGroupId, TestPropsValues.getUserId(),
 			StringUtil.randomString(),
 			TempFileEntryUtil.getTempFileName(
 				StringUtil.randomString() + ".txt"),
@@ -15264,8 +15227,7 @@ public class ObjectEntryResourceTest {
 
 		// File from documents and media
 
-		DLFolder dlFolder1 = DLTestUtil.addDLFolder(
-			TestPropsValues.getGroupId());
+		DLFolder dlFolder1 = DLTestUtil.addDLFolder(_testGroupId);
 
 		_testPatchPutCustomObjectEntryWithAttachmentField(
 			fileEntry -> JSONUtil.put(
@@ -15301,8 +15263,7 @@ public class ObjectEntryResourceTest {
 				_getFileEntryJSONObject(null, fileEntry, objectDefinition)),
 			_toFileEntry(
 				Base64::encode, RandomTestUtil.randomString(),
-				RandomTestUtil.randomString() + ".txt", null,
-				TestPropsValues.getGroupId()),
+				RandomTestUtil.randomString() + ".txt", null, _testGroupId),
 			httpMethod, null, objectDefinition,
 			_OBJECT_FIELD_NAME_ATTACHMENT_DOCS_AND_MEDIA_SOURCE,
 			useExternalReferenceCode);
@@ -15446,8 +15407,7 @@ public class ObjectEntryResourceTest {
 			userName + "@liferay.com", userPassword
 		).apply(
 			() -> {
-				DLFolder dlFolder = DLTestUtil.addDLFolder(
-					TestPropsValues.getGroupId());
+				DLFolder dlFolder = DLTestUtil.addDLFolder(_testGroupId);
 
 				Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
@@ -15462,8 +15422,7 @@ public class ObjectEntryResourceTest {
 
 				_resourcePermissionLocalService.setResourcePermissions(
 					TestPropsValues.getCompanyId(), DLConstants.RESOURCE_NAME,
-					ResourceConstants.SCOPE_GROUP,
-					String.valueOf(TestPropsValues.getGroupId()),
+					ResourceConstants.SCOPE_GROUP, String.valueOf(_testGroupId),
 					role.getRoleId(), new String[] {ActionKeys.ADD_DOCUMENT});
 
 				com.liferay.object.rest.dto.v1_0.FileEntry testFileEntry =
@@ -15513,7 +15472,7 @@ public class ObjectEntryResourceTest {
 			_toFileEntry(
 				Base64::encode, RandomTestUtil.randomString(),
 				RandomTestUtil.randomString() + ".txt",
-				randomExternalReferenceCode, TestPropsValues.getGroupId()),
+				randomExternalReferenceCode, _testGroupId),
 			httpMethod, null, objectDefinition,
 			_OBJECT_FIELD_NAME_ATTACHMENT_DOCS_AND_MEDIA_SOURCE,
 			useExternalReferenceCode);
@@ -15664,8 +15623,7 @@ public class ObjectEntryResourceTest {
 					RandomTestUtil.randomString(),
 					RandomTestUtil.randomString() + ".txt", objectFieldName)
 			).toString(),
-			_getEndpoint(objectDefinition, TestPropsValues.getGroupId()),
-			Http.Method.POST);
+			_getEndpoint(objectDefinition, _testGroupId), Http.Method.POST);
 
 		String endpoint =
 			objectDefinition.getRESTContextPath() + "/" +
@@ -15673,7 +15631,7 @@ public class ObjectEntryResourceTest {
 
 		if (useExternalReferenceCode) {
 			endpoint =
-				_getEndpoint(objectDefinition, TestPropsValues.getGroupId()) +
+				_getEndpoint(objectDefinition, _testGroupId) +
 					"/by-external-reference-code/" +
 						jsonObject.getString("externalReferenceCode");
 		}
@@ -15720,7 +15678,7 @@ public class ObjectEntryResourceTest {
 			httpMethod);
 
 		String endpoint = _getEndpoint(
-			siteScopedObjectDefinition, TestPropsValues.getGroupId());
+			siteScopedObjectDefinition, _testGroupId);
 
 		_testPatchPutCustomObjectEntryWithDuplicateExternalReferenceCode(
 			endpoint, endpoint + "/by-external-reference-code/", httpMethod);
@@ -15768,7 +15726,7 @@ public class ObjectEntryResourceTest {
 		// File from URL
 
 		FileEntry customFileEntry1 = TempFileEntryUtil.addTempFileEntry(
-			TestPropsValues.getGroupId(), TestPropsValues.getUserId(),
+			_testGroupId, TestPropsValues.getUserId(),
 			StringUtil.randomString(),
 			TempFileEntryUtil.getTempFileName(
 				StringUtil.randomString() + ".txt"),
@@ -15881,8 +15839,7 @@ public class ObjectEntryResourceTest {
 
 		// File from documents and media
 
-		DLFolder dlFolder1 = DLTestUtil.addDLFolder(
-			TestPropsValues.getGroupId());
+		DLFolder dlFolder1 = DLTestUtil.addDLFolder(_testGroupId);
 
 		_testPostCustomObjectEntryWithAttachmentObjectField(
 			fileEntry -> JSONUtil.put(
@@ -15916,8 +15873,7 @@ public class ObjectEntryResourceTest {
 				_getFileEntryJSONObject(null, fileEntry, objectDefinition)),
 			_toFileEntry(
 				Base64::encode, RandomTestUtil.randomString(),
-				RandomTestUtil.randomString() + ".txt", null,
-				TestPropsValues.getGroupId()),
+				RandomTestUtil.randomString() + ".txt", null, _testGroupId),
 			null, objectDefinition,
 			_OBJECT_FIELD_NAME_ATTACHMENT_DOCS_AND_MEDIA_SOURCE);
 		_testPostCustomObjectEntryWithAttachmentObjectField(
@@ -15942,11 +15898,10 @@ public class ObjectEntryResourceTest {
 
 		// File from documents and media with generated thumbnail
 
-		DLFolder dlFolder3 = DLTestUtil.addDLFolder(
-			TestPropsValues.getGroupId());
+		DLFolder dlFolder3 = DLTestUtil.addDLFolder(_testGroupId);
 
 		FileEntry customFileEntry2 = _dlAppLocalService.addFileEntry(
-			null, TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
+			null, TestPropsValues.getUserId(), _testGroupId,
 			dlFolder3.getFolderId(), StringUtil.randomString() + ".jpg",
 			ContentTypes.IMAGE_JPEG,
 			FileUtil.getBytes(getClass(), "dependencies/image.jpg"), null, null,
@@ -16078,8 +16033,7 @@ public class ObjectEntryResourceTest {
 			userName + "@liferay.com", userPassword
 		).apply(
 			() -> {
-				DLFolder dlFolder = DLTestUtil.addDLFolder(
-					TestPropsValues.getGroupId());
+				DLFolder dlFolder = DLTestUtil.addDLFolder(_testGroupId);
 
 				Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
@@ -16140,7 +16094,7 @@ public class ObjectEntryResourceTest {
 			_toFileEntry(
 				Base64::encode, RandomTestUtil.randomString(),
 				RandomTestUtil.randomString() + ".txt",
-				randomExternalReferenceCode, TestPropsValues.getGroupId()),
+				randomExternalReferenceCode, _testGroupId),
 			null, objectDefinition,
 			_OBJECT_FIELD_NAME_ATTACHMENT_DOCS_AND_MEDIA_SOURCE);
 
@@ -16216,7 +16170,7 @@ public class ObjectEntryResourceTest {
 
 		testFileEntry = _toFileEntry(
 			Base64::encode, fileContent, existingDLFileEntry.getFileName(),
-			null, TestPropsValues.getGroupId());
+			null, _testGroupId);
 
 		testFileEntry.setExternalReferenceCode(
 			existingDLFileEntry.getExternalReferenceCode());
@@ -16246,7 +16200,7 @@ public class ObjectEntryResourceTest {
 
 		testFileEntry = _toFileEntry(
 			Base64::encode, fileContent, existingDLFileEntry.getFileName(),
-			null, TestPropsValues.getGroupId());
+			null, _testGroupId);
 
 		testFileEntry.setExternalReferenceCode(
 			existingDLFileEntry.getExternalReferenceCode());
@@ -16427,8 +16381,7 @@ public class ObjectEntryResourceTest {
 			String objectFieldName)
 		throws Exception {
 
-		String endpoint = _getEndpoint(
-			objectDefinition, TestPropsValues.getGroupId());
+		String endpoint = _getEndpoint(objectDefinition, _testGroupId);
 
 		if (nestedFields != null) {
 			endpoint = StringBundler.concat(
@@ -16903,7 +16856,7 @@ public class ObjectEntryResourceTest {
 				objectField2.getObjectFieldId());
 
 			FileEntry fileEntry = TempFileEntryUtil.addTempFileEntry(
-				TestPropsValues.getGroupId(), TestPropsValues.getUserId(),
+				_testGroupId, TestPropsValues.getUserId(),
 				objectDefinition.getPortletId(),
 				TempFileEntryUtil.getTempFileName("foo.pdf"),
 				FileUtil.createTempFile(
@@ -17797,8 +17750,7 @@ public class ObjectEntryResourceTest {
 					"WebApplicationExceptionMapper",
 				LoggerTestUtil.ERROR)) {
 
-			String endpoint = _getEndpoint(
-				objectDefinition, TestPropsValues.getGroupId());
+			String endpoint = _getEndpoint(objectDefinition, _testGroupId);
 
 			JSONAssert.assertEquals(
 				JSONUtil.put(
@@ -17949,7 +17901,7 @@ public class ObjectEntryResourceTest {
 
 			Folder folder = new Folder();
 
-			folder.setSiteId(TestPropsValues.getGroupId());
+			folder.setSiteId(_testGroupId);
 
 			fileEntry.setFolder(folder);
 		}
