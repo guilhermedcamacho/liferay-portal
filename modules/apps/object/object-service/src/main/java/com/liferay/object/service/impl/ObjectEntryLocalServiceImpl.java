@@ -523,7 +523,7 @@ public class ObjectEntryLocalServiceImpl
 				defaultLanguageId, dlFileEntriesMap, null,
 				GroupConstants.DEFAULT_PARENT_GROUP_ID, user.isGuestUser(),
 				objectDefinition, null,
-				dynamicObjectDefinitionTable.getObjectFields(), true,
+				dynamicObjectDefinitionTable.getObjectFields(), false,
 				serviceContext, null, userId, null, values);
 
 			_addDLFileEntries(
@@ -531,8 +531,8 @@ public class ObjectEntryLocalServiceImpl
 				userId, values);
 
 			_insertIntoTable(
-				dynamicObjectDefinitionTable, new HashMap<>(), primaryKey, true,
-				values);
+				dynamicObjectDefinitionTable, new HashMap<>(), primaryKey,
+				false, values);
 		}
 
 		_deleteTempFileEntries(dlFileEntriesMap);
@@ -1605,12 +1605,12 @@ public class ObjectEntryLocalServiceImpl
 				defaultLanguageId, Collections.emptyMap(), null,
 				GroupConstants.DEFAULT_PARENT_GROUP_ID, user.isGuestUser(),
 				objectDefinition, null,
-				dynamicObjectDefinitionTable.getObjectFields(), true,
+				dynamicObjectDefinitionTable.getObjectFields(), false,
 				new ServiceContext(), null, userId, null, values);
 
 			_insertIntoTable(
-				dynamicObjectDefinitionTable, new HashMap<>(), primaryKey, true,
-				values);
+				dynamicObjectDefinitionTable, new HashMap<>(), primaryKey,
+				false, values);
 		}
 	}
 
