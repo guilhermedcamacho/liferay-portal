@@ -8091,7 +8091,7 @@ public class ObjectEntryResourceTest {
 
 		Group group = _groupLocalService.fetchGroup(_testGroupId);
 
-		// scopeKey: externalReferenceCode
+		// Scope key: external reference code
 
 		String externalReferenceCodeEndpoint = _getEndpoint(
 			_siteScopedObjectDefinition1, group.getExternalReferenceCode());
@@ -8103,7 +8103,7 @@ public class ObjectEntryResourceTest {
 			_siteScopedObjectDefinition1, _siteScopedObjectDefinition2,
 			group.getExternalReferenceCode());
 
-		// scopeKey: groupId
+		// Scope key: group ID
 
 		String groupIdEndpoint = _getEndpoint(
 			_siteScopedObjectDefinition1, _testGroupId);
@@ -8115,7 +8115,7 @@ public class ObjectEntryResourceTest {
 			_siteScopedObjectDefinition1, _siteScopedObjectDefinition2,
 			_testGroupId);
 
-		// scopeKey: groupKey
+		// Scope key: group ksey
 
 		String groupKeyEndpoint = _getEndpoint(
 			_siteScopedObjectDefinition1, group.getGroupKey());
@@ -10613,7 +10613,7 @@ public class ObjectEntryResourceTest {
 	public void testPutScopeScopeKeyByExternalReferenceCode() throws Exception {
 		Group group = _groupLocalService.fetchGroup(_testGroupId);
 
-		// scopeKey: externalReferenceCode
+		// Scope key: external reference code
 
 		String externalReferenceCodeEndpoint = _getEndpoint(
 			_siteScopedObjectDefinition1, group.getExternalReferenceCode());
@@ -10625,7 +10625,7 @@ public class ObjectEntryResourceTest {
 			_siteScopedObjectDefinition1, _siteScopedObjectDefinition2,
 			group.getExternalReferenceCode());
 
-		// scopeKey: groupId
+		// Scope key: group ID
 
 		String groupIdEndpoint = _getEndpoint(
 			_siteScopedObjectDefinition1, _testGroupId);
@@ -10637,7 +10637,7 @@ public class ObjectEntryResourceTest {
 			_siteScopedObjectDefinition1, _siteScopedObjectDefinition2,
 			_testGroupId);
 
-		// scopeKey: groupKey
+		// Scope key: group key
 
 		String groupKeyEndpoint = _getEndpoint(
 			_siteScopedObjectDefinition1, group.getGroupKey());
