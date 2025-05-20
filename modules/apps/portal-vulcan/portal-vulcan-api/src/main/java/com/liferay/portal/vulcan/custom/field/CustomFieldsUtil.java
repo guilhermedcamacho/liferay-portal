@@ -500,7 +500,7 @@ public class CustomFieldsUtil {
 		}
 
 		throw new IllegalArgumentException(
-			"Unable to parse field \"" + customField.getName() + "\"");
+			"Unable to parse custom field \"" + customField.getName() + "\"");
 	}
 
 	private static void _validateArrayCustomField(
@@ -539,7 +539,7 @@ public class CustomFieldsUtil {
 		}
 
 		throw new IllegalArgumentException(
-			"Unable to parse field \"" + customField.getName() + "\"");
+			"Unable to parse custom field \"" + customField.getName() + "\"");
 	}
 
 	private static void _validateCustomField(
@@ -550,7 +550,7 @@ public class CustomFieldsUtil {
 		}
 
 		throw new IllegalArgumentException(
-			"Unable to parse field \"" + customField.getName() + "\"");
+			"Unable to parse custom field \"" + customField.getName() + "\"");
 	}
 
 }
