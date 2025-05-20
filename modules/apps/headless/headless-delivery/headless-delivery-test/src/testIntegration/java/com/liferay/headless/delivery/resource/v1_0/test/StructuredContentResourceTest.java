@@ -733,7 +733,7 @@ public class StructuredContentResourceTest
 
 		super.testPutSiteStructuredContentByExternalReferenceCode();
 
-		_testPutSiteStructuredContentByExternalReferenceCodeWithExpandoField();
+		_testPutSiteStructuredContentByExternalReferenceCodeWithCustomField();
 	}
 
 	@Override
@@ -2528,7 +2528,7 @@ public class StructuredContentResourceTest
 		Assert.assertEquals(1, jsonObject.getLong("totalItemsCount"));
 	}
 
-	private void _testPutSiteStructuredContentByExternalReferenceCodeWithExpandoField()
+	private void _testPutSiteStructuredContentByExternalReferenceCodeWithCustomField()
 		throws Exception {
 
 		StructuredContent postStructuredContent =
