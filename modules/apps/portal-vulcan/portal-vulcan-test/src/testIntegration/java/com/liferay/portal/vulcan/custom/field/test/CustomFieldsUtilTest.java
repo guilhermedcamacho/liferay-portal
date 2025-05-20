@@ -2444,8 +2444,6 @@ public class CustomFieldsUtilTest {
 
 		Assert.assertTrue(expectedClass.isInstance(actualValue));
 
-		// Add value to assert the Service Layer admits the value
-
 		ExpandoTestUtil.addValues(_expandoTable, _user.getPrimaryKey(), map);
 
 		Assert.assertNotNull(
