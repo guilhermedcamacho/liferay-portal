@@ -2543,10 +2543,6 @@ public class StructuredContentResourceTest
 
 		ExpandoColumn longExpandoColumn = _addExpandoColumn(
 			null, null, _expandoTable, ExpandoColumnConstants.LONG);
-		ExpandoColumn shortExpandoColumn = _addExpandoColumn(
-			null, null, _expandoTable, ExpandoColumnConstants.SHORT);
-		ExpandoColumn shortArrayExpandoColumn = _addExpandoColumn(
-			null, null, _expandoTable, ExpandoColumnConstants.SHORT_ARRAY);
 
 		CustomField longCustomField = new CustomField() {
 			{
@@ -2560,6 +2556,9 @@ public class StructuredContentResourceTest
 			}
 		};
 
+		ExpandoColumn shortExpandoColumn = _addExpandoColumn(
+			null, null, _expandoTable, ExpandoColumnConstants.SHORT);
+
 		CustomField shortCustomField = new CustomField() {
 			{
 				customValue = new CustomValue() {
@@ -2571,6 +2570,9 @@ public class StructuredContentResourceTest
 				name = shortExpandoColumn.getName();
 			}
 		};
+
+		ExpandoColumn shortArrayExpandoColumn = _addExpandoColumn(
+			null, null, _expandoTable, ExpandoColumnConstants.SHORT_ARRAY);
 
 		CustomField shortArrayCustomField = new CustomField() {
 			{
