@@ -176,7 +176,6 @@ public class DefaultCSDiagramType implements CSDiagramType {
 			if (accountEntry != null) {
 				hashMapWrapper.put(
 					"commerceAccountId", accountEntry.getAccountEntryId());
-
 				hashMapWrapper.put(
 					"guestOrderEnabled",
 					_isGuestOrderEnabled(
