@@ -2756,9 +2756,7 @@ public class StructuredContentResourceTest
 				});
 		}
 
-		Assert.assertTrue(
-			structuredContent2 + " does not equal " + putStructuredContent,
-			_equals(structuredContent2, putStructuredContent));
+		Assert.assertTrue(_equals(structuredContent2, putStructuredContent));
 
 		_assertLocalizedValues(
 			putStructuredContent,
