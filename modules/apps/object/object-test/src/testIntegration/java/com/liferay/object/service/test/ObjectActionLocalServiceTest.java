@@ -1263,7 +1263,7 @@ public class ObjectActionLocalServiceTest {
 			CommerceOrderConstants.ORDER_STATUS_OPEN,
 			commerceOrder2.getOrderStatus());
 
-		// Commerce product system object definition
+		// Commerce product definition system object definition
 
 		ObjectDefinition commerceProductObjectDefinition =
 			_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
