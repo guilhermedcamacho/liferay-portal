@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -145,11 +146,9 @@ public class CommercePriceEntryDisplayContext
 
 		CommercePriceEntry commercePriceEntry = getCommercePriceEntry();
 
-		_cpInstance = _cpInstanceLocalService.getCProductInstance(
+		return _cpInstanceLocalService.fetchCPInstance(
 			commercePriceEntry.getCProductId(),
 			commercePriceEntry.getCPInstanceUuid());
-
-		return _cpInstance;
 	}
 
 	public List<CPInstanceUnitOfMeasure> getCPInstanceUnitOfMeasures()
@@ -157,9 +156,13 @@ public class CommercePriceEntryDisplayContext
 
 		CommercePriceEntry commercePriceEntry = getCommercePriceEntry();
 
-		CPInstance cpInstance = _cpInstanceLocalService.getCProductInstance(
+		CPInstance cpInstance = _cpInstanceLocalService.fetchCPInstance(
 			commercePriceEntry.getCProductId(),
 			commercePriceEntry.getCPInstanceUuid());
+
+		if (cpInstance == null) {
+			return Collections.emptyList();
+		}
 
 		return ListUtil.sort(
 			_cpInstanceUnitOfMeasureLocalService.
