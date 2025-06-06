@@ -1119,8 +1119,6 @@ public class ModulesStructureTest {
 			return;
 		}
 
-		boolean hasTestModule = false;
-
 		for (File file : dirPathFiles) {
 			if (file.isDirectory()) {
 				String modulePath = file.toString();
@@ -1128,19 +1126,15 @@ public class ModulesStructureTest {
 				if (!modulePath.endsWith("-test")) {
 					return;
 				}
-
-				hasTestModule = true;
 			}
 		}
 
-		if (hasTestModule) {
-			Assert.assertFalse(
-				"Unexpected file " + appBndPath, Files.exists(appBndPath));
+		Assert.assertFalse(
+			"Unexpected file " + appBndPath, Files.exists(appBndPath));
 
-			Assert.assertFalse(
-				"Unexpected file " + buildGradlePath,
-				Files.exists(buildGradlePath));
-		}
+		Assert.assertFalse(
+			"Unexpected file " + buildGradlePath,
+			Files.exists(buildGradlePath));
 	}
 
 	private void _testEquals(Path path, String expected) throws IOException {
