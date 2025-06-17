@@ -4611,7 +4611,8 @@ public class ObjectEntryLocalServiceImpl
 		values.put(columnName + "i18n", (Serializable)localizedValues);
 		values.putIfAbsent(
 			StringUtil.removeLast(columnName, StringPool.UNDERLINE),
-			GetterUtil.get(localizedValues.get(defaultLanguageId), StringPool.BLANK));
+			GetterUtil.get(
+				localizedValues.get(defaultLanguageId), StringPool.BLANK));
 	}
 
 	private void _putObjectFilterParser(
