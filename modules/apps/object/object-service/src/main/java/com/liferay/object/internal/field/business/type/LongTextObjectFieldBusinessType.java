@@ -54,10 +54,8 @@ public class LongTextObjectFieldBusinessType
 	}
 
 	@Override
-	public String getDDMFormFieldTypeName(
-		boolean localized, ObjectField objectField) {
-
-		if (localized) {
+	public String getDDMFormFieldTypeName(ObjectField objectField) {
+		if (objectField.isLocalized()) {
 			return DDMFormFieldTypeConstants.LOCALIZABLE_TEXT;
 		}
 
