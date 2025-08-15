@@ -8,6 +8,7 @@ package com.liferay.object.web.internal.item.selector;
 import com.liferay.item.selector.ItemSelectorViewDescriptor;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.web.internal.model.ProxyObjectEntry;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -79,6 +80,19 @@ public class ObjectEntryItemDescriptor
 		).put(
 			"externalReferenceCode", _objectEntry.getExternalReferenceCode()
 		).put(
+			"groupId",
+			() -> {
+				com.liferay.object.rest.dto.v1_0.ObjectEntry dtoObjectEntry =
+					_getObjectEntry(
+						_objectDefinition, _objectEntry, themeDisplay);
+
+				if (dtoObjectEntry != null) {
+					return dtoObjectEntry.getScopeId();
+				}
+
+				return null;
+			}
+		).put(
 			"title", getTitle(themeDisplay.getLocale())
 		).toString();
 	}
@@ -126,6 +140,28 @@ public class ObjectEntryItemDescriptor
 		}
 
 		return String.valueOf(_objectEntry.getObjectEntryId());
+	}
+
+	private com.liferay.object.rest.dto.v1_0.ObjectEntry _getObjectEntry(
+		ObjectDefinition objectDefinition, ObjectEntry objectEntry,
+		ThemeDisplay themeDisplay) {
+
+		if (objectEntry instanceof ProxyObjectEntry) {
+			ProxyObjectEntry proxyObjectEntry = (ProxyObjectEntry)objectEntry;
+
+			com.liferay.object.rest.dto.v1_0.ObjectEntry dtoObjectEntry =
+				proxyObjectEntry.getDTOObjectEntry();
+
+			if (dtoObjectEntry != null) {
+				return dtoObjectEntry;
+			}
+		}
+
+		//		return ObjectEntryInfoItemUtil.getObjectEntry(
+		//			objectDefinition, _objectEntryManagerRegistry,
+		//			_objectScopeProviderRegistry, objectEntry, themeDisplay);
+
+		return null;
 	}
 
 	private final HttpServletRequest _httpServletRequest;
