@@ -218,6 +218,7 @@ public class ObjectEntryDisplayContextImplTest {
 		ObjectEntryDisplayContextImpl objectEntryDisplayContextImpl =
 			_createObjectEntryDisplayContextImpl(
 				httpServletRequest, objectEntryManagerRegistry,
+				Mockito.mock(ObjectFieldBusinessTypeRegistry.class),
 				objectRelationshipLocalService);
 
 		ObjectEntry objectEntry2 = ReflectionTestUtil.invoke(
@@ -326,17 +327,6 @@ public class ObjectEntryDisplayContextImplTest {
 			Mockito.mock(ObjectLayoutLocalService.class),
 			objectRelationshipLocalService,
 			Mockito.mock(ObjectScopeProviderRegistry.class));
-	}
-
-	private ObjectEntryDisplayContextImpl _createObjectEntryDisplayContextImpl(
-		HttpServletRequest httpServletRequest,
-		ObjectEntryManagerRegistry objectEntryManagerRegistry,
-		ObjectRelationshipLocalService objectRelationshipLocalService) {
-
-		return _createObjectEntryDisplayContextImpl(
-			httpServletRequest, objectEntryManagerRegistry,
-			Mockito.mock(ObjectFieldBusinessTypeRegistry.class),
-			objectRelationshipLocalService);
 	}
 
 	private ObjectEntryDisplayContextImpl _createObjectEntryDisplayContextImpl(
