@@ -106,10 +106,6 @@ public class ObjectEntryDisplayContextImplTest {
 	public void testGetObjectEntry() throws Exception {
 		HttpServletRequest httpServletRequest = Mockito.mock(
 			HttpServletRequest.class);
-		ThemeDisplay themeDisplay = Mockito.mock(ThemeDisplay.class);
-
-		ObjectDefinition objectDefinition = Mockito.mock(
-			ObjectDefinition.class);
 
 		String externalReferenceCode = RandomTestUtil.randomString();
 
@@ -118,6 +114,9 @@ public class ObjectEntryDisplayContextImplTest {
 		).thenReturn(
 			externalReferenceCode
 		);
+
+		ObjectDefinition objectDefinition = Mockito.mock(
+			ObjectDefinition.class);
 
 		Mockito.when(
 			httpServletRequest.getAttribute(ObjectWebKeys.OBJECT_DEFINITION)
@@ -146,16 +145,18 @@ public class ObjectEntryDisplayContextImplTest {
 			"0"
 		);
 
-		Mockito.when(
-			objectDefinition.getStorageType()
-		).thenReturn(
-			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT
-		);
+		ThemeDisplay themeDisplay = Mockito.mock(ThemeDisplay.class);
 
 		Mockito.when(
 			httpServletRequest.getAttribute(WebKeys.THEME_DISPLAY)
 		).thenReturn(
 			themeDisplay
+		);
+
+		Mockito.when(
+			objectDefinition.getStorageType()
+		).thenReturn(
+			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT
 		);
 
 		long companyId = RandomTestUtil.randomLong();
@@ -178,10 +179,10 @@ public class ObjectEntryDisplayContextImplTest {
 			Mockito.mock(User.class)
 		);
 
-		ObjectEntryManagerRegistry objectEntryManagerRegistry = Mockito.mock(
-			ObjectEntryManagerRegistry.class);
 		ObjectEntryManager objectEntryManager = Mockito.mock(
 			ObjectEntryManager.class);
+		ObjectEntryManagerRegistry objectEntryManagerRegistry = Mockito.mock(
+			ObjectEntryManagerRegistry.class);
 		ObjectRelationshipLocalService objectRelationshipLocalService =
 			Mockito.mock(ObjectRelationshipLocalService.class);
 
