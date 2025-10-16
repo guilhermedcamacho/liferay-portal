@@ -139,10 +139,12 @@ public class ObjectEntryDisplayContextImplTest {
 			false
 		);
 
+		long objectRelationshipId = RandomTestUtil.randomLong();
+
 		Mockito.when(
 			httpServletRequest.getParameter("objectRelationshipId")
 		).thenReturn(
-			"0"
+			String.valueOf(objectRelationshipId)
 		);
 
 		ThemeDisplay themeDisplay = Mockito.mock(ThemeDisplay.class);
@@ -194,7 +196,8 @@ public class ObjectEntryDisplayContextImplTest {
 		);
 
 		Mockito.when(
-			objectRelationshipLocalService.fetchObjectRelationship(0L)
+			objectRelationshipLocalService.fetchObjectRelationship(
+				objectRelationshipId)
 		).thenReturn(
 			null
 		);
@@ -237,7 +240,7 @@ public class ObjectEntryDisplayContextImplTest {
 		Mockito.verify(
 			objectRelationshipLocalService, Mockito.times(1)
 		).fetchObjectRelationship(
-			0L
+			objectRelationshipId
 		);
 
 		Mockito.verify(
