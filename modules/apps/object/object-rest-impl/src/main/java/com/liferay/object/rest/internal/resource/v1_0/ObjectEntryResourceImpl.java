@@ -132,6 +132,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getCompanyId(),
 				_objectDefinition.getStorageType());
 
 		objectEntryManager.deleteObjectEntry(
@@ -144,6 +145,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		defaultObjectEntryManager.deleteObjectEntry(
@@ -167,6 +169,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getCompanyId(),
 				_objectDefinition.getStorageType());
 
 		objectEntryManager.deleteObjectEntry(
@@ -180,6 +183,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getCompanyId(),
 				_objectDefinition.getStorageType());
 
 		return objectEntryManager.getObjectEntry(
@@ -199,6 +203,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		return defaultObjectEntryManager.getObjectEntryByVersion(
@@ -218,6 +223,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		return defaultObjectEntryManager.getVersionedObjectEntries(
@@ -245,6 +251,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getCompanyId(),
 				_objectDefinition.getStorageType());
 
 		return objectEntryManager.getObjectEntries(
@@ -265,6 +272,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		return defaultObjectEntryManager.getVersionedObjectEntries(
@@ -276,6 +284,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		return defaultObjectEntryManager.getObjectEntry(
@@ -295,6 +304,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		return defaultObjectEntryManager.getObjectEntryByVersion(
@@ -313,6 +323,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getCompanyId(),
 				_objectDefinition.getStorageType());
 
 		return objectEntryManager.getObjectEntry(
@@ -329,6 +340,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getCompanyId(),
 				_objectDefinition.getStorageType());
 
 		return objectEntryManager.getObjectEntries(
@@ -344,6 +356,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getCompanyId(),
 				_objectDefinition.getStorageType());
 
 		return objectEntryManager.partialUpdateObjectEntry(
@@ -359,6 +372,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		return defaultObjectEntryManager.partialUpdateObjectEntry(
@@ -374,6 +388,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getCompanyId(),
 				_objectDefinition.getStorageType());
 
 		return objectEntryManager.partialUpdateObjectEntry(
@@ -400,6 +415,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getCompanyId(),
 				_objectDefinition.getStorageType());
 
 		return objectEntryManager.addObjectEntry(
@@ -424,6 +440,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getCompanyId(),
 				_objectDefinition.getStorageType());
 
 		return objectEntryManager.addObjectEntry(
@@ -453,6 +470,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getCompanyId(),
 				_objectDefinition.getStorageType());
 
 		return objectEntryManager.updateObjectEntry(
@@ -472,6 +490,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		return defaultObjectEntryManager.restoreObjectEntryByVersion(
@@ -490,6 +509,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		ObjectRelationship objectRelationship =
@@ -520,6 +540,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		defaultObjectEntryManager.executeObjectAction(
@@ -535,6 +556,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		return defaultObjectEntryManager.updateObjectEntry(
@@ -564,6 +586,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		return defaultObjectEntryManager.restoreObjectEntryByVersion(
@@ -579,6 +602,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		defaultObjectEntryManager.executeObjectAction(
@@ -594,6 +618,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getCompanyId(),
 				_objectDefinition.getStorageType());
 
 		return objectEntryManager.updateObjectEntry(
@@ -611,6 +636,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		defaultObjectEntryManager.executeObjectAction(
@@ -791,6 +817,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getStorageType()));
 
 		try {

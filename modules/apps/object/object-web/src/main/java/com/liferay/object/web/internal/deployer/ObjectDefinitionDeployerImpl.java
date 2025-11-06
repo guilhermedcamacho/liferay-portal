@@ -408,6 +408,7 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				new ObjectEntryInfoItemPermissionProvider(
 					objectDefinition,
 					_objectEntryManagerRegistry.getObjectEntryManager(
+						objectDefinition.getCompanyId(),
 						objectDefinition.getStorageType()),
 					_objectEntryService),
 				HashMapDictionaryBuilder.<String, Object>put(
@@ -420,6 +421,7 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				new ObjectEntryRowInfoItemRenderer(
 					_assetDisplayPageFriendlyURLProvider, objectDefinition,
 					_objectEntryManagerRegistry.getObjectEntryManager(
+						objectDefinition.getCompanyId(),
 						objectDefinition.getStorageType()),
 					_objectFieldLocalService, _objectScopeProviderRegistry,
 					_servletContext),
@@ -472,6 +474,7 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 					infoPermissionProvider, _itemSelectorViewDescriptorRenderer,
 					objectDefinition,
 					_objectEntryManagerRegistry.getObjectEntryManager(
+						objectDefinition.getCompanyId(),
 						objectDefinition.getStorageType()),
 					_objectRelatedModelsProviderRegistry,
 					_objectScopeProviderRegistry, _portal),
@@ -484,6 +487,7 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 					infoItemFriendlyURLProvider, objectDefinition,
 					_objectDefinitionLocalService, _objectEntryLocalService,
 					_objectEntryManagerRegistry.getObjectEntryManager(
+						objectDefinition.getCompanyId(),
 						objectDefinition.getStorageType()),
 					_userLocalService),
 				HashMapDictionaryBuilder.<String, Object>put(

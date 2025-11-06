@@ -751,6 +751,7 @@ public class CustomFDSSerializer
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					objectDefinition.getCompanyId(),
 					objectDefinition.getStorageType()));
 
 		ObjectEntryThreadLocal.setSkipObjectEntryResourcePermission(true);
@@ -784,6 +785,7 @@ public class CustomFDSSerializer
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					objectDefinition.getCompanyId(),
 					objectDefinition.getStorageType()));
 
 		ObjectEntryThreadLocal.setSkipObjectEntryResourcePermission(true);
