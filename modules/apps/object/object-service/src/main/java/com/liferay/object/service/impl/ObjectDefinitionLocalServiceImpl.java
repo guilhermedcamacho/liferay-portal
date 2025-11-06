@@ -2162,7 +2162,7 @@ public class ObjectDefinitionLocalServiceImpl
 	private String _getClassName(
 		String className, boolean modifiable, boolean system) {
 
-		if (_isUnmodifiableSystemObject(modifiable, system)) {
+		if (Validator.isNotNull(className) || _isUnmodifiableSystemObject(modifiable, system)) {
 			return className;
 		}
 

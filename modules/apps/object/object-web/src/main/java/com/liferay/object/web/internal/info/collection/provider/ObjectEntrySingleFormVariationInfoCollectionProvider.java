@@ -245,17 +245,6 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 		return Arrays.asList(new KeywordsInfoFilter());
 	}
 
-	@Override
-	public boolean isAvailable() {
-		if (_objectDefinition.getCompanyId() !=
-				CompanyThreadLocal.getCompanyId()) {
-
-			return false;
-		}
-
-		return true;
-	}
-
 	private SearchContext _buildSearchContext(CollectionQuery collectionQuery)
 		throws Exception {
 

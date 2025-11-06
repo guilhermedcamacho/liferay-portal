@@ -106,7 +106,7 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 	@Override
 	public String getObjectFolderExternalReferenceCode() {
 		ObjectFolder objectFolder =
-			ObjectFolderLocalServiceUtil.fetchObjectFolder(getObjectFolderId());
+			ObjectFolderLocalServiceUtil.fetchObjectFolder(getObjectFolderId());r
 
 		if (objectFolder == null) {
 			return null;
@@ -132,7 +132,7 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 		}
 
 		return ObjectPortletKeys.OBJECT_DEFINITIONS + StringPool.UNDERLINE +
-			StringUtil.split(getClassName(), StringPool.POUND)[1];
+			StringUtil.split(getClassName(), StringPool.POUND)[1] + getCompanyId();
 	}
 
 	@Override

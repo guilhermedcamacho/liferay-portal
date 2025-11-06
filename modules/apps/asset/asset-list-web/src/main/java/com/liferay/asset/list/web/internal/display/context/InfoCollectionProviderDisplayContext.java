@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -85,13 +86,31 @@ public class InfoCollectionProviderDisplayContext {
 				(List<?>)_infoItemServiceRegistry.getAllInfoItemServices(
 					InfoCollectionProvider.class);
 
-		return ListUtil.sort(
+		System.out.println("infoCollectionProviders size before: "+infoCollectionProviders.size());
+
+		System.out.println("-----------------------------");
+
+		infoCollectionProviders.stream().forEach(
+			i -> System.out.println(i.getLabel(LocaleUtil.ENGLISH) + " - " + i.getCollectionItemClassName()));
+
+		System.out.println("-----------------------------");
+
+		infoCollectionProviders = ListUtil.sort(
 			ListUtil.filter(
 				infoCollectionProviders, InfoCollectionProvider::isAvailable),
 			Comparator.comparing(
 				infoCollectionProvider -> infoCollectionProvider.getLabel(
 					_themeDisplay.getLocale()),
 				String.CASE_INSENSITIVE_ORDER));
+
+		System.out.println("infoCollectionProviders size after: "+infoCollectionProviders.size());
+
+		System.out.println("############################## \n");
+
+		infoCollectionProviders.stream().forEach(
+			i -> System.out.println(i.getLabel(LocaleUtil.ENGLISH) + " - " + i.getCollectionItemClassName()));
+
+		return infoCollectionProviders;
 	}
 
 	private PortletURL _getPortletURL() {
