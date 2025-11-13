@@ -44,12 +44,12 @@ public interface CommentManager {
 			String userName)
 		throws PortalException;
 
-	public Comment addEntityComment(
+	public Comment addComment(
 			String externalReferenceCode, long groupId, String className,
 			long classPK, String text)
 		throws Exception;
 
-	public Comment addParentComment(
+	public Comment addComment(
 		String externalReferenceCode, long groupId, long parentCommentId,
 		String className, long classPK, String text)
 		throws Exception;
