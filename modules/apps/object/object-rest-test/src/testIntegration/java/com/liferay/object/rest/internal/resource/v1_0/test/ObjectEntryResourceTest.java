@@ -5971,6 +5971,20 @@ public class ObjectEntryResourceTest {
 		}
 	}
 
+	@FeatureFlag("LPD-69419")
+	@Test
+	public void testGetObjectEntriesPageWithComments() throws Exception {
+
+		// Company scope
+
+		_testGetObjectEntriesPageWithComments(0L, _objectDefinition1);
+
+		// Site scope
+
+		_testGetObjectEntriesPageWithComments(
+			_testGroupId, _siteScopedObjectDefinition1);
+	}
+
 	@Test
 	public void testGetObjectEntriesPageWithLocalizedObjectField()
 		throws Exception {
@@ -15422,6 +15436,22 @@ public class ObjectEntryResourceTest {
 		}
 	}
 
+	private void _assertCommentJSONObject(
+			JSONObject commentJSONObject, String externalReferenceCode,
+			int parentCommentId, String text)
+		throws Exception {
+
+		JSONAssert.assertEquals(
+			JSONUtil.put(
+				"externalReferenceCode", externalReferenceCode
+			).put(
+				"parentCommentId", parentCommentId
+			).put(
+				"text", text
+			).toString(),
+			commentJSONObject.toString(), JSONCompareMode.LENIENT);
+	}
+
 	private void _assertCustomObjectEntryWithPermissions(
 			JSONArray expectedPermissionsJSONArray, JSONObject jsonObject)
 		throws Exception {
@@ -15801,6 +15831,22 @@ public class ObjectEntryResourceTest {
 		Node childNode = _getChildNode(index, node);
 
 		return childNode.getEdge();
+	}
+
+	private JSONArray _getCommentsJSONArray(
+			long groupId, ObjectDefinition objectDefinition,
+			String externalReferenceCode)
+		throws Exception {
+
+		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
+			null,
+			StringBundler.concat(
+				_getEndpoint(objectDefinition, groupId),
+				"/by-external-reference-code/", externalReferenceCode,
+				"?nestedFields=comments"),
+			Http.Method.GET);
+
+		return jsonObject.getJSONArray("comments");
 	}
 
 	private DLFolder _getDLFolder(
@@ -16458,6 +16504,20 @@ public class ObjectEntryResourceTest {
 			Http.Method.POST);
 	}
 
+	private JSONObject _postObjectEntryWithComments(
+			long groupId, ObjectDefinition objectDefinition,
+			JSONArray commentsJSONArray)
+		throws Exception {
+
+		return HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				_OBJECT_FIELD_NAME_1, RandomTestUtil.randomString()
+			).put(
+				"comments", commentsJSONArray
+			).toString(),
+			_getEndpoint(objectDefinition, groupId), Http.Method.POST);
+	}
+
 	private void _postObjectEntryWithKeywords(String... keywords)
 		throws Exception {
 
@@ -16750,6 +16810,67 @@ public class ObjectEntryResourceTest {
 			URLCodec.encodeURL(fieldName + " ne 2023-09-20T10:00:00Z"),
 			_objectDefinition1);
 		_assertFilteredObjectEntries(2, fieldName + " ne null");
+	}
+
+	private void _testGetObjectEntriesPageWithComments(
+			long groupId, ObjectDefinition objectDefinition)
+		throws Exception {
+
+		JSONObject jsonObject = _postObjectEntryWithComments(
+			groupId, objectDefinition,
+			JSONUtil.put(
+				JSONUtil.put(
+					"externalReferenceCode", RandomTestUtil.randomString()
+				).put(
+					"text", RandomTestUtil.randomString()
+				)));
+
+		JSONArray jsonArray = _getCommentsJSONArray(
+			groupId, objectDefinition,
+			jsonObject.getString("externalReferenceCode"));
+
+		Assert.assertNull(jsonArray);
+
+		_enableComments(objectDefinition);
+
+		String text1 = RandomTestUtil.randomString();
+		String text2 = RandomTestUtil.randomString();
+
+		jsonObject = _postObjectEntryWithComments(
+			groupId, objectDefinition,
+			JSONUtil.putAll(
+				JSONUtil.put(
+					"externalReferenceCode", _ERC_VALUE_1
+				).put(
+					"text", text1
+				),
+				JSONUtil.put(
+					"externalReferenceCode", _ERC_VALUE_2
+				).put(
+					"text", text2
+				)));
+
+		jsonArray = _getCommentsJSONArray(
+			groupId, objectDefinition,
+			jsonObject.getString("externalReferenceCode"));
+
+		Assert.assertEquals(3, jsonArray.length());
+
+		jsonObject = jsonArray.getJSONObject(0);
+
+		JSONAssert.assertEquals(
+			JSONUtil.put(
+				"parentCommentId", 0
+			).toString(),
+			jsonObject.toString(), JSONCompareMode.LENIENT);
+
+		_assertCommentJSONObject(
+			jsonArray.getJSONObject(1), _ERC_VALUE_1, jsonObject.getInt("id"),
+			text1);
+
+		_assertCommentJSONObject(
+			jsonArray.getJSONObject(2), _ERC_VALUE_2, jsonObject.getInt("id"),
+			text2);
 	}
 
 	private void _testGetObjectEntryActions(boolean sharingEnabled)
