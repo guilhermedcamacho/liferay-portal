@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
@@ -57,6 +58,25 @@ public abstract class BaseModelListenerTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
+		modifiableSystemObjectDefinition1 =
+			_objectDefinitionLocalService.
+				fetchObjectDefinitionByExternalReferenceCode(
+					"L_FUNCTIONAL_COOKIE_ENTRY",
+					TestPropsValues.getCompanyId());
+
+		modifiableSystemObjectDefinition1ClassNameId =
+			_classNameLocalService.getClassNameId(
+				modifiableSystemObjectDefinition1.getClassName());
+
+		modifiableSystemObjectDefinition2 =
+			_objectDefinitionLocalService.
+				fetchObjectDefinitionByExternalReferenceCode(
+					"L_FUNCTIONAL_COOKIE_ENTRY", company.getCompanyId());
+
+		modifiableSystemObjectDefinition2ClassNameId =
+			_classNameLocalService.getClassNameId(
+				modifiableSystemObjectDefinition2.getClassName());
+
 		objectDefinition1 = ObjectDefinitionTestUtil.publishObjectDefinition();
 
 		objectDefinition1ClassNameId = _classNameLocalService.getClassNameId(
@@ -133,6 +153,10 @@ public abstract class BaseModelListenerTestCase {
 	protected static Company company;
 	protected static User companyAdminUser;
 	protected static Group group;
+	protected static ObjectDefinition modifiableSystemObjectDefinition1;
+	protected static long modifiableSystemObjectDefinition1ClassNameId;
+	protected static ObjectDefinition modifiableSystemObjectDefinition2;
+	protected static long modifiableSystemObjectDefinition2ClassNameId;
 	protected static ObjectDefinition objectDefinition1;
 	protected static long objectDefinition1ClassNameId;
 	protected static ObjectDefinition objectDefinition2;
