@@ -12,6 +12,7 @@ import com.liferay.asset.list.model.AssetListEntry;
 import com.liferay.asset.list.model.AssetListEntrySegmentsEntryRel;
 import com.liferay.asset.list.service.AssetListEntryLocalService;
 import com.liferay.asset.list.service.AssetListEntrySegmentsEntryRelLocalService;
+import com.liferay.batch.engine.thread.local.BatchEngineThreadLocal;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
@@ -779,6 +780,28 @@ public class ObjectDefinitionLocalServiceTest {
 			_objectDefinitionLocalService,
 			new String[] {"C_A", "C_AA", "C_AAA", "C_AAB", "C_AB"},
 			_objectEntryLocalService, _objectRelationshipLocalService);
+	}
+
+	@Test
+	public void testAddModifiableObjectDefinitionWithNullClassName() {
+		try {
+			BatchEngineThreadLocal.setBatchImportInProcess(true);
+
+			AssertUtils.assertFailure(
+				ObjectDefinitionClassNameException.MustNotBeNull.class,
+				"Class name is null",
+				() -> _objectDefinitionLocalService.addSystemObjectDefinition(
+					null, TestPropsValues.getUserId(), 0, null, null, false,
+					true, false, true, false, false, false, false, null,
+					RandomTestUtil.randomLocaleStringMap(), true, "Test", null,
+					null, null, null, RandomTestUtil.randomLocaleStringMap(),
+					false, ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
+					WorkflowConstants.STATUS_APPROVED, Collections.emptyList(),
+					Collections.emptyList(), Collections.emptyList()));
+		}
+		finally {
+			BatchEngineThreadLocal.setBatchImportInProcess(false);
+		}
 	}
 
 	@Test
