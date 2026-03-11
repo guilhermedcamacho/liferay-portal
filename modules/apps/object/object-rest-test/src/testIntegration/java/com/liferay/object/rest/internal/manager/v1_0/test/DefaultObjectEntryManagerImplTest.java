@@ -541,6 +541,15 @@ public class DefaultObjectEntryManagerImplTest
 
 		_objectDefinition1 = _addObjectDefinition(
 			Arrays.asList(
+				new RichTextObjectFieldBuilder(
+				).indexed(
+					true
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"richTextObjectFieldName"
+				).build(),
 				new TextObjectFieldBuilder(
 				).indexed(
 					true
@@ -4969,6 +4978,9 @@ public class DefaultObjectEntryManagerImplTest
 				new ObjectEntry() {
 					{
 						properties = HashMapBuilder.<String, Object>put(
+							"richTextObjectFieldName",
+							"<i>richTextObjectFieldNameValue</i>"
+						).put(
 							"textObjectFieldName", "Able"
 						).put(
 							"textObjectFieldNameExtension", "Baker"
@@ -5773,6 +5785,32 @@ public class DefaultObjectEntryManagerImplTest
 				"search", StringUtil.toLowerCase(fileEntry.getTitle())
 			).build(),
 			childObjectEntry1);
+
+		long originalTitleObjectFieldId =
+			_objectDefinition1.getTitleObjectFieldId();
+
+		objectField = objectFieldLocalService.fetchObjectField(
+			_objectDefinition1.getObjectDefinitionId(),
+			"richTextObjectFieldName");
+
+		_objectDefinition1.setTitleObjectFieldId(
+			objectField.getObjectFieldId());
+
+		_objectDefinition1 =
+			objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition1);
+
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"search", "richTextObjectFieldNameValue"
+			).build(),
+			childObjectEntry1);
+
+		_objectDefinition1.setTitleObjectFieldId(originalTitleObjectFieldId);
+
+		_objectDefinition1 =
+			objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition1);
 
 		// "Starts with" expression
 
