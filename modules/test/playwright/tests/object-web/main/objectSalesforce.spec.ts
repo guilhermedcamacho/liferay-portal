@@ -52,11 +52,14 @@ test.beforeEach(async ({instanceSettingsPage, page}) => {
             'Salesforce Integration'
         );
 
-        await page.locator('div.ddm-field[data-field-name="loginURL"] textarea').fill(salesforceLoginURL!);
-        await page.locator('div.ddm-field[data-field-name="consumerKey"] textarea').fill(salesforceConsumerKey!);
-        await page.locator('div.ddm-field[data-field-name="consumerSecret"] textarea').fill(salesforceConsumerSecret!);
-        await page.locator('div.ddm-field[data-field-name="username"] textarea').fill(salesforceUsername!);
-        await page.locator('div.ddm-field[data-field-name="password"] input[type="password"]').fill(salesforcePassword!);
+        await page.getByLabel('Login URL').fill(salesforceLoginURL!);
+        await page.getByLabel('Consumer Key').fill(salesforceConsumerKey!);
+        await page.getByLabel('Consumer Secret').fill(salesforceConsumerSecret!);
+        await page.getByLabel('Username').fill(salesforceUsername!);
+        
+        await page.locator('input[name*="password"]')
+            .filter({ visible: true }) 
+            .fill(salesforcePassword!);
 
         await instanceSettingsPage.saveAndWaitForAlert();
     });
@@ -96,7 +99,7 @@ async function runSalesforceCRUDTest({
         await viewObjectEntriesPage.saveObjectEntryButton.click();
         await waitForAlert(page);
         await viewObjectEntriesPage.backButton.click();
-    });
+    }); 
 
     await test.step('Read Object Entry', async () => {
         await expect(page.getByRole('cell', { name: createValue })).toBeVisible();
