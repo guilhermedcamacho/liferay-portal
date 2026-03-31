@@ -46,18 +46,20 @@ test.beforeEach(async ({instanceSettingsPage, page}) => {
 
     page.setViewportSize({height: 1080, width: 1920});
 
-    await instanceSettingsPage.goToInstanceSetting(
-        'Third Party',
-        'Salesforce Integration'
-    );
+    await test.step('Setup Salesforce Instance Settings', async () => {
+        await instanceSettingsPage.goToInstanceSetting(
+            'Third Party',
+            'Salesforce Integration'
+        );
 
-    await page.locator('div.ddm-field[data-field-name="loginURL"] textarea').fill(salesforceLoginURL!);
-    await page.locator('div.ddm-field[data-field-name="consumerKey"] textarea').fill(salesforceConsumerKey!);
-    await page.locator('div.ddm-field[data-field-name="consumerSecret"] textarea').fill(salesforceConsumerSecret!);
-    await page.locator('div.ddm-field[data-field-name="username"] textarea').fill(salesforceUsername!);
-    await page.locator('div.ddm-field[data-field-name="password"] input[type="password"]').fill(salesforcePassword!);
+        await page.locator('div.ddm-field[data-field-name="loginURL"] textarea').fill(salesforceLoginURL!);
+        await page.locator('div.ddm-field[data-field-name="consumerKey"] textarea').fill(salesforceConsumerKey!);
+        await page.locator('div.ddm-field[data-field-name="consumerSecret"] textarea').fill(salesforceConsumerSecret!);
+        await page.locator('div.ddm-field[data-field-name="username"] textarea').fill(salesforceUsername!);
+        await page.locator('div.ddm-field[data-field-name="password"] input[type="password"]').fill(salesforcePassword!);
 
-    await instanceSettingsPage.saveAndWaitForAlert();
+        await instanceSettingsPage.saveAndWaitForAlert();
+    });
 });
 
 async function runSalesforceCRUDTest({
@@ -78,52 +80,54 @@ async function runSalesforceCRUDTest({
     });
 
     const fieldLabel = objectConfig.objectFields[fieldIndex].label['en_US'];
-
-    // Create
-    await viewObjectEntriesPage.goto(objectDefinition.className);
-    await viewObjectEntriesPage.clickAddObjectEntry(objectDefinition.label['en_US']);
-
     const createValue = isStandardObject ? `Last Name ${getRandomInt()}` : getRandomString();
-
-    await viewObjectEntriesPage.fillObjectEntry({
-        objectFieldBusinessType: 'Text',
-        objectFieldLabel: fieldLabel,
-        objectFieldValue: createValue,
-    });
-
-    await viewObjectEntriesPage.saveObjectEntryButton.click();
-    await waitForAlert(page);
-    await viewObjectEntriesPage.backButton.click();
-
-    // Read
-    await expect(page.getByRole('cell', { name: createValue })).toBeVisible();
-
-    // Update
-    await page.getByRole('button', {name: 'Actions'}).last().click();
-    await page.getByRole('menuitem', {name: 'View'}).click();
-
     const updateValue = isStandardObject ? `Last Name Updated ${getRandomInt()}` : getRandomString();
 
-    await viewObjectEntriesPage.fillObjectEntry({
-        objectFieldBusinessType: 'Text',
-        objectFieldLabel: fieldLabel,
-        objectFieldValue: updateValue,
+    await test.step('Create Object Entry', async () => {
+        await viewObjectEntriesPage.goto(objectDefinition.className);
+        await viewObjectEntriesPage.clickAddObjectEntry(objectDefinition.label['en_US']);
+
+        await viewObjectEntriesPage.fillObjectEntry({
+            objectFieldBusinessType: 'Text',
+            objectFieldLabel: fieldLabel,
+            objectFieldValue: createValue,
+        });
+
+        await viewObjectEntriesPage.saveObjectEntryButton.click();
+        await waitForAlert(page);
+        await viewObjectEntriesPage.backButton.click();
     });
 
-    await viewObjectEntriesPage.saveObjectEntryButton.click();
-    await expect(viewObjectEntriesPage.successMessage).toBeVisible();
-    await viewObjectEntriesPage.backButton.click();
+    await test.step('Read Object Entry', async () => {
+        await expect(page.getByRole('cell', { name: createValue })).toBeVisible();
+    });
 
-    await expect(page.getByRole('cell', { name: updateValue })).toBeVisible();
+    await test.step('Update Object Entry', async () => {
+        await page.getByRole('button', {name: 'Actions'}).last().click();
+        await page.getByRole('menuitem', {name: 'View'}).click();
 
-    // Delete
-    await viewObjectEntriesPage.frontendDatasetActions.last().click();
-    await viewObjectEntriesPage.frontendDatasetDeleteAction.click();
-    await viewObjectEntriesPage.deletionConfirmationModal
-        .getByRole('button', { name: 'Delete' })
-        .click();
+        await viewObjectEntriesPage.fillObjectEntry({
+            objectFieldBusinessType: 'Text',
+            objectFieldLabel: fieldLabel,
+            objectFieldValue: updateValue,
+        });
 
-    await expect(page.getByRole('cell', { name: updateValue })).toBeAttached({attached: false});
+        await viewObjectEntriesPage.saveObjectEntryButton.click();
+        await expect(viewObjectEntriesPage.successMessage).toBeVisible();
+        await viewObjectEntriesPage.backButton.click();
+
+        await expect(page.getByRole('cell', { name: updateValue })).toBeVisible();
+    });
+
+    await test.step('Delete Object Entry', async () => {
+        await viewObjectEntriesPage.frontendDatasetActions.last().click();
+        await viewObjectEntriesPage.frontendDatasetDeleteAction.click();
+        await viewObjectEntriesPage.deletionConfirmationModal
+            .getByRole('button', { name: 'Delete' })
+            .click();
+
+        await expect(page.getByRole('cell', { name: updateValue })).toBeAttached({attached: false});
+    });
 }
 
 test(
@@ -177,18 +181,18 @@ test(
             apiHelpers,
             page,
             fieldIndex: 2,
-			objectConfig: {
-				active: true,
-				externalReferenceCode: "Contact",
-				label: { en_US: "Contact" },
-				name: "Contact",
-				objectFields,
-				panelCategoryKey: 'control_panel.object',
-				pluralLabel: { en_US: "Contacts" },
-				portlet: true,
-				scope: 'company',
-				status: { code: 0 },
-				storageType: 'salesforce',
+            objectConfig: {
+                active: true,
+                externalReferenceCode: "Contact",
+                label: { en_US: "Contact" },
+                name: "Contact",
+                objectFields,
+                panelCategoryKey: 'control_panel.object',
+                pluralLabel: { en_US: "Contacts" },
+                portlet: true,
+                scope: 'company',
+                status: { code: 0 },
+                storageType: 'salesforce',
 			},
             viewObjectEntriesPage,
             isStandardObject: true
