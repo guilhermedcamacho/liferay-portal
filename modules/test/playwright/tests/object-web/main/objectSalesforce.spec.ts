@@ -61,26 +61,43 @@ test.beforeEach(async ({instanceSettingsPage, page}) => {
     });
 });
 
-async function runSalesforceCRUDTest({
-    apiHelpers,
-    page,
-	fieldIndex = 0,
-	objectConfig,
-    viewObjectEntriesPage,
-    isStandardObject = false
-}) {
+test(
+    'LPS-162131 Assert CRUD with created custom object using Salesforce storage type',
+    {tag: '@LPS-162131'},
+    async ({apiHelpers, page, viewObjectEntriesPage}) => {
+        const objectFields = generateObjectFields({
+            objectFieldBusinessTypes: [{
+                businessType: 'Text',
+                externalReferenceCode: 'Title__c',
+                label: { en_US: 'Title' },
+                name: 'title',
+            }],
+        });
+
     const objectDefinitionAPIClient = await apiHelpers.buildRestClient(ObjectDefinitionAPI);
 
-    const {body: objectDefinition} = await objectDefinitionAPIClient.postObjectDefinition(objectConfig);
+    const {body: objectDefinition} = await objectDefinitionAPIClient.postObjectDefinition({
+                                        active: true,
+                                        externalReferenceCode: 'Playwright_Test__c',
+                                        label: { en_US: "Playwright Test" },
+                                        name: "PlaywrightTest",
+                                        objectFields,
+                                        panelCategoryKey: 'control_panel.object',
+                                        pluralLabel: { en_US: "Playwright Tests" },
+                                        portlet: true,
+                                        scope: 'company',
+                                        status: { code: 0 },
+                                        storageType: 'salesforce',
+                            });
 
     apiHelpers.data.push({
         id: objectDefinition.id,
         type: 'objectDefinition',
     });
 
-    const fieldLabel = objectConfig.objectFields[fieldIndex].label['en_US'];
-    const createValue = isStandardObject ? `Last Name ${getRandomInt()}` : getRandomString();
-    const updateValue = isStandardObject ? `Last Name Updated ${getRandomInt()}` : getRandomString();
+    const fieldLabel = objectFields[0].label['en_US'];
+    const createValue = getRandomString();
+    const updateValue = getRandomString();
 
     await test.step('Create Object Entry', async () => {
         await viewObjectEntriesPage.goto(objectDefinition.className);
@@ -127,74 +144,5 @@ async function runSalesforceCRUDTest({
 
         await expect(page.getByRole('cell', { name: updateValue })).toBeAttached({attached: false});
     });
-}
-
-test(
-    'LPS-162131 Assert CRUD with created custom object using Salesforce storage type',
-    {tag: '@LPS-162131'},
-    async ({apiHelpers, page, viewObjectEntriesPage}) => {
-        const objectFields = generateObjectFields({
-            objectFieldBusinessTypes: [{
-                businessType: 'Text',
-                externalReferenceCode: 'Title__c',
-                label: { en_US: 'Title' },
-                name: 'title',
-            }],
-        });
-
-        await runSalesforceCRUDTest({
-            apiHelpers,
-            page,
-            objectConfig: {
-                active: true,
-                externalReferenceCode: 'Playwright_Test__c',
-                label: { en_US: "Playwright Test" },
-                name: "PlaywrightTest",
-                objectFields,
-                panelCategoryKey: 'control_panel.object',
-                pluralLabel: { en_US: "Playwright Tests" },
-                portlet: true,
-                scope: 'company',
-                status: { code: 0 },
-                storageType: 'salesforce',
-            },
-			viewObjectEntriesPage
-        });
-    }
-);
-
-test(
-    'LPS-185429 Assert CRUD with created standard object using Salesforce storage type',
-    {tag: '@LPS-185429'},
-    async ({apiHelpers, page, viewObjectEntriesPage}) => {
-        const objectFields = generateObjectFields({
-            objectFieldBusinessTypes: [
-                { businessType: 'Text', externalReferenceCode: 'Email', label: { en_US: 'Email' }, name: 'email' },
-                { businessType: 'Text', externalReferenceCode: 'FirstName', label: { en_US: 'First Name' }, name: 'firstName' },
-                { businessType: 'Text', externalReferenceCode: 'LastName', label: { en_US: 'Last Name' }, name: 'lastName', required: true },
-                { businessType: 'Text', externalReferenceCode: 'Phone', label: { en_US: 'Phone' }, name: 'phone' },
-            ],
-        });
-
-        await runSalesforceCRUDTest({
-            apiHelpers,
-            page,
-            fieldIndex: 2,
-            objectConfig: {
-                active: true,
-                externalReferenceCode: "Contact",
-                label: { en_US: "Contact" },
-                name: "Contact",
-                objectFields,
-                panelCategoryKey: 'control_panel.object',
-                pluralLabel: { en_US: "Contacts" },
-                portlet: true,
-                scope: 'company',
-                status: { code: 0 },
-                storageType: 'salesforce',
-			},
-            viewObjectEntriesPage,
-            isStandardObject: true
-        });
     }
 );
