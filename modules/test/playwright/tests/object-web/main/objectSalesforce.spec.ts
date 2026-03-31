@@ -17,11 +17,7 @@ import getRandomString from '../../../utils/getRandomString';
 import {waitForAlert} from '../../../utils/waitForAlert';
 import {generateObjectFields} from './utils/generateObjectFields';
 
-const salesforceLoginURL = process.env.SALESFORCE_LOGIN_URL;
-const salesforceConsumerKey = process.env.SALESFORCE_CONSUMER_KEY;
-const salesforceConsumerSecret = process.env.SALESFORCE_CONSUMER_SECRET;
-const salesforceUsername = process.env.SALESFORCE_USERNAME;
-const salesforcePassword = process.env.SALESFORCE_PASSWORD;
+import {salesforceConfig} from './salesforce.config';
 
 const test = mergeTests(
     dataApiHelpersTest,
@@ -36,11 +32,11 @@ const test = mergeTests(
 
 test.beforeEach(async ({instanceSettingsPage, page}) => {
     test.skip(
-        !salesforceLoginURL ||
-            !salesforceConsumerKey ||
-            !salesforceConsumerSecret ||
-            !salesforceUsername ||
-            !salesforcePassword,
+        !salesforceConfig.salesforceLoginURL ||
+            !salesforceConfig.salesforceConsumerKey ||
+            !salesforceConfig.salesforceConsumerSecret ||
+            !salesforceConfig.salesforceUsername ||
+            !salesforceConfig.salesforcePassword,
         'Requires Salesforce environment variables.'
     );
 
@@ -52,14 +48,14 @@ test.beforeEach(async ({instanceSettingsPage, page}) => {
             'Salesforce Integration'
         );
 
-        await page.getByLabel('Login URL').fill(salesforceLoginURL!);
-        await page.getByLabel('Consumer Key').fill(salesforceConsumerKey!);
-        await page.getByLabel('Consumer Secret').fill(salesforceConsumerSecret!);
-        await page.getByLabel('Username').fill(salesforceUsername!);
+        await page.getByLabel('Login URL').fill(salesforceConfig.salesforceLoginURL!);
+        await page.getByLabel('Consumer Key').fill(salesforceConfig.salesforceConsumerKey!);
+        await page.getByLabel('Consumer Secret').fill(salesforceConfig.salesforceConsumerSecret!);
+        await page.getByLabel('Username').fill(salesforceConfig.salesforceUsername!);
         
         await page.locator('input[name*="password"]')
             .filter({ visible: true }) 
-            .fill(salesforcePassword!);
+            .fill(salesforceConfig.salesforcePassword!);
 
         await instanceSettingsPage.saveAndWaitForAlert();
     });
