@@ -95,9 +95,8 @@ test(
         type: 'objectDefinition',
     });
 
-    const fieldLabel = objectFields[0].label['en_US'];
-    const createValue = getRandomString();
-    const updateValue = getRandomString();
+    const objectFieldValue = getRandomString();
+    const objectFieldUpdatedValue = getRandomString();
 
     await test.step('Create Object Entry', async () => {
         await viewObjectEntriesPage.goto(objectDefinition.className);
@@ -105,8 +104,8 @@ test(
 
         await viewObjectEntriesPage.fillObjectEntry({
             objectFieldBusinessType: 'Text',
-            objectFieldLabel: fieldLabel,
-            objectFieldValue: createValue,
+            objectFieldLabel: 'Title',
+            objectFieldValue: objectFieldValue,
         });
 
         await viewObjectEntriesPage.saveObjectEntryButton.click();
@@ -115,7 +114,7 @@ test(
     }); 
 
     await test.step('Read Object Entry', async () => {
-        await expect(page.getByRole('cell', { name: createValue })).toBeVisible();
+        await expect(page.getByRole('cell', { name: objectFieldValue })).toBeVisible();
     });
 
     await test.step('Update Object Entry', async () => {
@@ -124,15 +123,15 @@ test(
 
         await viewObjectEntriesPage.fillObjectEntry({
             objectFieldBusinessType: 'Text',
-            objectFieldLabel: fieldLabel,
-            objectFieldValue: updateValue,
+            objectFieldLabel: 'Title',
+            objectFieldValue: objectFieldUpdatedValue,
         });
 
         await viewObjectEntriesPage.saveObjectEntryButton.click();
         await expect(viewObjectEntriesPage.successMessage).toBeVisible();
         await viewObjectEntriesPage.backButton.click();
 
-        await expect(page.getByRole('cell', { name: updateValue })).toBeVisible();
+        await expect(page.getByRole('cell', { name: objectFieldUpdatedValue })).toBeVisible();
     });
 
     await test.step('Delete Object Entry', async () => {
@@ -142,7 +141,7 @@ test(
             .getByRole('button', { name: 'Delete' })
             .click();
 
-        await expect(page.getByRole('cell', { name: updateValue })).toBeAttached({attached: false});
+        await expect(page.getByRole('cell', { name: objectFieldUpdatedValue })).toBeAttached({attached: false});
     });
     }
 );
