@@ -230,11 +230,19 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.site.cms.site.initializer.test.util.CMSTestUtil;
 import com.liferay.subscription.service.SubscriptionLocalService;
 
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 
 import java.math.BigDecimal;
+
+import java.net.URI;
 
 import java.sql.Timestamp;
 
@@ -7203,6 +7211,167 @@ public class DefaultObjectEntryManagerImplTest
 					dtoConverterContext,
 					objectEntry1.getExternalReferenceCode(), _objectDefinition4,
 					_group.getGroupKey(), 1)));
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testGetVersionedObjectEntriesWithCopyAction() throws Exception {
+		_enableObjectEntryVersioning();
+
+		ObjectEntry objectEntry = _updateObjectEntryVersion(
+			_objectDefinition1,
+			_addObjectEntry(
+				_objectDefinition1,
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null, 1),
+			2);
+
+		_user = _addUser();
+
+		_addRoleUser(
+			new String[] {ActionKeys.UPDATE, ActionKeys.VIEW},
+			_objectDefinition1, _user);
+
+		Role role = _addRoleUser(
+			new String[] {ObjectActionKeys.ADD_OBJECT_ENTRY},
+			_objectDefinition1, _user);
+
+		DTOConverterContext dtoConverterContext =
+			new DefaultDTOConverterContext(
+				false, Collections.emptyMap(), dtoConverterRegistry, null,
+				LocaleUtil.getDefault(),
+				new UriInfo() {
+
+					@Override
+					public URI getAbsolutePath() {
+						return null;
+					}
+
+					@Override
+					public UriBuilder getAbsolutePathBuilder() {
+						return null;
+					}
+
+					@Override
+					public URI getBaseUri() {
+						return URI.create("http://localhost:8080/o/c/");
+					}
+
+					@Override
+					public UriBuilder getBaseUriBuilder() {
+						return UriBuilder.fromUri("http://localhost:8080/o/c/");
+					}
+
+					@Override
+					public List<Object> getMatchedResources() {
+						return Collections.emptyList();
+					}
+
+					@Override
+					public List<String> getMatchedURIs() {
+						return Collections.emptyList();
+					}
+
+					@Override
+					public List<String> getMatchedURIs(boolean decode) {
+						return Collections.emptyList();
+					}
+
+					@Override
+					public String getPath() {
+						return null;
+					}
+
+					@Override
+					public String getPath(boolean decode) {
+						return null;
+					}
+
+					@Override
+					public MultivaluedMap<String, String> getPathParameters() {
+						return new MultivaluedHashMap<>();
+					}
+
+					@Override
+					public MultivaluedMap<String, String> getPathParameters(
+						boolean decode) {
+
+						return new MultivaluedHashMap<>();
+					}
+
+					@Override
+					public List<PathSegment> getPathSegments() {
+						return Collections.emptyList();
+					}
+
+					@Override
+					public List<PathSegment> getPathSegments(boolean decode) {
+						return Collections.emptyList();
+					}
+
+					@Override
+					public MultivaluedMap<String, String> getQueryParameters() {
+						return new MultivaluedHashMap<>();
+					}
+
+					@Override
+					public MultivaluedMap<String, String> getQueryParameters(
+						boolean decode) {
+
+						return new MultivaluedHashMap<>();
+					}
+
+					@Override
+					public URI getRequestUri() {
+						return null;
+					}
+
+					@Override
+					public UriBuilder getRequestUriBuilder() {
+						return null;
+					}
+
+					@Override
+					public URI relativize(URI uri) {
+						return null;
+					}
+
+					@Override
+					public URI resolve(URI uri) {
+						return null;
+					}
+
+				},
+				_user);
+
+		Page<ObjectEntry> page =
+			_defaultObjectEntryManager.getVersionedObjectEntries(
+				dtoConverterContext, objectEntry.getExternalReferenceCode(),
+				_objectDefinition1, null, null, null);
+
+		for (ObjectEntry versionedEntry : page.getItems()) {
+			Map<String, Map<String, String>> actions =
+				versionedEntry.getActions();
+
+			Assert.assertTrue(actions.containsKey("copy"));
+		}
+
+		_resourcePermissionLocalService.removeResourcePermission(
+			companyId, _objectDefinition1.getResourceName(),
+			ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
+			role.getRoleId(), ObjectActionKeys.ADD_OBJECT_ENTRY);
+
+		page = _defaultObjectEntryManager.getVersionedObjectEntries(
+			dtoConverterContext, objectEntry.getExternalReferenceCode(),
+			_objectDefinition1, null, null, null);
+
+		for (ObjectEntry versionedEntry : page.getItems()) {
+			Map<String, Map<String, String>> actions =
+				versionedEntry.getActions();
+
+			Assert.assertFalse(actions.containsKey("copy"));
+		}
 	}
 
 	@FeatureFlag("LPD-17564")
