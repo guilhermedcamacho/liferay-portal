@@ -193,6 +193,12 @@ dependencies: {}
 env:
     -   name: DNS_MEMBERSHIP_SERVICE_NAME
         value: liferay-default-headless
+    -   name: JMX_AGENT_PORT
+        value: "12345"
+    -   name: JMX_AGENT_YAML
+        value: |
+            rules:
+            -   pattern: ".*"
     -   name: LIFERAY_CLUSTER_PERIOD_LINK_PERIOD_BIND_PERIOD_ADDR_OPENBRACKET__QUOTE_CLUSTER_MINUS_LINK_MINUS_CONTROL_QUOTE__CLOSEBRACKET_
         value: ${env.POD_IP}
     -   name: LIFERAY_CLUSTER_PERIOD_LINK_PERIOD_BIND_PERIOD_ADDR_OPENBRACKET__QUOTE_CLUSTER_MINUS_LINK_MINUS_UDP_QUOTE__CLOSEBRACKET_
@@ -239,7 +245,9 @@ global:
                     resources:
                         -   configmaps
                     verbs:
-                        -   "*"
+                        -   get
+                        -   list
+                        -   watch
 image:
     pullPolicy: IfNotPresent
     pullSecrets: []
@@ -265,12 +273,18 @@ network:
     gatewayName: ""
     hostnames: []
     timeouts: {}
+networkPolicy:
+    allowGatewayIngress: true
+    annotations: {}
+    enabled: false
+    extraIngress: []
+    gatewayNamespace: envoy-gateway-system
+    gatewayPodLabel: envoy
 nodeSelector: {}
 overlay:
     bucketName: ""
     copy: []
-    enabled: false 
-podAnnotations: {}
+    enabled: false
 podLabels: {}
 podSecurityContext:
     fsGroup: 1000
@@ -372,9 +386,6 @@ volumeMounts:
     -   mountPath: /opt/liferay/osgi/configs
         name: liferay-persistent-volume
         subPath: osgi/configs
-    -   mountPath: /opt/liferay/osgi/configs/com.liferay.portal.k8s.agent.configuration.PortalK8sAgentConfiguration.config
-        name: liferay-configmap
-        subPath: com.liferay.portal.k8s.agent.configuration.PortalK8sAgentConfiguration.config
     -   mountPath: /opt/liferay/osgi/modules
         name: liferay-persistent-volume
         subPath: osgi/modules

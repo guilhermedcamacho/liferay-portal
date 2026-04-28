@@ -1234,3 +1234,4 @@ public abstract class BaseDSRecipientViewDefinitionResourceTestCase {
 		DSRecipientViewDefinitionResource _dsRecipientViewDefinitionResource;
 
 }
+// LIFERAY-REST-BUILDER-HASH:1012435354

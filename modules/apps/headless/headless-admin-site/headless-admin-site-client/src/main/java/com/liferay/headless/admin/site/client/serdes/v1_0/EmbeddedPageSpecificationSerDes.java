@@ -387,3 +387,4 @@ public class EmbeddedPageSpecificationSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1321933625

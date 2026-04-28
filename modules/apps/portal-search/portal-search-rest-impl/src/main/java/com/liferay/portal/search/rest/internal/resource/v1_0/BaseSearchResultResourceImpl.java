@@ -900,3 +900,4 @@ public abstract class BaseSearchResultResourceImpl
 		LogFactoryUtil.getLog(BaseSearchResultResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1314395548

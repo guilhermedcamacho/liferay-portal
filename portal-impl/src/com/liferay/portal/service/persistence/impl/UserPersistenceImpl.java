@@ -42,8 +42,11 @@ import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.service.persistence.UserUtil;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelperUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.service.persistence.impl.CollectionPersistenceFinder;
+import com.liferay.portal.kernel.service.persistence.impl.FinderColumn;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapper;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapperFactory;
+import com.liferay.portal.kernel.service.persistence.impl.UniquePersistenceFinder;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -109,6 +112,8 @@ public class UserPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByUuid;
 	private FinderPath _finderPathWithoutPaginationFindByUuid;
 	private FinderPath _finderPathCountByUuid;
+	private CollectionPersistenceFinder<User>
+		_collectionPersistenceFinderByUuid;
 
 	/**
 	 * Returns all the users where uuid = &#63;.
@@ -182,106 +187,9 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath = _finderPathWithoutPaginationFindByUuid;
-					finderArgs = new Object[] {uuid};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath = _finderPathWithPaginationFindByUuid;
-				finderArgs = new Object[] {uuid, start, end, orderByComparator};
-			}
-
-			List<User> list = null;
-
-			if (useFinderCache) {
-				list = (List<User>)FinderCacheUtil.getResult(
-					finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (User user : list) {
-						if (!uuid.equals(user.getUuid())) {
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						3 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(3);
-				}
-
-				sb.append(_SQL_SELECT_USER_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_UUID_2);
-				}
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(UserModelImpl.ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					list = (List<User>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						FinderCacheUtil.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByUuid.find(
+				FinderCacheUtil.getFinderCache(), new Object[] {uuid}, start,
+				end, orderByComparator, useFinderCache);
 		}
 	}
 
@@ -304,16 +212,9 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("uuid=");
-		sb.append(uuid);
-
-		sb.append("}");
-
-		throw new NoSuchUserException(sb.toString());
+		throw new NoSuchUserException(
+			_collectionPersistenceFinderByUuid.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {uuid}));
 	}
 
 	/**
@@ -327,13 +228,9 @@ public class UserPersistenceImpl
 	public User fetchByUuid_First(
 		String uuid, OrderByComparator<User> orderByComparator) {
 
-		List<User> list = findByUuid(uuid, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByUuid.fetchFirst(
+			FinderCacheUtil.getFinderCache(), new Object[] {uuid},
+			orderByComparator);
 	}
 
 	/**
@@ -343,11 +240,8 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public void removeByUuid(String uuid) {
-		for (User user :
-				findByUuid(uuid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
-
-			remove(user);
-		}
+		_collectionPersistenceFinderByUuid.remove(
+			FinderCacheUtil.getFinderCache(), new Object[] {uuid});
 	}
 
 	/**
@@ -362,70 +256,16 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUuid;
-
-			Object[] finderArgs = new Object[] {uuid};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(2);
-
-				sb.append(_SQL_COUNT_USER_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_UUID_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByUuid.count(
+				FinderCacheUtil.getFinderCache(), new Object[] {uuid});
 		}
 	}
-
-	private static final String _FINDER_COLUMN_UUID_UUID_2 = "user.uuid = ?";
-
-	private static final String _FINDER_COLUMN_UUID_UUID_3 =
-		"(user.uuid IS NULL OR user.uuid = '')";
 
 	private FinderPath _finderPathWithPaginationFindByUuid_C;
 	private FinderPath _finderPathWithoutPaginationFindByUuid_C;
 	private FinderPath _finderPathCountByUuid_C;
+	private CollectionPersistenceFinder<User>
+		_collectionPersistenceFinderByUuid_C;
 
 	/**
 	 * Returns all the users where uuid = &#63; and companyId = &#63;.
@@ -507,114 +347,10 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath = _finderPathWithoutPaginationFindByUuid_C;
-					finderArgs = new Object[] {uuid, companyId};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath = _finderPathWithPaginationFindByUuid_C;
-				finderArgs = new Object[] {
-					uuid, companyId, start, end, orderByComparator
-				};
-			}
-
-			List<User> list = null;
-
-			if (useFinderCache) {
-				list = (List<User>)FinderCacheUtil.getResult(
-					finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (User user : list) {
-						if (!uuid.equals(user.getUuid()) ||
-							(companyId != user.getCompanyId())) {
-
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						4 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(4);
-				}
-
-				sb.append(_SQL_SELECT_USER_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(UserModelImpl.ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(companyId);
-
-					list = (List<User>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						FinderCacheUtil.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByUuid_C.find(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {uuid, companyId}, start, end, orderByComparator,
+				useFinderCache);
 		}
 	}
 
@@ -639,19 +375,9 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("uuid=");
-		sb.append(uuid);
-
-		sb.append(", companyId=");
-		sb.append(companyId);
-
-		sb.append("}");
-
-		throw new NoSuchUserException(sb.toString());
+		throw new NoSuchUserException(
+			_collectionPersistenceFinderByUuid_C.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {uuid, companyId}));
 	}
 
 	/**
@@ -667,14 +393,9 @@ public class UserPersistenceImpl
 		String uuid, long companyId,
 		OrderByComparator<User> orderByComparator) {
 
-		List<User> list = findByUuid_C(
-			uuid, companyId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByUuid_C.fetchFirst(
+			FinderCacheUtil.getFinderCache(), new Object[] {uuid, companyId},
+			orderByComparator);
 	}
 
 	/**
@@ -685,13 +406,8 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public void removeByUuid_C(String uuid, long companyId) {
-		for (User user :
-				findByUuid_C(
-					uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(user);
-		}
+		_collectionPersistenceFinderByUuid_C.remove(
+			FinderCacheUtil.getFinderCache(), new Object[] {uuid, companyId});
 	}
 
 	/**
@@ -707,74 +423,11 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUuid_C;
-
-			Object[] finderArgs = new Object[] {uuid, companyId};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_USER_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(companyId);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByUuid_C.count(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {uuid, companyId});
 		}
 	}
-
-	private static final String _FINDER_COLUMN_UUID_C_UUID_2 =
-		"user.uuid = ? AND ";
-
-	private static final String _FINDER_COLUMN_UUID_C_UUID_3 =
-		"(user.uuid IS NULL OR user.uuid = '') AND ";
-
-	private static final String _FINDER_COLUMN_UUID_C_COMPANYID_2 =
-		"user.companyId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByCompanyId;
 	private FinderPath _finderPathWithoutPaginationFindByCompanyId;
@@ -1070,6 +723,7 @@ public class UserPersistenceImpl
 		"user.companyId = ? AND type_ = 1";
 
 	private FinderPath _finderPathFetchByContactId;
+	private UniquePersistenceFinder<User> _uniquePersistenceFinderByContactId;
 
 	/**
 	 * Returns the user where contactId = &#63; or throws a <code>NoSuchUserException</code> if it could not be found.
@@ -1083,20 +737,15 @@ public class UserPersistenceImpl
 		User user = fetchByContactId(contactId);
 
 		if (user == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("contactId=");
-			sb.append(contactId);
-
-			sb.append("}");
+			String message =
+				_uniquePersistenceFinderByContactId.buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY, new Object[] {contactId});
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
+				_log.debug(message);
 			}
 
-			throw new NoSuchUserException(sb.toString());
+			throw new NoSuchUserException(message);
 		}
 
 		return user;
@@ -1126,77 +775,9 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			Object[] finderArgs = null;
-
-			if (useFinderCache) {
-				finderArgs = new Object[] {contactId};
-			}
-
-			Object result = null;
-
-			if (useFinderCache) {
-				result = FinderCacheUtil.getResult(
-					_finderPathFetchByContactId, finderArgs, this);
-			}
-
-			if (result instanceof User) {
-				User user = (User)result;
-
-				if (contactId != user.getContactId()) {
-					result = null;
-				}
-			}
-
-			if (result == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_SELECT_USER_WHERE);
-
-				sb.append(_FINDER_COLUMN_CONTACTID_CONTACTID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(contactId);
-
-					List<User> list = query.list();
-
-					if (list.isEmpty()) {
-						if (useFinderCache) {
-							FinderCacheUtil.putResult(
-								_finderPathFetchByContactId, finderArgs, list);
-						}
-					}
-					else {
-						User user = list.get(0);
-
-						result = user;
-
-						cacheResult(user);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			if (result instanceof List<?>) {
-				return null;
-			}
-			else {
-				return (User)result;
-			}
+			return _uniquePersistenceFinderByContactId.fetch(
+				FinderCacheUtil.getFinderCache(), new Object[] {contactId},
+				useFinderCache);
 		}
 	}
 
@@ -1221,21 +802,15 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByContactId(long contactId) {
-		User user = fetchByContactId(contactId);
-
-		if (user == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByContactId.count(
+			FinderCacheUtil.getFinderCache(), new Object[] {contactId});
 	}
-
-	private static final String _FINDER_COLUMN_CONTACTID_CONTACTID_2 =
-		"user.contactId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByEmailAddress;
 	private FinderPath _finderPathWithoutPaginationFindByEmailAddress;
 	private FinderPath _finderPathCountByEmailAddress;
+	private CollectionPersistenceFinder<User>
+		_collectionPersistenceFinderByEmailAddress;
 
 	/**
 	 * Returns all the users where emailAddress = &#63;.
@@ -1313,108 +888,9 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			emailAddress = Objects.toString(emailAddress, "");
-
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath = _finderPathWithoutPaginationFindByEmailAddress;
-					finderArgs = new Object[] {emailAddress};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath = _finderPathWithPaginationFindByEmailAddress;
-				finderArgs = new Object[] {
-					emailAddress, start, end, orderByComparator
-				};
-			}
-
-			List<User> list = null;
-
-			if (useFinderCache) {
-				list = (List<User>)FinderCacheUtil.getResult(
-					finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (User user : list) {
-						if (!emailAddress.equals(user.getEmailAddress())) {
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						3 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(3);
-				}
-
-				sb.append(_SQL_SELECT_USER_WHERE);
-
-				boolean bindEmailAddress = false;
-
-				if (emailAddress.isEmpty()) {
-					sb.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_3);
-				}
-				else {
-					bindEmailAddress = true;
-
-					sb.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_2);
-				}
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(UserModelImpl.ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindEmailAddress) {
-						queryPos.add(emailAddress);
-					}
-
-					list = (List<User>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						FinderCacheUtil.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByEmailAddress.find(
+				FinderCacheUtil.getFinderCache(), new Object[] {emailAddress},
+				start, end, orderByComparator, useFinderCache);
 		}
 	}
 
@@ -1437,16 +913,9 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("emailAddress=");
-		sb.append(emailAddress);
-
-		sb.append("}");
-
-		throw new NoSuchUserException(sb.toString());
+		throw new NoSuchUserException(
+			_collectionPersistenceFinderByEmailAddress.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {emailAddress}));
 	}
 
 	/**
@@ -1460,14 +929,9 @@ public class UserPersistenceImpl
 	public User fetchByEmailAddress_First(
 		String emailAddress, OrderByComparator<User> orderByComparator) {
 
-		List<User> list = findByEmailAddress(
-			emailAddress, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByEmailAddress.fetchFirst(
+			FinderCacheUtil.getFinderCache(), new Object[] {emailAddress},
+			orderByComparator);
 	}
 
 	/**
@@ -1477,12 +941,8 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public void removeByEmailAddress(String emailAddress) {
-		for (User user :
-				findByEmailAddress(
-					emailAddress, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
-
-			remove(user);
-		}
+		_collectionPersistenceFinderByEmailAddress.remove(
+			FinderCacheUtil.getFinderCache(), new Object[] {emailAddress});
 	}
 
 	/**
@@ -1497,71 +957,16 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			emailAddress = Objects.toString(emailAddress, "");
-
-			FinderPath finderPath = _finderPathCountByEmailAddress;
-
-			Object[] finderArgs = new Object[] {emailAddress};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(2);
-
-				sb.append(_SQL_COUNT_USER_WHERE);
-
-				boolean bindEmailAddress = false;
-
-				if (emailAddress.isEmpty()) {
-					sb.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_3);
-				}
-				else {
-					bindEmailAddress = true;
-
-					sb.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindEmailAddress) {
-						queryPos.add(emailAddress);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByEmailAddress.count(
+				FinderCacheUtil.getFinderCache(), new Object[] {emailAddress});
 		}
 	}
-
-	private static final String _FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_2 =
-		"user.emailAddress = ?";
-
-	private static final String _FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_3 =
-		"(user.emailAddress IS NULL OR user.emailAddress = '')";
 
 	private FinderPath _finderPathWithPaginationFindByPortraitId;
 	private FinderPath _finderPathWithoutPaginationFindByPortraitId;
 	private FinderPath _finderPathCountByPortraitId;
+	private CollectionPersistenceFinder<User>
+		_collectionPersistenceFinderByPortraitId;
 
 	/**
 	 * Returns all the users where portraitId = &#63;.
@@ -1637,95 +1042,9 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath = _finderPathWithoutPaginationFindByPortraitId;
-					finderArgs = new Object[] {portraitId};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath = _finderPathWithPaginationFindByPortraitId;
-				finderArgs = new Object[] {
-					portraitId, start, end, orderByComparator
-				};
-			}
-
-			List<User> list = null;
-
-			if (useFinderCache) {
-				list = (List<User>)FinderCacheUtil.getResult(
-					finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (User user : list) {
-						if (portraitId != user.getPortraitId()) {
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						3 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(3);
-				}
-
-				sb.append(_SQL_SELECT_USER_WHERE);
-
-				sb.append(_FINDER_COLUMN_PORTRAITID_PORTRAITID_2);
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(UserModelImpl.ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(portraitId);
-
-					list = (List<User>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						FinderCacheUtil.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByPortraitId.find(
+				FinderCacheUtil.getFinderCache(), new Object[] {portraitId},
+				start, end, orderByComparator, useFinderCache);
 		}
 	}
 
@@ -1748,16 +1067,9 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("portraitId=");
-		sb.append(portraitId);
-
-		sb.append("}");
-
-		throw new NoSuchUserException(sb.toString());
+		throw new NoSuchUserException(
+			_collectionPersistenceFinderByPortraitId.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {portraitId}));
 	}
 
 	/**
@@ -1771,13 +1083,9 @@ public class UserPersistenceImpl
 	public User fetchByPortraitId_First(
 		long portraitId, OrderByComparator<User> orderByComparator) {
 
-		List<User> list = findByPortraitId(portraitId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByPortraitId.fetchFirst(
+			FinderCacheUtil.getFinderCache(), new Object[] {portraitId},
+			orderByComparator);
 	}
 
 	/**
@@ -1787,12 +1095,8 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public void removeByPortraitId(long portraitId) {
-		for (User user :
-				findByPortraitId(
-					portraitId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
-
-			remove(user);
-		}
+		_collectionPersistenceFinderByPortraitId.remove(
+			FinderCacheUtil.getFinderCache(), new Object[] {portraitId});
 	}
 
 	/**
@@ -1807,51 +1111,10 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			FinderPath finderPath = _finderPathCountByPortraitId;
-
-			Object[] finderArgs = new Object[] {portraitId};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(2);
-
-				sb.append(_SQL_COUNT_USER_WHERE);
-
-				sb.append(_FINDER_COLUMN_PORTRAITID_PORTRAITID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(portraitId);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByPortraitId.count(
+				FinderCacheUtil.getFinderCache(), new Object[] {portraitId});
 		}
 	}
-
-	private static final String _FINDER_COLUMN_PORTRAITID_PORTRAITID_2 =
-		"user.portraitId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByGtU_C;
 	private FinderPath _finderPathWithPaginationCountByGtU_C;
@@ -2167,6 +1430,7 @@ public class UserPersistenceImpl
 		"user.companyId = ? AND type_ = 1";
 
 	private FinderPath _finderPathFetchByC_U;
+	private UniquePersistenceFinder<User> _uniquePersistenceFinderByC_U;
 
 	/**
 	 * Returns the user where companyId = &#63; and userId = &#63; or throws a <code>NoSuchUserException</code> if it could not be found.
@@ -2183,23 +1447,15 @@ public class UserPersistenceImpl
 		User user = fetchByC_U(companyId, userId);
 
 		if (user == null) {
-			StringBundler sb = new StringBundler(6);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("companyId=");
-			sb.append(companyId);
-
-			sb.append(", userId=");
-			sb.append(userId);
-
-			sb.append("}");
+			String message =
+				_uniquePersistenceFinderByC_U.buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY, new Object[] {companyId, userId});
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
+				_log.debug(message);
 			}
 
-			throw new NoSuchUserException(sb.toString());
+			throw new NoSuchUserException(message);
 		}
 
 		return user;
@@ -2233,83 +1489,9 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			Object[] finderArgs = null;
-
-			if (useFinderCache) {
-				finderArgs = new Object[] {companyId, userId};
-			}
-
-			Object result = null;
-
-			if (useFinderCache) {
-				result = FinderCacheUtil.getResult(
-					_finderPathFetchByC_U, finderArgs, this);
-			}
-
-			if (result instanceof User) {
-				User user = (User)result;
-
-				if ((companyId != user.getCompanyId()) ||
-					(userId != user.getUserId())) {
-
-					result = null;
-				}
-			}
-
-			if (result == null) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(_SQL_SELECT_USER_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_U_COMPANYID_2);
-
-				sb.append(_FINDER_COLUMN_C_U_USERID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					queryPos.add(userId);
-
-					List<User> list = query.list();
-
-					if (list.isEmpty()) {
-						if (useFinderCache) {
-							FinderCacheUtil.putResult(
-								_finderPathFetchByC_U, finderArgs, list);
-						}
-					}
-					else {
-						User user = list.get(0);
-
-						result = user;
-
-						cacheResult(user);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			if (result instanceof List<?>) {
-				return null;
-			}
-			else {
-				return (User)result;
-			}
+			return _uniquePersistenceFinderByC_U.fetch(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {companyId, userId}, useFinderCache);
 		}
 	}
 
@@ -2338,19 +1520,9 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByC_U(long companyId, long userId) {
-		User user = fetchByC_U(companyId, userId);
-
-		if (user == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByC_U.count(
+			FinderCacheUtil.getFinderCache(), new Object[] {companyId, userId});
 	}
-
-	private static final String _FINDER_COLUMN_C_U_COMPANYID_2 =
-		"user.companyId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_U_USERID_2 = "user.userId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByC_CD;
 	private FinderPath _finderPathWithoutPaginationFindByC_CD;
@@ -3062,6 +2234,7 @@ public class UserPersistenceImpl
 		"user.modifiedDate = ? AND type_ = 1";
 
 	private FinderPath _finderPathFetchByC_SN;
+	private UniquePersistenceFinder<User> _uniquePersistenceFinderByC_SN;
 
 	/**
 	 * Returns the user where companyId = &#63; and screenName = &#63; or throws a <code>NoSuchUserException</code> if it could not be found.
@@ -3078,23 +2251,16 @@ public class UserPersistenceImpl
 		User user = fetchByC_SN(companyId, screenName);
 
 		if (user == null) {
-			StringBundler sb = new StringBundler(6);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("companyId=");
-			sb.append(companyId);
-
-			sb.append(", screenName=");
-			sb.append(screenName);
-
-			sb.append("}");
+			String message =
+				_uniquePersistenceFinderByC_SN.buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY,
+					new Object[] {companyId, screenName});
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
+				_log.debug(message);
 			}
 
-			throw new NoSuchUserException(sb.toString());
+			throw new NoSuchUserException(message);
 		}
 
 		return user;
@@ -3128,96 +2294,9 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			screenName = Objects.toString(screenName, "");
-
-			Object[] finderArgs = null;
-
-			if (useFinderCache) {
-				finderArgs = new Object[] {companyId, screenName};
-			}
-
-			Object result = null;
-
-			if (useFinderCache) {
-				result = FinderCacheUtil.getResult(
-					_finderPathFetchByC_SN, finderArgs, this);
-			}
-
-			if (result instanceof User) {
-				User user = (User)result;
-
-				if ((companyId != user.getCompanyId()) ||
-					!Objects.equals(screenName, user.getScreenName())) {
-
-					result = null;
-				}
-			}
-
-			if (result == null) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(_SQL_SELECT_USER_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_SN_COMPANYID_2);
-
-				boolean bindScreenName = false;
-
-				if (screenName.isEmpty()) {
-					sb.append(_FINDER_COLUMN_C_SN_SCREENNAME_3);
-				}
-				else {
-					bindScreenName = true;
-
-					sb.append(_FINDER_COLUMN_C_SN_SCREENNAME_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					if (bindScreenName) {
-						queryPos.add(screenName);
-					}
-
-					List<User> list = query.list();
-
-					if (list.isEmpty()) {
-						if (useFinderCache) {
-							FinderCacheUtil.putResult(
-								_finderPathFetchByC_SN, finderArgs, list);
-						}
-					}
-					else {
-						User user = list.get(0);
-
-						result = user;
-
-						cacheResult(user);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			if (result instanceof List<?>) {
-				return null;
-			}
-			else {
-				return (User)result;
-			}
+			return _uniquePersistenceFinderByC_SN.fetch(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {companyId, screenName}, useFinderCache);
 		}
 	}
 
@@ -3246,25 +2325,13 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByC_SN(long companyId, String screenName) {
-		User user = fetchByC_SN(companyId, screenName);
-
-		if (user == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByC_SN.count(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {companyId, screenName});
 	}
 
-	private static final String _FINDER_COLUMN_C_SN_COMPANYID_2 =
-		"user.companyId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_SN_SCREENNAME_2 =
-		"user.screenName = ?";
-
-	private static final String _FINDER_COLUMN_C_SN_SCREENNAME_3 =
-		"(user.screenName IS NULL OR user.screenName = '')";
-
 	private FinderPath _finderPathFetchByC_EA;
+	private UniquePersistenceFinder<User> _uniquePersistenceFinderByC_EA;
 
 	/**
 	 * Returns the user where companyId = &#63; and emailAddress = &#63; or throws a <code>NoSuchUserException</code> if it could not be found.
@@ -3281,23 +2348,16 @@ public class UserPersistenceImpl
 		User user = fetchByC_EA(companyId, emailAddress);
 
 		if (user == null) {
-			StringBundler sb = new StringBundler(6);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("companyId=");
-			sb.append(companyId);
-
-			sb.append(", emailAddress=");
-			sb.append(emailAddress);
-
-			sb.append("}");
+			String message =
+				_uniquePersistenceFinderByC_EA.buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY,
+					new Object[] {companyId, emailAddress});
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
+				_log.debug(message);
 			}
 
-			throw new NoSuchUserException(sb.toString());
+			throw new NoSuchUserException(message);
 		}
 
 		return user;
@@ -3331,96 +2391,9 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			emailAddress = Objects.toString(emailAddress, "");
-
-			Object[] finderArgs = null;
-
-			if (useFinderCache) {
-				finderArgs = new Object[] {companyId, emailAddress};
-			}
-
-			Object result = null;
-
-			if (useFinderCache) {
-				result = FinderCacheUtil.getResult(
-					_finderPathFetchByC_EA, finderArgs, this);
-			}
-
-			if (result instanceof User) {
-				User user = (User)result;
-
-				if ((companyId != user.getCompanyId()) ||
-					!Objects.equals(emailAddress, user.getEmailAddress())) {
-
-					result = null;
-				}
-			}
-
-			if (result == null) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(_SQL_SELECT_USER_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_EA_COMPANYID_2);
-
-				boolean bindEmailAddress = false;
-
-				if (emailAddress.isEmpty()) {
-					sb.append(_FINDER_COLUMN_C_EA_EMAILADDRESS_3);
-				}
-				else {
-					bindEmailAddress = true;
-
-					sb.append(_FINDER_COLUMN_C_EA_EMAILADDRESS_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					if (bindEmailAddress) {
-						queryPos.add(emailAddress);
-					}
-
-					List<User> list = query.list();
-
-					if (list.isEmpty()) {
-						if (useFinderCache) {
-							FinderCacheUtil.putResult(
-								_finderPathFetchByC_EA, finderArgs, list);
-						}
-					}
-					else {
-						User user = list.get(0);
-
-						result = user;
-
-						cacheResult(user);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			if (result instanceof List<?>) {
-				return null;
-			}
-			else {
-				return (User)result;
-			}
+			return _uniquePersistenceFinderByC_EA.fetch(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {companyId, emailAddress}, useFinderCache);
 		}
 	}
 
@@ -3449,27 +2422,16 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByC_EA(long companyId, String emailAddress) {
-		User user = fetchByC_EA(companyId, emailAddress);
-
-		if (user == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByC_EA.count(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {companyId, emailAddress});
 	}
-
-	private static final String _FINDER_COLUMN_C_EA_COMPANYID_2 =
-		"user.companyId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_EA_EMAILADDRESS_2 =
-		"user.emailAddress = ?";
-
-	private static final String _FINDER_COLUMN_C_EA_EMAILADDRESS_3 =
-		"(user.emailAddress IS NULL OR user.emailAddress = '')";
 
 	private FinderPath _finderPathWithPaginationFindByC_FID;
 	private FinderPath _finderPathWithoutPaginationFindByC_FID;
 	private FinderPath _finderPathCountByC_FID;
+	private CollectionPersistenceFinder<User>
+		_collectionPersistenceFinderByC_FID;
 
 	/**
 	 * Returns all the users where companyId = &#63; and facebookId = &#63;.
@@ -3551,101 +2513,10 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath = _finderPathWithoutPaginationFindByC_FID;
-					finderArgs = new Object[] {companyId, facebookId};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath = _finderPathWithPaginationFindByC_FID;
-				finderArgs = new Object[] {
-					companyId, facebookId, start, end, orderByComparator
-				};
-			}
-
-			List<User> list = null;
-
-			if (useFinderCache) {
-				list = (List<User>)FinderCacheUtil.getResult(
-					finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (User user : list) {
-						if ((companyId != user.getCompanyId()) ||
-							(facebookId != user.getFacebookId())) {
-
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						4 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(4);
-				}
-
-				sb.append(_SQL_SELECT_USER_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_FID_COMPANYID_2);
-
-				sb.append(_FINDER_COLUMN_C_FID_FACEBOOKID_2);
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(UserModelImpl.ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					queryPos.add(facebookId);
-
-					list = (List<User>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						FinderCacheUtil.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByC_FID.find(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {companyId, facebookId}, start, end,
+				orderByComparator, useFinderCache);
 		}
 	}
 
@@ -3671,19 +2542,10 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append(", facebookId=");
-		sb.append(facebookId);
-
-		sb.append("}");
-
-		throw new NoSuchUserException(sb.toString());
+		throw new NoSuchUserException(
+			_collectionPersistenceFinderByC_FID.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY,
+				new Object[] {companyId, facebookId}));
 	}
 
 	/**
@@ -3699,14 +2561,9 @@ public class UserPersistenceImpl
 		long companyId, long facebookId,
 		OrderByComparator<User> orderByComparator) {
 
-		List<User> list = findByC_FID(
-			companyId, facebookId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByC_FID.fetchFirst(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {companyId, facebookId}, orderByComparator);
 	}
 
 	/**
@@ -3717,13 +2574,9 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public void removeByC_FID(long companyId, long facebookId) {
-		for (User user :
-				findByC_FID(
-					companyId, facebookId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(user);
-		}
+		_collectionPersistenceFinderByC_FID.remove(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {companyId, facebookId});
 	}
 
 	/**
@@ -3739,62 +2592,16 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			FinderPath finderPath = _finderPathCountByC_FID;
-
-			Object[] finderArgs = new Object[] {companyId, facebookId};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_USER_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_FID_COMPANYID_2);
-
-				sb.append(_FINDER_COLUMN_C_FID_FACEBOOKID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					queryPos.add(facebookId);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByC_FID.count(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {companyId, facebookId});
 		}
 	}
-
-	private static final String _FINDER_COLUMN_C_FID_COMPANYID_2 =
-		"user.companyId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_FID_FACEBOOKID_2 =
-		"user.facebookId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByC_T;
 	private FinderPath _finderPathWithoutPaginationFindByC_T;
 	private FinderPath _finderPathCountByC_T;
+	private CollectionPersistenceFinder<User> _collectionPersistenceFinderByC_T;
 
 	/**
 	 * Returns all the users where companyId = &#63; and type = &#63;.
@@ -3873,101 +2680,10 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath = _finderPathWithoutPaginationFindByC_T;
-					finderArgs = new Object[] {companyId, type};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath = _finderPathWithPaginationFindByC_T;
-				finderArgs = new Object[] {
-					companyId, type, start, end, orderByComparator
-				};
-			}
-
-			List<User> list = null;
-
-			if (useFinderCache) {
-				list = (List<User>)FinderCacheUtil.getResult(
-					finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (User user : list) {
-						if ((companyId != user.getCompanyId()) ||
-							(type != user.getType())) {
-
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						4 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(4);
-				}
-
-				sb.append(_SQL_SELECT_USER_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_T_COMPANYID_2);
-
-				sb.append(_FINDER_COLUMN_C_T_TYPE_2);
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(UserModelImpl.ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					queryPos.add(type);
-
-					list = (List<User>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						FinderCacheUtil.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByC_T.find(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {companyId, type}, start, end, orderByComparator,
+				useFinderCache);
 		}
 	}
 
@@ -3991,19 +2707,9 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append(", type=");
-		sb.append(type);
-
-		sb.append("}");
-
-		throw new NoSuchUserException(sb.toString());
+		throw new NoSuchUserException(
+			_collectionPersistenceFinderByC_T.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {companyId, type}));
 	}
 
 	/**
@@ -4018,13 +2724,9 @@ public class UserPersistenceImpl
 	public User fetchByC_T_First(
 		long companyId, int type, OrderByComparator<User> orderByComparator) {
 
-		List<User> list = findByC_T(companyId, type, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByC_T.fetchFirst(
+			FinderCacheUtil.getFinderCache(), new Object[] {companyId, type},
+			orderByComparator);
 	}
 
 	/**
@@ -4035,13 +2737,8 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public void removeByC_T(long companyId, int type) {
-		for (User user :
-				findByC_T(
-					companyId, type, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(user);
-		}
+		_collectionPersistenceFinderByC_T.remove(
+			FinderCacheUtil.getFinderCache(), new Object[] {companyId, type});
 	}
 
 	/**
@@ -4057,57 +2754,11 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			FinderPath finderPath = _finderPathCountByC_T;
-
-			Object[] finderArgs = new Object[] {companyId, type};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_USER_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_T_COMPANYID_2);
-
-				sb.append(_FINDER_COLUMN_C_T_TYPE_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					queryPos.add(type);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByC_T.count(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {companyId, type});
 		}
 	}
-
-	private static final String _FINDER_COLUMN_C_T_COMPANYID_2 =
-		"user.companyId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_T_TYPE_2 = "user.type = ?";
 
 	private FinderPath _finderPathWithPaginationFindByC_S;
 	private FinderPath _finderPathWithoutPaginationFindByC_S;
@@ -4848,6 +3499,8 @@ public class UserPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByC_T_S;
 	private FinderPath _finderPathWithoutPaginationFindByC_T_S;
 	private FinderPath _finderPathCountByC_T_S;
+	private CollectionPersistenceFinder<User>
+		_collectionPersistenceFinderByC_T_S;
 
 	/**
 	 * Returns all the users where companyId = &#63; and type = &#63; and status = &#63;.
@@ -4934,106 +3587,10 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath = _finderPathWithoutPaginationFindByC_T_S;
-					finderArgs = new Object[] {companyId, type, status};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath = _finderPathWithPaginationFindByC_T_S;
-				finderArgs = new Object[] {
-					companyId, type, status, start, end, orderByComparator
-				};
-			}
-
-			List<User> list = null;
-
-			if (useFinderCache) {
-				list = (List<User>)FinderCacheUtil.getResult(
-					finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (User user : list) {
-						if ((companyId != user.getCompanyId()) ||
-							(type != user.getType()) ||
-							(status != user.getStatus())) {
-
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						5 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(5);
-				}
-
-				sb.append(_SQL_SELECT_USER_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_T_S_COMPANYID_2);
-
-				sb.append(_FINDER_COLUMN_C_T_S_TYPE_2);
-
-				sb.append(_FINDER_COLUMN_C_T_S_STATUS_2);
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(UserModelImpl.ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					queryPos.add(type);
-
-					queryPos.add(status);
-
-					list = (List<User>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						FinderCacheUtil.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByC_T_S.find(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {companyId, type, status}, start, end,
+				orderByComparator, useFinderCache);
 		}
 	}
 
@@ -5060,22 +3617,10 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler sb = new StringBundler(8);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append(", type=");
-		sb.append(type);
-
-		sb.append(", status=");
-		sb.append(status);
-
-		sb.append("}");
-
-		throw new NoSuchUserException(sb.toString());
+		throw new NoSuchUserException(
+			_collectionPersistenceFinderByC_T_S.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY,
+				new Object[] {companyId, type, status}));
 	}
 
 	/**
@@ -5092,14 +3637,9 @@ public class UserPersistenceImpl
 		long companyId, int type, int status,
 		OrderByComparator<User> orderByComparator) {
 
-		List<User> list = findByC_T_S(
-			companyId, type, status, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByC_T_S.fetchFirst(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {companyId, type, status}, orderByComparator);
 	}
 
 	/**
@@ -5111,13 +3651,9 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public void removeByC_T_S(long companyId, int type, int status) {
-		for (User user :
-				findByC_T_S(
-					companyId, type, status, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null)) {
-
-			remove(user);
-		}
+		_collectionPersistenceFinderByC_T_S.remove(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {companyId, type, status});
 	}
 
 	/**
@@ -5134,67 +3670,14 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			FinderPath finderPath = _finderPathCountByC_T_S;
-
-			Object[] finderArgs = new Object[] {companyId, type, status};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(_SQL_COUNT_USER_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_T_S_COMPANYID_2);
-
-				sb.append(_FINDER_COLUMN_C_T_S_TYPE_2);
-
-				sb.append(_FINDER_COLUMN_C_T_S_STATUS_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					queryPos.add(type);
-
-					queryPos.add(status);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByC_T_S.count(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {companyId, type, status});
 		}
 	}
 
-	private static final String _FINDER_COLUMN_C_T_S_COMPANYID_2 =
-		"user.companyId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_T_S_TYPE_2 =
-		"user.type = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_T_S_STATUS_2 =
-		"user.status = ?";
-
 	private FinderPath _finderPathFetchByERC_C;
+	private UniquePersistenceFinder<User> _uniquePersistenceFinderByERC_C;
 
 	/**
 	 * Returns the user where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchUserException</code> if it could not be found.
@@ -5211,23 +3694,16 @@ public class UserPersistenceImpl
 		User user = fetchByERC_C(externalReferenceCode, companyId);
 
 		if (user == null) {
-			StringBundler sb = new StringBundler(6);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("externalReferenceCode=");
-			sb.append(externalReferenceCode);
-
-			sb.append(", companyId=");
-			sb.append(companyId);
-
-			sb.append("}");
+			String message =
+				_uniquePersistenceFinderByERC_C.buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY,
+					new Object[] {externalReferenceCode, companyId});
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
+				_log.debug(message);
 			}
 
-			throw new NoSuchUserException(sb.toString());
+			throw new NoSuchUserException(message);
 		}
 
 		return user;
@@ -5261,98 +3737,10 @@ public class UserPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					User.class)) {
 
-			externalReferenceCode = Objects.toString(externalReferenceCode, "");
-
-			Object[] finderArgs = null;
-
-			if (useFinderCache) {
-				finderArgs = new Object[] {externalReferenceCode, companyId};
-			}
-
-			Object result = null;
-
-			if (useFinderCache) {
-				result = FinderCacheUtil.getResult(
-					_finderPathFetchByERC_C, finderArgs, this);
-			}
-
-			if (result instanceof User) {
-				User user = (User)result;
-
-				if (!Objects.equals(
-						externalReferenceCode,
-						user.getExternalReferenceCode()) ||
-					(companyId != user.getCompanyId())) {
-
-					result = null;
-				}
-			}
-
-			if (result == null) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(_SQL_SELECT_USER_WHERE);
-
-				boolean bindExternalReferenceCode = false;
-
-				if (externalReferenceCode.isEmpty()) {
-					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3);
-				}
-				else {
-					bindExternalReferenceCode = true;
-
-					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2);
-				}
-
-				sb.append(_FINDER_COLUMN_ERC_C_COMPANYID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindExternalReferenceCode) {
-						queryPos.add(externalReferenceCode);
-					}
-
-					queryPos.add(companyId);
-
-					List<User> list = query.list();
-
-					if (list.isEmpty()) {
-						if (useFinderCache) {
-							FinderCacheUtil.putResult(
-								_finderPathFetchByERC_C, finderArgs, list);
-						}
-					}
-					else {
-						User user = list.get(0);
-
-						result = user;
-
-						cacheResult(user);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			if (result instanceof List<?>) {
-				return null;
-			}
-			else {
-				return (User)result;
-			}
+			return _uniquePersistenceFinderByERC_C.fetch(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {externalReferenceCode, companyId},
+				useFinderCache);
 		}
 	}
 
@@ -5381,23 +3769,10 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByERC_C(String externalReferenceCode, long companyId) {
-		User user = fetchByERC_C(externalReferenceCode, companyId);
-
-		if (user == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByERC_C.count(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {externalReferenceCode, companyId});
 	}
-
-	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2 =
-		"user.externalReferenceCode = ? AND ";
-
-	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3 =
-		"(user.externalReferenceCode IS NULL OR user.externalReferenceCode = '') AND ";
-
-	private static final String _FINDER_COLUMN_ERC_C_COMPANYID_2 =
-		"user.companyId = ?";
 
 	public UserPersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
@@ -8069,6 +6444,15 @@ public class UserPersistenceImpl
 			new String[] {String.class.getName()}, new String[] {"uuid_"},
 			false);
 
+		_collectionPersistenceFinderByUuid = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByUuid,
+			_finderPathWithoutPaginationFindByUuid, _finderPathCountByUuid,
+			_SQL_SELECT_USER_WHERE, _SQL_COUNT_USER_WHERE,
+			UserModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"user.", "uuid", FinderColumn.Type.STRING, "=", true, true,
+				User::getUuid));
+
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
@@ -8087,6 +6471,20 @@ public class UserPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, false);
+
+		_collectionPersistenceFinderByUuid_C =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByUuid_C,
+				_finderPathWithoutPaginationFindByUuid_C,
+				_finderPathCountByUuid_C, _SQL_SELECT_USER_WHERE,
+				_SQL_COUNT_USER_WHERE, UserModelImpl.ORDER_BY_JPQL,
+				_ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"user.", "uuid", FinderColumn.Type.STRING, "=", true, false,
+					User::getUuid),
+				new FinderColumn<>(
+					"user.", "companyId", FinderColumn.Type.LONG, "=", true,
+					true, User::getCompanyId));
 
 		_finderPathWithPaginationFindByCompanyId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
@@ -8111,6 +6509,12 @@ public class UserPersistenceImpl
 			new String[] {Long.class.getName()}, new String[] {"contactId"},
 			true);
 
+		_uniquePersistenceFinderByContactId = new UniquePersistenceFinder<>(
+			this, _finderPathFetchByContactId, _SQL_SELECT_USER_WHERE,
+			new FinderColumn<>(
+				"user.", "contactId", FinderColumn.Type.LONG, "=", true, true,
+				User::getContactId));
+
 		_finderPathWithPaginationFindByEmailAddress = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByEmailAddress",
 			new String[] {
@@ -8128,6 +6532,17 @@ public class UserPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByEmailAddress",
 			new String[] {String.class.getName()},
 			new String[] {"emailAddress"}, false);
+
+		_collectionPersistenceFinderByEmailAddress =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByEmailAddress,
+				_finderPathWithoutPaginationFindByEmailAddress,
+				_finderPathCountByEmailAddress, _SQL_SELECT_USER_WHERE,
+				_SQL_COUNT_USER_WHERE, UserModelImpl.ORDER_BY_JPQL,
+				_ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"user.", "emailAddress", FinderColumn.Type.STRING, "=",
+					true, true, User::getEmailAddress));
 
 		_finderPathWithPaginationFindByPortraitId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByPortraitId",
@@ -8147,6 +6562,17 @@ public class UserPersistenceImpl
 			new String[] {Long.class.getName()}, new String[] {"portraitId"},
 			false);
 
+		_collectionPersistenceFinderByPortraitId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByPortraitId,
+				_finderPathWithoutPaginationFindByPortraitId,
+				_finderPathCountByPortraitId, _SQL_SELECT_USER_WHERE,
+				_SQL_COUNT_USER_WHERE, UserModelImpl.ORDER_BY_JPQL,
+				_ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"user.", "portraitId", FinderColumn.Type.LONG, "=", true,
+					true, User::getPortraitId));
+
 		_finderPathWithPaginationFindByGtU_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGtU_C",
 			new String[] {
@@ -8165,6 +6591,15 @@ public class UserPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_U",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"companyId", "userId"}, true);
+
+		_uniquePersistenceFinderByC_U = new UniquePersistenceFinder<>(
+			this, _finderPathFetchByC_U, _SQL_SELECT_USER_WHERE,
+			new FinderColumn<>(
+				"user.", "companyId", FinderColumn.Type.LONG, "=", true, false,
+				User::getCompanyId),
+			new FinderColumn<>(
+				"user.", "userId", FinderColumn.Type.LONG, "=", true, true,
+				User::getUserId));
 
 		_finderPathWithPaginationFindByC_CD = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_CD",
@@ -8209,10 +6644,28 @@ public class UserPersistenceImpl
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "screenName"}, true);
 
+		_uniquePersistenceFinderByC_SN = new UniquePersistenceFinder<>(
+			this, _finderPathFetchByC_SN, _SQL_SELECT_USER_WHERE,
+			new FinderColumn<>(
+				"user.", "companyId", FinderColumn.Type.LONG, "=", true, false,
+				User::getCompanyId),
+			new FinderColumn<>(
+				"user.", "screenName", FinderColumn.Type.STRING, "=", true,
+				true, User::getScreenName));
+
 		_finderPathFetchByC_EA = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_EA",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "emailAddress"}, true);
+
+		_uniquePersistenceFinderByC_EA = new UniquePersistenceFinder<>(
+			this, _finderPathFetchByC_EA, _SQL_SELECT_USER_WHERE,
+			new FinderColumn<>(
+				"user.", "companyId", FinderColumn.Type.LONG, "=", true, false,
+				User::getCompanyId),
+			new FinderColumn<>(
+				"user.", "emailAddress", FinderColumn.Type.STRING, "=", true,
+				true, User::getEmailAddress));
 
 		_finderPathWithPaginationFindByC_FID = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_FID",
@@ -8233,6 +6686,18 @@ public class UserPersistenceImpl
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"companyId", "facebookId"}, false);
 
+		_collectionPersistenceFinderByC_FID = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByC_FID,
+			_finderPathWithoutPaginationFindByC_FID, _finderPathCountByC_FID,
+			_SQL_SELECT_USER_WHERE, _SQL_COUNT_USER_WHERE,
+			UserModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"user.", "companyId", FinderColumn.Type.LONG, "=", true, false,
+				User::getCompanyId),
+			new FinderColumn<>(
+				"user.", "facebookId", FinderColumn.Type.LONG, "=", true, true,
+				User::getFacebookId));
+
 		_finderPathWithPaginationFindByC_T = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_T",
 			new String[] {
@@ -8251,6 +6716,18 @@ public class UserPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_T",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"companyId", "type_"}, false);
+
+		_collectionPersistenceFinderByC_T = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByC_T,
+			_finderPathWithoutPaginationFindByC_T, _finderPathCountByC_T,
+			_SQL_SELECT_USER_WHERE, _SQL_COUNT_USER_WHERE,
+			UserModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"user.", "companyId", FinderColumn.Type.LONG, "=", true, false,
+				User::getCompanyId),
+			new FinderColumn<>(
+				"user.", "type", FinderColumn.Type.INTEGER, "=", true, true,
+				User::getType));
 
 		_finderPathWithPaginationFindByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_S",
@@ -8319,10 +6796,34 @@ public class UserPersistenceImpl
 			},
 			new String[] {"companyId", "type_", "status"}, false);
 
+		_collectionPersistenceFinderByC_T_S = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByC_T_S,
+			_finderPathWithoutPaginationFindByC_T_S, _finderPathCountByC_T_S,
+			_SQL_SELECT_USER_WHERE, _SQL_COUNT_USER_WHERE,
+			UserModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"user.", "companyId", FinderColumn.Type.LONG, "=", true, false,
+				User::getCompanyId),
+			new FinderColumn<>(
+				"user.", "type", FinderColumn.Type.INTEGER, "=", true, false,
+				User::getType),
+			new FinderColumn<>(
+				"user.", "status", FinderColumn.Type.INTEGER, "=", true, true,
+				User::getStatus));
+
 		_finderPathFetchByERC_C = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "companyId"}, true);
+
+		_uniquePersistenceFinderByERC_C = new UniquePersistenceFinder<>(
+			this, _finderPathFetchByERC_C, _SQL_SELECT_USER_WHERE,
+			new FinderColumn<>(
+				"user.", "externalReferenceCode", FinderColumn.Type.STRING, "=",
+				true, false, User::getExternalReferenceCode),
+			new FinderColumn<>(
+				"user.", "companyId", FinderColumn.Type.LONG, "=", true, true,
+				User::getCompanyId));
 
 		UserUtil.setPersistence(this);
 	}
@@ -8408,4 +6909,4 @@ public class UserPersistenceImpl
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1739034491
+// LIFERAY-SERVICE-BUILDER-HASH:199693202

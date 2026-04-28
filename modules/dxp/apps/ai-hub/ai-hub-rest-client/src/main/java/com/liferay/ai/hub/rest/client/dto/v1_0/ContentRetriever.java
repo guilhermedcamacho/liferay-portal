@@ -246,3 +246,4 @@ public class ContentRetriever implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1383308028

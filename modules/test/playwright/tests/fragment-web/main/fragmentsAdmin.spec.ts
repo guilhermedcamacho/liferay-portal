@@ -571,13 +571,15 @@ test(
 
 		// Create go to fragment administration to check dialog is not shown
 
-		const site = await apiHelpers.headlessSite.createSite({
+		const site = await apiHelpers.headlessAdminSite.postSite({
 			name: '<script>alert(123);</script>',
 		});
 
 		await fragmentsPage.goto(site.friendlyUrlPath);
 
-		expect(await apiHelpers.headlessSite.deleteSite(site.id)).toBeOK();
+		await apiHelpers.headlessAdminSite.deleteSite(
+			site.externalReferenceCode
+		);
 	}
 );
 
@@ -1576,7 +1578,7 @@ test(
 
 		const siteName = getRandomString();
 
-		const newSite = await apiHelpers.headlessSite.createSite({
+		const newSite = await apiHelpers.headlessAdminSite.postSite({
 			name: siteName,
 		});
 
@@ -1649,9 +1651,9 @@ test(
 
 		// Clean up
 
-		await expect(
-			await apiHelpers.headlessSite.deleteSite(newSite.id)
-		).toBeOK();
+		await apiHelpers.headlessAdminSite.deleteSite(
+			newSite.externalReferenceCode
+		);
 
 		await apiHelpers.jsonWebServicesLayout.deleteLayout(layout.id);
 
@@ -1853,7 +1855,7 @@ testEmbeddingWidgets(
 	}
 );
 
-testEmbeddingWidgets(
+test(
 	'The Embedded Widget Modal appears when embedding widgets inside of fragments using liferay_portlet taglib',
 	{
 		tag: '@LPD-44999',

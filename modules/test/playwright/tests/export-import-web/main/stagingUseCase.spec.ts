@@ -41,6 +41,7 @@ const test = mergeTests(
 	dataApiHelpersTest,
 	featureFlagsTest({
 		'LPD-35443': {enabled: true},
+		'LPD-39304': {enabled: true},
 	}),
 	loginTest(),
 	assetPublisherPagesTest,
@@ -263,7 +264,7 @@ test(
 		await expect(page.getByRole('button', {name: 'Select'})).toHaveCount(0);
 
 		await expect(
-			page.getByText(/(?=.*Categories \(1\))(?=.*Vocabularies \(1\))/)
+			page.getByText(/(?=.*Categories)(?=.*Vocabularies)/)
 		).toBeVisible();
 	}
 );

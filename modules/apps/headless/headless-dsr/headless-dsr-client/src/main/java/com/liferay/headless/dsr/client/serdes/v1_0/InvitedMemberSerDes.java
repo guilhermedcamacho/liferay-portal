@@ -259,3 +259,4 @@ public class InvitedMemberSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:727654800

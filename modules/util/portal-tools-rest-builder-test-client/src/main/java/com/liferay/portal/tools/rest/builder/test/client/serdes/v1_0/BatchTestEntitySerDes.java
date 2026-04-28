@@ -411,3 +411,4 @@ public class BatchTestEntitySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-527591277

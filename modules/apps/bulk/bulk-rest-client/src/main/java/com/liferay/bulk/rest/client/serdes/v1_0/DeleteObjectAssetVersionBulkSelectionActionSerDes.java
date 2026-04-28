@@ -445,3 +445,4 @@ public class DeleteObjectAssetVersionBulkSelectionActionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1354118285

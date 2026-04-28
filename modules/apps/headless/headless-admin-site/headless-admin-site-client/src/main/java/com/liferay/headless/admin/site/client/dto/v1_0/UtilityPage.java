@@ -432,3 +432,4 @@ public class UtilityPage implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1200512460

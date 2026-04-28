@@ -4,16 +4,16 @@
  */
 
 import ClayModal from '@clayui/modal';
-import {openToast} from 'frontend-js-components-web';
+import {
+	FileData,
+	MultipleFileUploader,
+	UploadMessages,
+	openToast,
+} from 'frontend-js-components-web';
 import {sub} from 'frontend-js-web';
 import React from 'react';
 
 import ApiHelper from '../../common/services/ApiHelper';
-import {AssetLibrary} from '../../common/types/AssetLibrary';
-import MultipleFileUploader, {
-	FileData,
-	UploadMessages,
-} from '../multiple_file_uploader/MultipleFileUploader';
 
 const VALID_EXTENSIONS = '.xliff,.xlf,.zip';
 
@@ -40,14 +40,12 @@ interface ImportTranslationResultData {
 
 export default function ImportTranslationModalContent({
 	actionLink,
-	groupId,
 	itemId,
 	itemName,
 	loadData,
 	onModalClose,
 }: {
 	actionLink: string;
-	groupId: number;
 	itemId: number;
 	itemName: string;
 	loadData?: () => void;
@@ -68,33 +66,33 @@ export default function ImportTranslationModalContent({
 				`/o/cms/basic-web-contents/${itemId}/translations`
 			);
 
-		const errors = response.data?.failureMessagesJSON.map((item) => {
-			const jsonItem = JSON.parse(item) as FailedImportMessage;
+		const failureMessagesJSON = response.data?.failureMessagesJSON ?? [];
+		const successFiles = response.data?.successMessages ?? [];
 
+		if (!failureMessagesJSON.length) {
 			return {
-				errorMessage: jsonItem.errorMessage,
-				name: jsonItem.fileName,
+				successFiles,
 			};
-		});
+		}
 
-		const responseObject: {
-			errors?: {errorMessage: string; name: string}[];
-			multipleErrors: boolean;
-			successFiles: string[];
-		} = {
-			errors,
-			multipleErrors: !!errors?.length,
-			successFiles: response.data?.successMessages || [],
+		return {
+			errors: failureMessagesJSON.map((item) => {
+				const jsonItem = JSON.parse(item) as FailedImportMessage;
+
+				return {
+					errorMessage: jsonItem.errorMessage,
+					name: jsonItem.fileName,
+				};
+			}),
+			multipleErrors: true,
+			successFiles,
 		};
-
-		return responseObject;
 	};
 
 	const onUploadComplete = ({
 		failedFiles,
 		successFiles,
 	}: {
-		assetLibrary: AssetLibrary | null;
 		failedFiles: string[];
 		successFiles: string[];
 	}) => {
@@ -138,12 +136,10 @@ export default function ImportTranslationModalContent({
 			</ClayModal.Header>
 
 			<MultipleFileUploader
-				assetLibraries={[]}
 				buttonLabel={Liferay.Language.get('import')}
 				description={Liferay.Language.get(
 					'please-upload-your-translation-files'
 				)}
-				groupId={groupId}
 				messages={IMPORT_MESSAGES}
 				onModalClose={onModalClose}
 				onUploadComplete={onUploadComplete}

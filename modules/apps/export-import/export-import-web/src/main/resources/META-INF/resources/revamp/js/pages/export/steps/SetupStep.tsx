@@ -11,9 +11,13 @@ import {
 	FormikFieldMultiCheckbox,
 	FormikFieldText,
 } from '../../../components/forms/formik';
-import {mockPorletDataHandlerSections} from '../../../utils/mockPorletDataHandlerSections';
+import {PortletDataHandlerSection} from '../../../utils/mockPortletDataHandlerSections';
 
-export default function SetupStep() {
+interface SetupStepProps {
+	sections: PortletDataHandlerSection[];
+}
+
+export default function SetupStep({sections}: SetupStepProps) {
 	return (
 		<>
 			<ClayLayout.Sheet>
@@ -62,12 +66,12 @@ export default function SetupStep() {
 					aria-describedby="selectedSectionIds-description"
 					aria-labelledby="selectedSectionIds-label"
 					name="selectedSectionIds"
-					options={mockPorletDataHandlerSections.map(
-						({name, portletEntries}) => ({
-							description: portletEntries
-								.map(({portletTitle}) => portletTitle)
+					options={sections.map(
+						({label: sectionLabel, name, portletDataHandlers}) => ({
+							description: portletDataHandlers
+								.map(({label}) => label)
 								.join(', '),
-							label: name,
+							label: sectionLabel,
 							value: name,
 						})
 					)}

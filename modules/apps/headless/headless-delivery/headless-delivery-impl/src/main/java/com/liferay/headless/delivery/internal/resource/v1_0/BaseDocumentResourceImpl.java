@@ -3311,3 +3311,4 @@ public abstract class BaseDocumentResourceImpl
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:2123637205

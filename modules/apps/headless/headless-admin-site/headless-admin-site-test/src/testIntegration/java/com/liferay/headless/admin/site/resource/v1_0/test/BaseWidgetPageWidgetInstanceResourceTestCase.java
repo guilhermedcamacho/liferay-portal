@@ -1792,3 +1792,4 @@ public abstract class BaseWidgetPageWidgetInstanceResourceTestCase {
 		WidgetPageWidgetInstanceResource _widgetPageWidgetInstanceResource;
 
 }
+// LIFERAY-REST-BUILDER-HASH:730929011

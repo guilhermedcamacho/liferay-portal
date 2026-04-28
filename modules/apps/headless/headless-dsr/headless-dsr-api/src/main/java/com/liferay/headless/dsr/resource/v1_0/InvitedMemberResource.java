@@ -138,3 +138,4 @@ public interface InvitedMemberResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:159423760

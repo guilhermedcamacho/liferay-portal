@@ -12,7 +12,14 @@ import {
 } from '@liferay/frontend-data-set-web';
 import {useBrowserTabVisibility} from '@liferay/frontend-js-react-web';
 import {fetch} from 'frontend-js-web';
-import React, {forwardRef, useEffect, useRef, useState} from 'react';
+import React, {
+	createContext,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 
 import ItemSelectorModal from './ItemSelectorModal';
 import {TDetachedItemSelectorModal} from './types';
@@ -23,9 +30,17 @@ async function checkNewCMSFiles(
 	cmsRootFilesURL: string,
 	lastRequestTime: string
 ) {
-	const response = await fetch(
-		`${cmsRootFilesURL} and dateCreated gt ${lastRequestTime}`
+	const url = new URL(cmsRootFilesURL, window.location.origin);
+	const existingFilter = url.searchParams.get('filter') ?? '';
+
+	url.searchParams.set(
+		'filter',
+		existingFilter
+			? `(${existingFilter}) and dateCreated gt ${lastRequestTime}`
+			: `dateCreated gt ${lastRequestTime}`
 	);
+
+	const response = await fetch(url.toString());
 
 	if (!response.ok) {
 		return {totalCount: 0};
@@ -34,129 +49,138 @@ async function checkNewCMSFiles(
 	return (await response.json()) as {totalCount: number};
 }
 
-const DetachedCMSFilesItemSelectorModal = forwardRef(
-	<T extends Record<string, any>>(props: TDetachedItemSelectorModal<T>) => {
-		const {observer, onOpenChange, open} = useModal();
-		const [newItemsCount, setNewItemsCount] = useState(0);
-		const [showInlineNotification, setShowInlineNotification] =
-			useState(false);
+type NotificationContextValue = {
+	newItemsCount: number;
+	setShowInlineNotification: (show: boolean) => void;
+	showInlineNotification: boolean;
+};
 
-		const isBrowserTabVisible = useBrowserTabVisibility();
-		const lastRequestTimeRef = useRef(new Date().toISOString());
+const NotificationContext = createContext<NotificationContextValue>({
+	newItemsCount: 0,
+	setShowInlineNotification: () => {},
+	showInlineNotification: false,
+});
 
-		useEffect(() => {
-			onOpenChange(true);
-		}, [onOpenChange]);
+const NewItemsNotificationComponent = ({
+	context,
+}: {
+	context: IInlineNotificationComponent['context'];
+}) => {
+	const {newItemsCount, setShowInlineNotification, showInlineNotification} =
+		useContext(NotificationContext);
 
-		useEffect(() => {
-			if (isBrowserTabVisible && open) {
-				checkNewCMSFiles(props.apiURL, lastRequestTimeRef.current).then(
-					(response) => {
-						if (response.totalCount > 0) {
-							setNewItemsCount(response.totalCount);
-							setShowInlineNotification(true);
-
-							lastRequestTimeRef.current =
-								new Date().toISOString();
-						}
-					}
-				);
-			}
-		}, [isBrowserTabVisible, open, props.apiURL]);
-
-		const NewItemsNotificationComponent = ({
-			context,
-		}: {
-			context: IInlineNotificationComponent['context'];
-		}) => {
-			if (!showInlineNotification) {
-				return null;
-			}
-
-			return (
-				<ClayAlert
-					className="detached-cms-files-alert mx-n3 pl-5 pr-1"
-					displayType="info"
-					onClose={() => setShowInlineNotification(false)}
-					title={Liferay.Language.get('info')}
-					variant="stripe"
-				>
-					{Liferay.Util.sub(
-						Liferay.Language.get(
-							'x-new-items-are-not-visible-in-this-view'
-						),
-						[newItemsCount]
-					)}
-
-					<ClayButton.Group className="pl-3" spaced>
-						<ClayButton
-							displayType="info"
-							onClick={() => {
-								const updatedSorts: TSort[] = (
-									context?.sorts || []
-								)
-									.filter(
-										(sort) => sort.key !== 'dateCreated'
-									)
-									.map((sort) => {
-										sort.active = false;
-
-										return sort;
-									});
-
-								updatedSorts.push({
-									active: true,
-									direction: 'desc',
-									key: 'dateCreated',
-									label: Liferay.Language.get(
-										'by-creation-date'
-									),
-								});
-
-								context && context.onClearResultsBar();
-								context &&
-									context.forceSortsUpdate(updatedSorts);
-
-								setShowInlineNotification(false);
-							}}
-							size="sm"
-						>
-							{Liferay.Language.get('reload')}
-						</ClayButton>
-
-						<ClayButton
-							alert
-							onClick={() => setShowInlineNotification(false)}
-							size="sm"
-						>
-							{Liferay.Language.get('dismiss')}
-						</ClayButton>
-					</ClayButton.Group>
-				</ClayAlert>
-			);
-		};
-
-		return (
-			<>
-				{open && (
-					<ItemSelectorModal
-						{...props}
-						fdsProps={{
-							...props.fdsProps,
-							inlineNotificationComponent:
-								NewItemsNotificationComponent,
-						}}
-						observer={observer}
-						onOpenChange={onOpenChange}
-						open={open}
-					/>
-				)}
-			</>
-		);
+	if (!showInlineNotification) {
+		return null;
 	}
-);
 
-DetachedCMSFilesItemSelectorModal.displayName =
-	'DetachedCMSFilesItemSelectorModal';
+	return (
+		<ClayAlert
+			className="detached-cms-files-alert mx-n3 pl-5 pr-1"
+			displayType="info"
+			onClose={() => setShowInlineNotification(false)}
+			title={Liferay.Language.get('info')}
+			variant="stripe"
+		>
+			{Liferay.Util.sub(
+				Liferay.Language.get(
+					'x-new-items-are-not-visible-in-this-view'
+				),
+				[newItemsCount]
+			)}
+
+			<ClayButton.Group className="pl-3" spaced>
+				<ClayButton
+					displayType="info"
+					onClick={() => {
+						const updatedSorts: TSort[] = (context?.sorts || [])
+							.filter((sort) => sort.key !== 'dateCreated')
+							.map((sort) => ({...sort, active: false}));
+
+						updatedSorts.push({
+							active: true,
+							direction: 'desc',
+							key: 'dateCreated',
+							label: Liferay.Language.get('by-creation-date'),
+						});
+
+						context?.onClearResultsBar();
+						context?.forceSortsUpdate(updatedSorts);
+
+						setShowInlineNotification(false);
+					}}
+					size="sm"
+				>
+					{Liferay.Language.get('reload')}
+				</ClayButton>
+
+				<ClayButton
+					alert
+					onClick={() => setShowInlineNotification(false)}
+					size="sm"
+				>
+					{Liferay.Language.get('dismiss')}
+				</ClayButton>
+			</ClayButton.Group>
+		</ClayAlert>
+	);
+};
+
+const DetachedCMSFilesItemSelectorModal = <T extends Record<string, any>>(
+	props: TDetachedItemSelectorModal<T>
+) => {
+	const {observer, onOpenChange, open} = useModal();
+	const [newItemsCount, setNewItemsCount] = useState(0);
+	const [showInlineNotification, setShowInlineNotification] = useState(false);
+
+	const isBrowserTabVisible = useBrowserTabVisibility();
+	const lastRequestTimeRef = useRef(new Date().toISOString());
+
+	useEffect(() => {
+		onOpenChange(true);
+	}, [onOpenChange]);
+
+	useEffect(() => {
+		if (isBrowserTabVisible && open) {
+			checkNewCMSFiles(props.apiURL, lastRequestTimeRef.current).then(
+				(response) => {
+					if (response.totalCount > 0) {
+						setNewItemsCount(response.totalCount);
+						setShowInlineNotification(true);
+
+						lastRequestTimeRef.current = new Date().toISOString();
+					}
+				}
+			);
+		}
+	}, [isBrowserTabVisible, open, props.apiURL]);
+
+	const fdsProps = useMemo(
+		() => ({
+			...props.fdsProps,
+			inlineNotificationComponent: NewItemsNotificationComponent,
+		}),
+		[props.fdsProps]
+	);
+
+	return (
+		<NotificationContext.Provider
+			value={{
+				newItemsCount,
+				setShowInlineNotification,
+				showInlineNotification,
+			}}
+		>
+			{open && (
+				<ItemSelectorModal
+					{...props}
+					fdsProps={fdsProps}
+					observer={observer}
+					onOpenChange={onOpenChange}
+					open={open}
+				/>
+			)}
+		</NotificationContext.Provider>
+	);
+};
 
 export default DetachedCMSFilesItemSelectorModal;

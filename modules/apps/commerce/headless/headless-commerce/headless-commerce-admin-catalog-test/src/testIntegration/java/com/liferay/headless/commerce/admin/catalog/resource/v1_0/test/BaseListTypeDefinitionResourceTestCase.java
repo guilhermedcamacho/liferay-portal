@@ -1628,3 +1628,4 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 		ListTypeDefinitionResource _listTypeDefinitionResource;
 
 }
+// LIFERAY-REST-BUILDER-HASH:1383561466

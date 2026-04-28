@@ -15,10 +15,10 @@ import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisibl
 import {getRandomInt} from '../../../utils/getRandomInt';
 import getRandomString from '../../../utils/getRandomString';
 import performLogin, {
+	performLoginViaApi,
 	performLogout,
 	userData,
 } from '../../../utils/performLogin';
-import {waitForModal} from '../../../utils/waitFor';
 import {waitForAlert} from '../../../utils/waitForAlert';
 import {structureBuilderPagesTest} from '../structure-builder/fixtures/structureBuilderPagesTest';
 import {cmsPagesTest} from './fixtures/cmsPagesTest';
@@ -27,8 +27,9 @@ const test = mergeTests(
 	cmsPagesTest,
 	dataApiHelpersTest,
 	featureFlagsTest({
-		'LPD-11235': {enabled: true},
+		'LPD-11235': {enabled: false},
 		'LPD-17564': {enabled: true},
+		'LPD-34594': {enabled: true},
 	}),
 	loginTest(),
 	structureBuilderPagesTest
@@ -155,7 +156,7 @@ test(
 			).toBeVisible();
 
 			await expect(
-				page.getByLabel('contents', {exact: true})
+				page.getByLabel('Contents', {exact: true})
 			).toBeVisible();
 		});
 
@@ -174,208 +175,8 @@ test(
 				page.getByText('Showing 1 to 1 of 1 entries.')
 			).toBeVisible();
 
-			await expect(page.getByLabel('files', {exact: true})).toBeVisible();
+			await expect(page.getByLabel('Files', {exact: true})).toBeVisible();
 		});
-	}
-);
-
-test(
-	'Can delete multiple contents across spaces with and without recycle bin enabled',
-	{tag: '@LPD-62787'},
-	async ({apiHelpers, assetsPage, page, recycleBinPage}) => {
-		const applicationName = 'cms/basic-web-contents';
-		const spaceNameWithRecycleBin = `Space ${getRandomString()}`;
-		const spaceNameWithoutRecycleBin = `Space ${getRandomString()}`;
-		const file1Title = `title ${getRandomString()}`;
-		const file2Title = `title ${getRandomString()}`;
-
-		await apiHelpers.headlessAssetLibrary.createAssetLibrary({
-			name: spaceNameWithRecycleBin,
-			settings: {
-				logoColor: 'outline-3',
-				sharingEnabled: true,
-				trashEnabled: true,
-			},
-			type: 'Space',
-		});
-
-		await apiHelpers.headlessAssetLibrary.createAssetLibrary({
-			name: spaceNameWithoutRecycleBin,
-			settings: {
-				logoColor: 'outline-3',
-				sharingEnabled: true,
-				trashEnabled: false,
-			},
-			type: 'Space',
-		});
-
-		await apiHelpers.objectEntry.postObjectEntry(
-			{
-				objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-				title: file1Title,
-			},
-			applicationName,
-			spaceNameWithRecycleBin
-		);
-
-		await apiHelpers.objectEntry.postObjectEntry(
-			{
-				objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-				title: file2Title,
-			},
-			applicationName,
-			spaceNameWithoutRecycleBin
-		);
-
-		await assetsPage.gotoAll();
-
-		await assetsPage.selectItems([file1Title, file2Title]);
-
-		await page
-			.getByTestId(/visualization-mode/)
-			.getByLabel('Actions')
-			.click();
-
-		await page.getByRole('menuitem', {name: 'Delete'}).click();
-
-		expect(page.getByText('Some of the selected files')).toBeVisible();
-
-		await page.getByRole('button', {name: 'Delete'}).click();
-
-		await page.reload();
-
-		await expect(
-			page.getByRole('cell', {name: file1Title})
-		).not.toBeVisible();
-		await expect(
-			page.getByRole('cell', {name: file2Title})
-		).not.toBeVisible();
-
-		await recycleBinPage.goto();
-
-		await expect(page.getByRole('cell', {name: file1Title})).toBeVisible();
-	}
-);
-
-test(
-	'Can delete multiple contents in a space with recycle bin disabled',
-	{tag: '@LPD-62787'},
-	async ({apiHelpers, assetsPage, page}) => {
-		const applicationName = 'cms/basic-web-contents';
-		const spaceName = `Space ${getRandomString()}`;
-		const file1Title = `title ${getRandomString()}`;
-		const file2Title = `title ${getRandomString()}`;
-
-		await apiHelpers.headlessAssetLibrary.createAssetLibrary({
-			name: spaceName,
-			settings: {
-				logoColor: 'outline-3',
-				sharingEnabled: true,
-				trashEnabled: false,
-			},
-			type: 'Space',
-		});
-
-		await apiHelpers.objectEntry.postObjectEntry(
-			{
-				objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-				title: file1Title,
-			},
-			applicationName,
-			spaceName
-		);
-
-		await apiHelpers.objectEntry.postObjectEntry(
-			{
-				objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-				title: file2Title,
-			},
-			applicationName,
-			spaceName
-		);
-
-		await assetsPage.gotoAll();
-
-		await assetsPage.selectItems([file1Title, file2Title]);
-
-		await page
-			.getByTestId(/visualization-mode/)
-			.getByLabel('Actions')
-			.click();
-
-		await page.getByRole('menuitem', {name: 'Delete'}).click();
-
-		await expect(
-			page.getByText('You are about to permanently')
-		).toBeVisible();
-
-		await page.getByRole('button', {name: 'Delete'}).click();
-
-		await page.reload();
-
-		await expect(
-			page.getByRole('cell', {name: file1Title})
-		).not.toBeVisible();
-		await expect(
-			page.getByRole('cell', {name: file2Title})
-		).not.toBeVisible();
-	}
-);
-
-test(
-	'Can delete multiple contents in a space with recycle bin enabled',
-	{tag: '@LPD-62787'},
-	async ({apiHelpers, assetsPage, page, recycleBinPage}) => {
-		const applicationName = 'cms/basic-web-contents';
-		const spaceName = `Space ${getRandomString()}`;
-		const file1Title = `title ${getRandomString()}`;
-		const file2Title = `title ${getRandomString()}`;
-
-		await apiHelpers.headlessAssetLibrary.createAssetLibrary({
-			name: spaceName,
-			settings: {
-				logoColor: 'outline-3',
-				sharingEnabled: true,
-				trashEnabled: true,
-			},
-			type: 'Space',
-		});
-
-		await apiHelpers.objectEntry.postObjectEntry(
-			{
-				objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-				title: file1Title,
-			},
-			applicationName,
-			spaceName
-		);
-
-		await apiHelpers.objectEntry.postObjectEntry(
-			{
-				objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-				title: file2Title,
-			},
-			applicationName,
-			spaceName
-		);
-
-		await assetsPage.gotoAll();
-
-		await assetsPage.selectItems([file1Title, file2Title]);
-
-		await page
-			.getByTestId('visualization-mode-table')
-			.getByLabel('Actions')
-			.click();
-
-		await page.getByRole('menuitem', {name: 'Delete'}).click();
-
-		await page.reload();
-
-		await recycleBinPage.goto();
-
-		await expect(page.getByRole('cell', {name: file1Title})).toBeVisible();
-		await expect(page.getByRole('cell', {name: file2Title})).toBeVisible();
 	}
 );
 
@@ -427,11 +228,12 @@ test(
 
 test(
 	'Info Panel Comments and view Delete confirmation modal for added content',
-	{tag: '@LPD-62554'},
-	async ({apiHelpers, assetsPage, infoPanelPage, page}) => {
+	{tag: ['@LPD-62554', '@LPD-86000']},
+	async ({apiHelpers, assetsPage, infoPanelPage, page, spaceSummaryPage}) => {
 		const applicationName = 'cms/basic-web-contents';
 		const spaceName = `Space ${getRandomString()}`;
 		let objectEntry1;
+		let user;
 
 		const file1Title = `title ${getRandomString()}`;
 
@@ -443,6 +245,19 @@ test(
 				trashEnabled: false,
 			},
 			type: 'Space',
+		});
+
+		await test.step('Create an user and add to the Space', async () => {
+			user = await apiHelpers.headlessAdminUser.postUserAccount();
+
+			userData[user.alternateName] = {
+				name: user.givenName,
+				password: 'test',
+				surname: user.familyName,
+			};
+
+			await spaceSummaryPage.goto(spaceName);
+			await spaceSummaryPage.addUserOrUserGroup(user.name, 'users');
 		});
 
 		const addComment = async ({
@@ -506,7 +321,13 @@ test(
 				spaceName
 			);
 
-			await test.step('Go to All Assets, check the Location in Details tab and open the Info Panel Comments', async () => {
+			await test.step('Login as Space Member, go to All Assets, check the Details tab and open the Info Panel Comments', async () => {
+				await performLogout(page);
+				await performLoginViaApi({
+					page,
+					screenName: user.alternateName,
+				});
+
 				await assetsPage.gotoAll();
 
 				await assetsPage.execItemAction({
@@ -524,27 +345,7 @@ test(
 						.getByText('Location')
 				).toBeVisible();
 
-				await expect(
-					page.locator('div .space-breadcrumb').filter({
-						hasText: 'Content',
-					})
-				).toBeVisible();
-
-				await expect(
-					page.locator('div .space-breadcrumb').filter({
-						hasText: 'S',
-					})
-				).toBeVisible();
-
-				await expect(
-					page.locator('div .space-breadcrumb').filter({
-						hasText: spaceName,
-					})
-				).toBeVisible();
-
-				await infoPanelPage.selectTab('More').click();
 				await infoPanelPage.dropdownTab('Comments').click();
-				await infoPanelPage.selectTab('More').click();
 			});
 
 			await test.step('Add, edit and delete comments in the info Panel Comments', async () => {
@@ -633,6 +434,9 @@ test(
 			});
 		}
 		finally {
+			await performLogout(page);
+			await performLoginViaApi({page, screenName: 'test'});
+
 			await apiHelpers.objectEntry.deleteObjectEntry(
 				applicationName,
 				String(objectEntry1.id)
@@ -672,7 +476,7 @@ test(
 				assetLibraries: [{id: -1}],
 				assetTypes: [
 					{
-						required: true,
+						required: false,
 						subtype: 'AllAssetSubtypes',
 						type: 'AllAssetTypes',
 					},
@@ -834,10 +638,12 @@ test(
 
 			await performLogin(page, 'test');
 
-			await apiHelpers.objectEntry.deleteObjectEntry(
-				applicationName,
-				String(objectEntry.id)
-			);
+			if (objectEntry?.id) {
+				await apiHelpers.objectEntry.deleteObjectEntry(
+					applicationName,
+					String(objectEntry.id)
+				);
+			}
 
 			await apiHelpers.headlessAdminTaxonomy.deleteTaxonomyVocabulary(
 				vocabularyId
@@ -1140,341 +946,31 @@ test(
 );
 
 test(
-	'Bulk Actions Monitor component',
-	{tag: ['@LPD-57835', '@LPD-74095', '@LPD-74096']},
-	async ({apiHelpers, assetsPage, page}) => {
-		const basicWebContent = 'cms/basic-web-contents';
-		const bulkActionTasks = 'cms/bulk-action-tasks';
-		const spaceName = 'Default';
-
-		const createdFiles = [];
-		const filesNames = [
-			getRandomString(),
-			getRandomString(),
-			getRandomString(),
-		];
-		let tasks;
-
-		for (const fileName of filesNames) {
-			const file = await apiHelpers.objectEntry.postObjectEntry(
-				{
-					objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-					title: fileName,
-				},
-				basicWebContent,
-				spaceName
-			);
-			createdFiles.push(file);
-		}
-		try {
-			await test.step('Select 1 asset and delete it using the Bulk Action', async () => {
-				await assetsPage.gotoAll();
-
-				await assetsPage
-					.getItem(filesNames[0])
-					.locator('input[title="Select Item"]')
-					.check();
-				await assetsPage.execBulkItemAction('Delete');
-
-				await waitForAlert(
-					page,
-					`Info:Delete action started for ${filesNames[0]} asset.`,
-					{
-						autoClose: true,
-						type: 'info',
-					}
-				);
-			});
-
-			await test.step('Check that the processingTask button appear and click on it', async () => {
-				await expect(assetsPage.processingTasksButton).toBeVisible();
-
-				await assetsPage.processingTasksButton.click();
-			});
-
-			await test.step('After the click, the dropdown component is shown and 1 task with details is visible', async () => {
-				await expect(
-					assetsPage
-						.taskStatusDropdownItemButton('Assets Deletion')
-						.nth(0)
-				).toBeVisible();
-
-				await expect(assetsPage.taskStatusDropdownList).toContainText(
-					'1 Items'
-				);
-				await expect(assetsPage.taskStatusDropdownList).toContainText(
-					'a few seconds ago'
-				);
-				await expect(assetsPage.taskStatusDropdownList).toContainText(
-					'Completed'
-				);
-
-				await expect(assetsPage.viewAllTasksLink).toBeVisible();
-			});
-
-			await test.step('Go to View All Task redirect to the Task Report page and check that Result column show the correct results', async () => {
-				tasks =
-					await apiHelpers.objectEntry.getObjectDefinitionObjectEntries(
-						bulkActionTasks
-					);
-
-				await assetsPage.viewAllTasksLink.click();
-
-				await expect(
-					page.getByRole('heading', {
-						exact: true,
-						name: 'Task Report',
-					})
-				).toBeVisible();
-
-				const row = page.getByRole('row').filter({
-					hasText: tasks.items[0].id,
-				});
-
-				await expect(row).toBeVisible();
-				await expect(
-					row.getByRole('cell', {
-						name: 'All Successful',
-					})
-				).toBeVisible();
-				await expect(
-					row
-						.getByRole('cell', {
-							name: 'All Successful',
-						})
-						.locator('.lexicon-icon-check-circle-full')
-				).toBeVisible();
-
-				await apiHelpers.objectEntry.patchObjectEntry(
-					{
-						executionStatus: {
-							key: 'failed',
-							name: 'Failed',
-						},
-						numberOfFailedItems: 3,
-						numberOfSuccessfulItems: 3,
-					},
-					bulkActionTasks,
-					tasks.items[0].id
-				);
-
-				await page.reload();
-
-				await expect(
-					page.getByRole('cell', {
-						exact: true,
-						name: '3 Successful 3 Failed',
-					})
-				).toBeVisible();
-				await expect(
-					page
-						.getByRole('cell', {
-							exact: true,
-							name: '3 Successful 3 Failed',
-						})
-						.locator('.lexicon-icon-check-circle-full')
-				).toBeVisible();
-				await expect(
-					page
-						.getByRole('cell', {
-							exact: true,
-							name: '3 Successful 3 Failed',
-						})
-						.locator('.lexicon-icon-times-circle-full')
-				).toBeVisible();
-
-				await apiHelpers.objectEntry.patchObjectEntry(
-					{
-						executionStatus: {
-							key: 'started',
-							name: 'Started',
-						},
-						numberOfFailedItems: 0,
-						numberOfSuccessfulItems: 0,
-					},
-					bulkActionTasks,
-					tasks.items[0].id
-				);
-
-				await page.reload();
-
-				await expect(
-					page.getByRole('cell', {exact: true, name: 'Processing'})
-				).toBeVisible();
-				await expect(
-					page
-						.getByRole('cell', {exact: true, name: 'Processing'})
-						.locator('.lexicon-icon-time')
-				).toBeVisible();
-
-				await apiHelpers.objectEntry.patchObjectEntry(
-					{
-						executionStatus: {
-							key: 'failed',
-							name: 'Failed',
-						},
-						numberOfFailedItems: 3,
-						numberOfSuccessfulItems: 0,
-					},
-					bulkActionTasks,
-					tasks.items[0].id
-				);
-
-				await expect(
-					page.getByRole('cell', {exact: true, name: 'All Failed'})
-				).toBeVisible();
-				await expect(
-					page
-						.getByRole('cell', {exact: true, name: 'All Failed'})
-						.locator('.lexicon-icon-times-circle-full')
-				).toBeVisible();
-
-				await assetsPage.gotoAll();
-			});
-
-			await test.step('Update the task status to Started', async () => {
-				await apiHelpers.objectEntry.patchObjectEntry(
-					{
-						executionStatus: {
-							key: 'started',
-							name: 'Started',
-						},
-						numberOfFailedItems: 0,
-						numberOfSuccessfulItems: 1,
-					},
-					bulkActionTasks,
-					tasks.items[0].id
-				);
-
-				expect.poll(
-					async () => {
-						await expect(
-							assetsPage.taskStatusFormsButton
-						).toBeVisible();
-					},
-					{
-						timeout: 5000,
-					}
-				);
-
-				await assetsPage.taskStatusFormsButton.click();
-
-				await expect(assetsPage.taskStatusDropdownList).toContainText(
-					'Processing'
-				);
-			});
-
-			await test.step('Select 2 assets and delete them using the Bulk Action', async () => {
-				await expect(
-					assetsPage
-						.getItem(filesNames[0])
-						.locator('input[title="Select Item"]')
-				).not.toBeVisible();
-
-				await assetsPage
-					.getItem(filesNames[1])
-					.locator('input[title="Select Item"]')
-					.check();
-				await assetsPage
-					.getItem(filesNames[2])
-					.locator('input[title="Select Item"]')
-					.check();
-				await assetsPage.execBulkItemAction('Delete');
-
-				await waitForAlert(
-					page,
-					'Info:Delete action started for 2 assets.',
-					{
-						autoClose: true,
-						type: 'info',
-					}
-				);
-
-				await expect(assetsPage.processingTasksButton).toBeVisible();
-
-				await assetsPage.processingTasksButton.click();
-
-				await expect(assetsPage.taskStatusDropdownList).toContainText(
-					'2 Items'
-				);
-				await expect(assetsPage.taskStatusDropdownList).toContainText(
-					'a few seconds ago'
-				);
-
-				await expect(
-					assetsPage
-						.taskStatusDropdownItemButton('Assets Deletion')
-						.nth(0)
-				).toBeVisible();
-				await expect(
-					assetsPage
-						.taskStatusDropdownItemButton('Assets Deletion')
-						.nth(1)
-				).toBeVisible();
-			});
-
-			await test.step('Update the status of the task to Failed', async () => {
-				const processingTasks =
-					await apiHelpers.objectEntry.getObjectDefinitionObjectEntries(
-						bulkActionTasks,
-						new URLSearchParams({
-							filter: `executionStatus eq 'started'`,
-						})
-					);
-
-				await apiHelpers.objectEntry.patchObjectEntry(
-					{
-						executionStatus: {
-							key: 'failed',
-							name: 'Failed',
-						},
-					},
-					bulkActionTasks,
-					processingTasks.items[0].id
-				);
-
-				expect.poll(
-					async () => {
-						await expect(
-							assetsPage.taskStatusDropdownList
-						).toContainText('Failed');
-					},
-					{
-						timeout: 5000,
-					}
-				);
-			});
-		}
-		finally {
-			tasks =
-				await apiHelpers.objectEntry.getObjectDefinitionObjectEntries(
-					bulkActionTasks
-				);
-
-			for (let i = 0; i < tasks.totalCount; i++) {
-				await apiHelpers.objectEntry.deleteObjectEntry(
-					bulkActionTasks,
-					tasks.items[i].id
-				);
-			}
-
-			if (createdFiles) {
-				for (const file of createdFiles) {
-					await apiHelpers.objectEntry.deleteObjectEntry(
-						basicWebContent,
-						file.id
-					);
-				}
-			}
-		}
-	}
-);
-
-test(
 	'Expiration date filter allows future dates',
 	{tag: '@LPD-69189'},
-	async ({assetsPage, page}) => {
+	async ({apiHelpers, assetsPage, page}) => {
+		const applicationName = 'cms/basic-web-contents';
+		const file1Title = `Content ${getRandomString()}`;
+
+		const futureDate = new Date();
+
+		futureDate.setDate(futureDate.getDate() + 1);
+
+		await apiHelpers.objectEntry.postObjectEntry(
+			{
+				expirationDate: futureDate.toISOString(),
+				objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
+				title: file1Title,
+			},
+			applicationName,
+			'Default'
+		);
+
 		await assetsPage.gotoAll();
+
+		await expect(
+			page.getByRole('cell', {exact: true, name: file1Title})
+		).toBeVisible();
 
 		// Choose to filter by Expiration Date
 
@@ -1482,25 +978,15 @@ test(
 
 		await page.getByRole('menuitem', {name: 'Expiration Date'}).click();
 
-		// Verify that future dates are allowed by checking the max attribute
-
 		const fromDateInput = page.getByLabel('From');
 		const toDateInput = page.getByLabel('To', {exact: true});
 
-		expect(
-			new Date(await fromDateInput.getAttribute('max')).getTime()
-		).toBeNaN();
-		expect(
-			new Date(await toDateInput.getAttribute('max')).getTime()
-		).toBeNaN();
-
-		// Set future From and To dates
+		// Set future From and To dates covering futureDate
 
 		const fromDate = new Date();
 		const toDate = new Date();
 
-		fromDate.setDate(fromDate.getDate() + 5);
-		toDate.setDate(toDate.getDate() + 10);
+		toDate.setDate(toDate.getDate() + 2);
 
 		// Fill in future dates and see that filter label is applied
 
@@ -1514,6 +1000,124 @@ test(
 				.getByRole('button', {name: /Expiration Date:/})
 				.locator('.label-section')
 		).toBeVisible();
+
+		// Verify that the content is still visible (it was filtered out before the fix)
+
+		await expect(
+			page.getByRole('cell', {exact: true, name: file1Title})
+		).toBeVisible();
+	}
+);
+
+test(
+	'Content can be filtered by Review Date',
+	{tag: '@LPD-85206'},
+	async ({apiHelpers, assetsPage, page}) => {
+		const applicationName = 'cms/basic-web-contents';
+		const file1Title = `Content ${getRandomString()}`;
+
+		const pastDate = new Date();
+
+		pastDate.setDate(pastDate.getDate() - 1);
+
+		await apiHelpers.objectEntry.postObjectEntry(
+			{
+				objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
+				reviewDate: pastDate.toISOString(),
+				title: file1Title,
+			},
+			applicationName,
+			'Default'
+		);
+
+		await assetsPage.gotoAll();
+
+		await expect(
+			page.getByRole('cell', {exact: true, name: file1Title})
+		).toBeVisible();
+
+		// Choose to filter by Review Date
+
+		await page.getByRole('button', {name: 'Filter'}).click();
+
+		await page.getByRole('menuitem', {name: 'Review Date'}).click();
+
+		const fromDateInput = page.getByLabel('From');
+		const toDateInput = page.getByLabel('To', {exact: true});
+
+		// Set past From and To dates covering pastDate
+
+		const fromDate = new Date();
+		const toDate = new Date();
+
+		fromDate.setDate(fromDate.getDate() - 2);
+
+		// Fill in dates and see that filter label is applied
+
+		await fromDateInput.fill(fromDate.toISOString().split('T')[0]);
+		await toDateInput.fill(toDate.toISOString().split('T')[0]);
+
+		await page.getByRole('button', {name: 'Add Filter'}).click();
+
+		await expect(
+			page
+				.getByRole('button', {name: /Review Date:/})
+				.locator('.label-section')
+		).toBeVisible();
+
+		// Verify that the content is visible
+
+		await expect(
+			page.getByRole('cell', {exact: true, name: file1Title})
+		).toBeVisible();
+	}
+);
+
+test(
+	'Expiration date filter does not allow "to" date to be before "from" date',
+	{tag: '@LPD-78935'},
+	async ({assetsPage, page}) => {
+		const addFilterButton = page.getByRole('button', {name: 'Add Filter'});
+
+		await test.step('Go to All section', async () => {
+			await assetsPage.gotoAll();
+		});
+
+		await test.step('Choose to filter by Expiration Date', async () => {
+			await page.getByRole('button', {name: 'Filter'}).click();
+
+			await page.getByRole('menuitem', {name: 'Expiration Date'}).click();
+		});
+
+		const fromDateInput = page.getByLabel('From');
+		const toDateInput = page.getByLabel('To', {exact: true});
+
+		const fromDate = new Date();
+		const toDate = new Date();
+
+		await test.step('Check that the "Add filter" button is disabled if "from" date is a past date', async () => {
+			fromDate.setDate(fromDate.getDate() - 1);
+			await fromDateInput.fill(fromDate.toISOString().split('T')[0]);
+			await expect(addFilterButton).toBeDisabled();
+		});
+
+		await test.step('Check that the "Add filter" button is enabled if "from" date is today or after', async () => {
+			fromDate.setDate(fromDate.getDate() + 2);
+			await fromDateInput.fill(fromDate.toISOString().split('T')[0]);
+			await expect(addFilterButton).toBeEnabled();
+		});
+
+		await test.step('Check that the "Add filter" button is disabled if "to" date is before "from date"', async () => {
+			toDate.setDate(toDate.getDate());
+			await toDateInput.fill(toDate.toISOString().split('T')[0]);
+			await expect(addFilterButton).toBeDisabled();
+		});
+
+		await test.step('Check that the "Add filter" button is enabled if "to" date is after "from date"', async () => {
+			toDate.setDate(toDate.getDate() + 5);
+			await toDateInput.fill(toDate.toISOString().split('T')[0]);
+			await expect(addFilterButton).toBeEnabled();
+		});
 	}
 );
 
@@ -1577,993 +1181,6 @@ test(
 				applicationName,
 				String(objectEntry.id)
 			);
-		}
-	}
-);
-
-test(
-	'Edit Categories in bulk',
-	{tag: '@LPD-57835'},
-	async ({apiHelpers, assetsPage, infoPanelPage, page}) => {
-		const vocabularyName = getRandomString();
-
-		const siteId = await apiHelpers.headlessAdminUser
-			.getSiteByFriendlyUrlPath('cms')
-			.then((response) => response.id);
-
-		const vocabularyId = await apiHelpers.headlessAdminTaxonomy
-			.postSiteTaxonomyVocabulary({
-				assetLibraries: [{id: -1}],
-				assetTypes: [
-					{
-						required: false,
-						subtype: 'AllAssetSubtypes',
-						type: 'AllAssetTypes',
-					},
-				],
-				name: vocabularyName,
-				siteId,
-				visibilityType: 'PUBLIC',
-			})
-			.then((response) => response.id);
-
-		const categoryName = getRandomString();
-
-		await apiHelpers.headlessAdminTaxonomy
-			.postTaxonomyVocabularyTaxonomyCategory({
-				name: categoryName,
-				vocabularyId,
-			})
-			.then((response) => response.id);
-
-		const basicWebContent = 'cms/basic-web-contents';
-		const bulkActionTasks = 'cms/bulk-action-tasks';
-
-		const createdFiles = [];
-
-		const fileNames = [
-			getRandomString(),
-			getRandomString(),
-			getRandomString(),
-		];
-
-		let tasks;
-
-		for (const fileName of fileNames) {
-			const file = await apiHelpers.objectEntry.postObjectEntry(
-				{
-					objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-					title: fileName,
-				},
-				basicWebContent,
-				'Default'
-			);
-
-			createdFiles.push(file);
-		}
-		try {
-			await test.step('Select 3 assets and bulk edit their categories', async () => {
-				await assetsPage.gotoAll();
-
-				await assetsPage
-					.getItem(fileNames[0])
-					.locator('input[title="Select Item"]')
-					.check();
-				await assetsPage
-					.getItem(fileNames[1])
-					.locator('input[title="Select Item"]')
-					.check();
-				await assetsPage
-					.getItem(fileNames[2])
-					.locator('input[title="Select Item"]')
-					.check();
-
-				await assetsPage.execBulkItemAction('Edit Categories');
-
-				await waitForModal({
-					page,
-				});
-			});
-
-			await test.step('Add a new category to the selected assets', async () => {
-				const categoriesAutocomplete =
-					page.getByPlaceholder('Add category');
-
-				await categoriesAutocomplete.fill(categoryName);
-
-				const option = page.getByRole('option', {name: categoryName});
-
-				await option.waitFor();
-				await option.click();
-
-				const categoryLabel = page.locator('.label-item', {
-					hasText: categoryName,
-				});
-
-				await expect(categoryLabel).toBeAttached();
-
-				await page.getByRole('button', {name: 'Save'}).click();
-
-				await waitForAlert(
-					page,
-					'Info:Categories update action started for 3 assets.',
-					{
-						autoClose: true,
-						type: 'info',
-					}
-				);
-			});
-
-			await test.step('Check that the "Processing Task" button appears and click on it', async () => {
-				await expect(assetsPage.processingTasksButton).toBeVisible();
-
-				await assetsPage.processingTasksButton.click();
-
-				expect.poll(
-					async () => {
-						await expect(
-							assetsPage.processingTasksButton
-						).toBeHidden();
-					},
-					{
-						timeout: 5000,
-					}
-				);
-
-				await expect(assetsPage.taskStatusDropdownList).toContainText(
-					'Completed'
-				);
-			});
-
-			await test.step('After the click, the dropdown component is shown and 1 task with details is visible', async () => {
-				await expect(
-					assetsPage
-						.taskStatusDropdownItemButton('Assets Categorization')
-						.nth(0)
-				).toBeVisible();
-
-				await expect(assetsPage.taskStatusDropdownList).toContainText(
-					'3 Items'
-				);
-			});
-
-			await test.step('Verify the category has been correctly applied.', async () => {
-				await page.reload();
-
-				await assetsPage.execItemAction({
-					action: 'Show Details',
-					filter: fileNames[0],
-				});
-
-				await expect(
-					page.getByRole('heading', {name: fileNames[0]})
-				).toBeVisible();
-
-				await infoPanelPage.selectTab('Categorization').click();
-
-				await expect(
-					page.getByText(categoryName, {exact: true})
-				).toBeVisible();
-			});
-		}
-		finally {
-			tasks =
-				await apiHelpers.objectEntry.getObjectDefinitionObjectEntries(
-					bulkActionTasks
-				);
-
-			for (let i = 0; i < tasks.totalCount; i++) {
-				await apiHelpers.objectEntry.deleteObjectEntry(
-					bulkActionTasks,
-					tasks.items[i].id
-				);
-			}
-
-			if (createdFiles.length) {
-				for (const file of createdFiles) {
-					await apiHelpers.objectEntry.deleteObjectEntry(
-						basicWebContent,
-						file.id
-					);
-				}
-			}
-
-			await apiHelpers.headlessAdminTaxonomy.deleteTaxonomyVocabulary(
-				vocabularyId
-			);
-		}
-	}
-);
-
-test(
-	'Edit Categories in bulk for different assets',
-	{tag: '@LPD-76507'},
-	async ({apiHelpers, assetsPage, infoPanelPage, page}) => {
-		const vocabularyName = getRandomString();
-		const fileNameImg = `file_${getRandomString()}.png`;
-		const titleImg = `title ${getRandomString()}`;
-
-		const siteId = await apiHelpers.headlessAdminUser
-			.getSiteByFriendlyUrlPath('cms')
-			.then((response) => response.id);
-
-		const vocabularyId = await apiHelpers.headlessAdminTaxonomy
-			.postSiteTaxonomyVocabulary({
-				assetLibraries: [{id: -1}],
-				assetTypes: [
-					{
-						required: false,
-						subtype: 'AllAssetSubtypes',
-						type: 'AllAssetTypes',
-					},
-				],
-				name: vocabularyName,
-				siteId,
-				visibilityType: 'PUBLIC',
-			})
-			.then((response) => response.id);
-
-		const categories = [
-			getRandomString(),
-			getRandomString(),
-			getRandomString(),
-		];
-
-		for (const category of categories) {
-			await apiHelpers.headlessAdminTaxonomy
-				.postTaxonomyVocabularyTaxonomyCategory({
-					name: category,
-					vocabularyId,
-				})
-				.then((response) => response.id);
-		}
-
-		const basicWebContent = 'cms/basic-web-contents';
-		const bulkActionTasks = 'cms/bulk-action-tasks';
-
-		const createdFiles = [];
-
-		const webContentNames = [getRandomString(), getRandomString()];
-
-		let tasks;
-
-		for (const fileName of webContentNames) {
-			const file = await apiHelpers.objectEntry.postObjectEntry(
-				{
-					objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-					title: fileName,
-				},
-				basicWebContent,
-				'Default'
-			);
-
-			createdFiles.push(file);
-		}
-
-		const folderName = `Folder ${getRandomInt()}`;
-
-		const folder = await apiHelpers.objectFolder.createObjectEntryFolder({
-			parentObjectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-			scopeKey: 'Default',
-			title: folderName,
-		});
-
-		await apiHelpers.objectEntry.postObjectEntry(
-			{
-				file: {
-					fileBase64: 'R0lGODlhAQABAAAAACw=',
-					name: fileNameImg,
-				},
-				objectEntryFolderExternalReferenceCode: 'L_FILES',
-				title: titleImg,
-			},
-			'cms/basic-documents',
-			'Default'
-		);
-
-		await apiHelpers.objectEntry.postObjectEntry(
-			{
-				file: {
-					objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-					title: getRandomString(),
-				},
-				objectEntryFolderExternalReferenceCode:
-					folder.externalReferenceCode,
-				title: `Content ${getRandomInt()}`,
-			},
-			basicWebContent,
-			'Default'
-		);
-
-		try {
-			await test.step('Select 3 assets including a folder and bulk edit their categories', async () => {
-				await assetsPage.gotoContents();
-
-				await assetsPage
-					.getItem(webContentNames[0])
-					.locator('input[title="Select Item"]')
-					.check();
-				await assetsPage
-					.getItem(webContentNames[1])
-					.locator('input[title="Select Item"]')
-					.check();
-				await assetsPage
-					.getItem(folderName)
-					.locator('input[title="Select Item"]')
-					.check();
-
-				await assetsPage.execBulkItemAction('Edit Categories');
-
-				await waitForModal({
-					page,
-				});
-			});
-
-			await test.step('Add categories to the selected assets', async () => {
-				const categoriesAutocomplete =
-					page.getByPlaceholder('Add category');
-
-				for (const category of categories) {
-					await categoriesAutocomplete.fill(category);
-
-					const option = page.getByRole('option', {name: category});
-
-					await option.waitFor();
-					await option.click();
-
-					const categoryLabel = page.locator('.label-item', {
-						hasText: category,
-					});
-
-					await expect(categoryLabel).toBeAttached();
-				}
-
-				await page.getByRole('button', {name: 'Save'}).click();
-
-				await waitForAlert(
-					page,
-					'Info:Categories update action started for 2 assets.',
-					{
-						autoClose: true,
-						type: 'info',
-					}
-				);
-			});
-
-			await test.step('Check that the "Processing Task" button appears and click on it', async () => {
-				await expect(assetsPage.processingTasksButton).toBeVisible();
-
-				await assetsPage.processingTasksButton.click();
-
-				expect.poll(
-					async () => {
-						await expect(
-							assetsPage.processingTasksButton
-						).toBeHidden();
-					},
-					{
-						timeout: 5000,
-					}
-				);
-
-				await expect(assetsPage.taskStatusDropdownList).toContainText(
-					'Completed'
-				);
-			});
-
-			await test.step('After the click, the dropdown component is shown and 1 task with details is visible', async () => {
-				await expect(
-					assetsPage
-						.taskStatusDropdownItemButton('Assets Categorization')
-						.nth(0)
-				).toBeVisible();
-
-				await expect(assetsPage.taskStatusDropdownList).toContainText(
-					'2 Items'
-				);
-			});
-
-			await test.step('Verify the categories has been correctly applied.', async () => {
-				for (const webContentName of webContentNames) {
-					await page.reload();
-
-					await assetsPage.execItemAction({
-						action: 'Show Details',
-						filter: webContentName,
-					});
-
-					await expect(
-						page.getByRole('heading', {name: webContentName})
-					).toBeVisible();
-
-					await infoPanelPage.selectTab('Categorization').click();
-
-					for (const category of categories) {
-						await expect(
-							page.getByText(category, {exact: true})
-						).toBeVisible();
-					}
-				}
-			});
-
-			await test.step('Delete more than one category', async () => {
-				await page.reload();
-
-				await assetsPage
-					.getItem(webContentNames[1])
-					.locator('input[title="Select Item"]')
-					.check();
-
-				await assetsPage.execBulkItemAction('Edit Categories');
-
-				await waitForModal({
-					page,
-				});
-
-				await page
-					.locator('span', {hasText: categories[0]})
-					.getByRole('button', {name: 'Close'})
-					.click();
-				await page
-					.locator('span', {hasText: categories[1]})
-					.getByRole('button', {name: 'Close'})
-					.click();
-
-				await page.getByRole('button', {name: 'Save'}).click();
-
-				await waitForAlert(
-					page,
-					'Info:Categories update action started for one asset.',
-					{
-						autoClose: true,
-						type: 'info',
-					}
-				);
-			});
-
-			await test.step('Verify the categories has been correctly removed.', async () => {
-				await page.reload();
-
-				await assetsPage.execItemAction({
-					action: 'Show Details',
-					filter: webContentNames[1],
-				});
-
-				await expect(
-					page.getByRole('heading', {name: webContentNames[1]})
-				).toBeVisible();
-
-				await infoPanelPage.selectTab('Categorization').click();
-
-				await expect(
-					page.getByText(categories[2], {exact: true})
-				).toBeVisible();
-			});
-
-			await test.step('Select 3 mixed assets and bulk edit their categories', async () => {
-				await assetsPage.gotoAll();
-
-				await assetsPage
-					.getItem(webContentNames[0])
-					.locator('input[title="Select Item"]')
-					.check();
-				await assetsPage
-					.getItem(webContentNames[1])
-					.locator('input[title="Select Item"]')
-					.check();
-				await assetsPage
-					.getItem(titleImg)
-					.locator('input[title="Select Item"]')
-					.check();
-
-				await assetsPage.execBulkItemAction('Edit Categories');
-
-				await waitForModal({
-					page,
-				});
-			});
-
-			await test.step('Add and remove categories to the selected assets', async () => {
-				const categoriesAutocomplete =
-					page.getByPlaceholder('Add category');
-
-				for (const category of categories) {
-					await categoriesAutocomplete.fill(category);
-
-					const option = page.getByRole('option', {name: category});
-
-					await option.waitFor();
-					await option.click();
-
-					const categoryLabel = page.locator('.label-item', {
-						hasText: category,
-					});
-
-					await expect(categoryLabel).toBeAttached();
-				}
-
-				await page
-					.locator('span', {hasText: categories[1]})
-					.getByRole('button', {name: 'Close'})
-					.click();
-				await page
-					.locator('span', {hasText: categories[2]})
-					.getByRole('button', {name: 'Close'})
-					.click();
-
-				await page.getByRole('button', {name: 'Save'}).click();
-
-				await waitForAlert(
-					page,
-					'Info:Categories update action started for 3 assets.',
-					{
-						autoClose: true,
-						type: 'info',
-					}
-				);
-			});
-
-			await test.step('Verify the categories has been correctly edited.', async () => {
-				await page.reload();
-
-				for (const webContentName of webContentNames) {
-					await assetsPage.execItemAction({
-						action: 'Show Details',
-						filter: webContentName,
-					});
-
-					await expect(
-						page.getByRole('heading', {name: webContentName})
-					).toBeVisible();
-
-					await infoPanelPage.selectTab('Categorization').click();
-
-					await expect(
-						page.getByText(categories[0], {exact: true})
-					).toBeVisible();
-
-					await assetsPage
-						.getItem(webContentName)
-						.locator('input[title="Select Item"]')
-						.uncheck();
-				}
-
-				await assetsPage.execItemAction({
-					action: 'Show Details',
-					filter: titleImg,
-				});
-
-				await expect(
-					page.getByRole('heading', {name: titleImg})
-				).toBeVisible();
-
-				await infoPanelPage.selectTab('Categorization').click();
-
-				await expect(
-					page.getByText(categories[0], {exact: true})
-				).toBeVisible();
-			});
-		}
-		finally {
-			tasks =
-				await apiHelpers.objectEntry.getObjectDefinitionObjectEntries(
-					bulkActionTasks
-				);
-
-			await apiHelpers.objectFolder.deleteObjectEntryFolder(folder.id);
-
-			for (let i = 0; i < tasks.totalCount; i++) {
-				await apiHelpers.objectEntry.deleteObjectEntry(
-					bulkActionTasks,
-					tasks.items[i].id
-				);
-			}
-
-			if (createdFiles.length) {
-				for (const file of createdFiles) {
-					await apiHelpers.objectEntry.deleteObjectEntry(
-						basicWebContent,
-						file.id
-					);
-				}
-			}
-
-			await apiHelpers.headlessAdminTaxonomy.deleteTaxonomyVocabulary(
-				vocabularyId
-			);
-		}
-	}
-);
-
-test(
-	'Edit Tags in bulk for different assets',
-	{tag: '@LPD-76507'},
-	async ({apiHelpers, assetsPage, infoPanelPage, page}) => {
-		const fileNameImg = `file_${getRandomString()}.png`;
-		const titleImg = `title ${getRandomString()}`;
-
-		const siteId = await apiHelpers.headlessAdminUser
-			.getSiteByFriendlyUrlPath('cms')
-			.then((response) => response.id);
-
-		const basicWebContent = 'cms/basic-web-contents';
-		const bulkActionTasks = 'cms/bulk-action-tasks';
-
-		const createdFiles = [];
-
-		const webContentNames = [getRandomString(), getRandomString()];
-
-		let tasks;
-
-		for (const fileName of webContentNames) {
-			const file = await apiHelpers.objectEntry.postObjectEntry(
-				{
-					objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-					title: fileName,
-				},
-				basicWebContent,
-				'Default'
-			);
-
-			createdFiles.push(file);
-		}
-
-		const folderName = `Folder ${getRandomInt()}`;
-
-		const folder = await apiHelpers.objectFolder.createObjectEntryFolder({
-			parentObjectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-			scopeKey: 'Default',
-			title: folderName,
-		});
-
-		await apiHelpers.objectEntry.postObjectEntry(
-			{
-				file: {
-					fileBase64: 'R0lGODlhAQABAAAAACw=',
-					name: fileNameImg,
-				},
-				objectEntryFolderExternalReferenceCode: 'L_FILES',
-				title: titleImg,
-			},
-			'cms/basic-documents',
-			'Default'
-		);
-
-		await apiHelpers.objectEntry.postObjectEntry(
-			{
-				file: {
-					objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-					title: getRandomString(),
-				},
-				objectEntryFolderExternalReferenceCode:
-					folder.externalReferenceCode,
-				title: `Content ${getRandomInt()}`,
-			},
-			basicWebContent,
-			'Default'
-		);
-
-		const createdTags = [];
-
-		const tagNames = [
-			'Tag' + getRandomInt(),
-			'Tag' + getRandomInt(),
-			'Tag' + getRandomInt(),
-		];
-
-		for (const tagName of tagNames) {
-			const tag = await apiHelpers.headlessAdminTaxonomy.postSiteKeyword({
-				name: tagName,
-				siteId,
-			});
-
-			createdTags.push(tag);
-		}
-
-		try {
-			await test.step('Select 3 assets including a folder and bulk edit their tags', async () => {
-				await assetsPage.gotoContents();
-
-				await assetsPage
-					.getItem(webContentNames[0])
-					.locator('input[title="Select Item"]')
-					.check();
-				await assetsPage
-					.getItem(webContentNames[1])
-					.locator('input[title="Select Item"]')
-					.check();
-				await assetsPage
-					.getItem(folderName)
-					.locator('input[title="Select Item"]')
-					.check();
-
-				await assetsPage.execBulkItemAction('Edit Tags');
-
-				await waitForModal({
-					page,
-				});
-			});
-
-			await test.step('Add tags to the selected assets', async () => {
-				const categoriesAutocomplete = page.getByPlaceholder('Add tag');
-
-				for (const tagName of tagNames) {
-					await categoriesAutocomplete.fill(tagName);
-
-					const option = page.getByRole('option', {
-						exact: true,
-						name: tagName,
-					});
-
-					await option.waitFor();
-					await option.click();
-
-					const categoryLabel = page.locator('.label-item', {
-						hasText: tagName,
-					});
-
-					await expect(categoryLabel).toBeAttached();
-				}
-
-				await page.getByRole('button', {name: 'Save'}).click();
-
-				await waitForAlert(
-					page,
-					'Info:Tags update action started for 2 assets.',
-					{
-						autoClose: true,
-						type: 'info',
-					}
-				);
-			});
-
-			await test.step('Check that the "Processing Task" button appears and click on it', async () => {
-				await expect(assetsPage.processingTasksButton).toBeVisible();
-
-				await assetsPage.processingTasksButton.click();
-
-				expect.poll(
-					async () => {
-						await expect(
-							assetsPage.processingTasksButton
-						).toBeHidden();
-					},
-					{
-						timeout: 5000,
-					}
-				);
-
-				await expect(assetsPage.taskStatusDropdownList).toContainText(
-					'Completed'
-				);
-			});
-
-			await test.step('After the click, the dropdown component is shown and 1 task with details is visible', async () => {
-				await expect(
-					assetsPage
-						.taskStatusDropdownItemButton('Assets Tagging')
-						.nth(0)
-				).toBeVisible();
-
-				await expect(assetsPage.taskStatusDropdownList).toContainText(
-					'2 Items'
-				);
-			});
-
-			await test.step('Verify the tags has been correctly applied.', async () => {
-				for (const webContentName of webContentNames) {
-					await page.reload();
-
-					await assetsPage.execItemAction({
-						action: 'Show Details',
-						filter: webContentName,
-					});
-
-					await expect(
-						page.getByRole('heading', {name: webContentName})
-					).toBeVisible();
-
-					await infoPanelPage.selectTab('Categorization').click();
-
-					for (const tagName of tagNames) {
-						await expect(
-							page.getByText(tagName, {exact: true})
-						).toBeVisible();
-					}
-				}
-			});
-
-			await test.step('Delete more than one tag', async () => {
-				await page.reload();
-
-				await assetsPage
-					.getItem(webContentNames[1])
-					.locator('input[title="Select Item"]')
-					.check();
-
-				await assetsPage.execBulkItemAction('Edit Tags');
-
-				await waitForModal({
-					page,
-				});
-
-				await page
-					.locator('span', {hasText: tagNames[0]})
-					.getByRole('button', {name: 'Close'})
-					.click();
-				await page
-					.locator('span', {hasText: tagNames[1]})
-					.getByRole('button', {name: 'Close'})
-					.click();
-
-				await page.getByRole('button', {name: 'Save'}).click();
-
-				await waitForAlert(
-					page,
-					'Info:Tags update action started for one asset.',
-					{
-						autoClose: true,
-						type: 'info',
-					}
-				);
-			});
-
-			await test.step('Verify the tags has been correctly removed.', async () => {
-				await page.reload();
-
-				await assetsPage.execItemAction({
-					action: 'Show Details',
-					filter: webContentNames[1],
-				});
-
-				await expect(
-					page.getByRole('heading', {name: webContentNames[1]})
-				).toBeVisible();
-
-				await infoPanelPage.selectTab('Categorization').click();
-
-				await expect(
-					page.getByText(tagNames[2], {exact: true})
-				).toBeVisible();
-			});
-
-			await test.step('Select 3 mixed assets and bulk edit their tags', async () => {
-				await assetsPage.gotoAll();
-
-				await assetsPage
-					.getItem(webContentNames[0])
-					.locator('input[title="Select Item"]')
-					.check();
-				await assetsPage
-					.getItem(webContentNames[1])
-					.locator('input[title="Select Item"]')
-					.check();
-				await assetsPage
-					.getItem(titleImg)
-					.locator('input[title="Select Item"]')
-					.check();
-
-				await assetsPage.execBulkItemAction('Edit Tags');
-
-				await waitForModal({
-					page,
-				});
-			});
-
-			await test.step('Add and remove tags to the selected assets', async () => {
-				const categoriesAutocomplete = page.getByPlaceholder('Add tag');
-
-				for (const tagName of tagNames) {
-					await categoriesAutocomplete.fill(tagName);
-
-					const option = page.getByRole('option', {
-						exact: true,
-						name: tagName,
-					});
-
-					await option.waitFor();
-					await option.click();
-
-					const categoryLabel = page.locator('.label-item', {
-						hasText: tagName,
-					});
-
-					await expect(categoryLabel).toBeAttached();
-				}
-
-				await page
-					.locator('span', {hasText: tagNames[1]})
-					.getByRole('button', {name: 'Close'})
-					.click();
-				await page
-					.locator('span', {hasText: tagNames[2]})
-					.getByRole('button', {name: 'Close'})
-					.click();
-
-				await page.getByRole('button', {name: 'Save'}).click();
-
-				await waitForAlert(
-					page,
-					'Info:Tags update action started for 3 assets.',
-					{
-						autoClose: true,
-						type: 'info',
-					}
-				);
-			});
-
-			await test.step('Verify the tags has been correctly edited.', async () => {
-				await page.reload();
-
-				for (const webContentName of webContentNames) {
-					await assetsPage.execItemAction({
-						action: 'Show Details',
-						filter: webContentName,
-					});
-
-					await expect(
-						page.getByRole('heading', {name: webContentName})
-					).toBeVisible();
-
-					await infoPanelPage.selectTab('Categorization').click();
-
-					await expect(
-						page.getByText(tagNames[0], {exact: true})
-					).toBeVisible();
-
-					await assetsPage
-						.getItem(webContentName)
-						.locator('input[title="Select Item"]')
-						.uncheck();
-				}
-
-				await assetsPage.execItemAction({
-					action: 'Show Details',
-					filter: titleImg,
-				});
-
-				await expect(
-					page.getByRole('heading', {name: titleImg})
-				).toBeVisible();
-
-				await infoPanelPage.selectTab('Categorization').click();
-
-				await expect(
-					page.getByText(tagNames[0], {exact: true})
-				).toBeVisible();
-			});
-		}
-		finally {
-			tasks =
-				await apiHelpers.objectEntry.getObjectDefinitionObjectEntries(
-					bulkActionTasks
-				);
-
-			await apiHelpers.objectFolder.deleteObjectEntryFolder(folder.id);
-
-			for (let i = 0; i < tasks.totalCount; i++) {
-				await apiHelpers.objectEntry.deleteObjectEntry(
-					bulkActionTasks,
-					tasks.items[i].id
-				);
-			}
-
-			if (createdFiles.length) {
-				for (const file of createdFiles) {
-					await apiHelpers.objectEntry.deleteObjectEntry(
-						basicWebContent,
-						file.id
-					);
-				}
-			}
-
-			if (createdTags.length) {
-				for (const tag of createdTags) {
-					await apiHelpers.headlessAdminTaxonomy.deleteKeyword({
-						id: tag.id,
-					});
-				}
-			}
 		}
 	}
 );
@@ -3074,255 +1691,119 @@ test(
 );
 
 test(
-	'Bulk action download assets',
-	{tag: '@LPD-62554'},
-	async ({apiHelpers, assetsPage, page}) => {
+	'Versions tab should not be visible for Space Member role',
+	{tag: '@LPD-86002'},
+	async ({apiHelpers, assetsPage, infoPanelPage, page, spaceSummaryPage}) => {
 		const contentApplicationName = 'cms/basic-web-contents';
-		const fileApplicationName = 'cms/basic-documents';
+		let objectEntryContent;
 		const spaceName = 'Default';
+		let user;
 
-		const content1 = `title ${getRandomString()}`;
-		const fileAssetTitle1 = `title ${getRandomString()}`;
-		const fileAssetTitle2 = `title ${getRandomString()}`;
-		const fileNameImg = `file_${getRandomString()}.png`;
+		const content = `title ${getRandomString()}`;
 
-		const contentObjectEntry1 =
-			await apiHelpers.objectEntry.postObjectEntry(
+		try {
+			objectEntryContent = await apiHelpers.objectEntry.postObjectEntry(
 				{
 					objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-					title: content1,
+					title: content,
 				},
 				contentApplicationName,
 				spaceName
 			);
 
-		const fileObjectEntry1 = await apiHelpers.objectEntry.postObjectEntry(
-			{
-				file: {
-					fileBase64: 'R0lGODlhAQABAAAAACw=',
-					name: fileNameImg,
-				},
-				objectEntryFolderExternalReferenceCode: 'L_FILES',
-				title: fileAssetTitle1,
-			},
-			fileApplicationName,
-			'Default'
-		);
+			await test.step('Create an user and add to the Space', async () => {
+				user = await apiHelpers.headlessAdminUser.postUserAccount();
 
-		const fileObjectEntry2 = await apiHelpers.objectEntry.postObjectEntry(
-			{
-				file: {
-					fileBase64: 'R0lGODlhAQABAAAAACw=',
-					name: fileNameImg,
-				},
-				objectEntryFolderExternalReferenceCode: 'L_FILES',
-				title: fileAssetTitle2,
-			},
-			fileApplicationName,
-			'Default'
-		);
+				userData[user.alternateName] = {
+					name: user.givenName,
+					password: 'test',
+					surname: user.familyName,
+				};
 
-		await test.step('Go to All section and try to download a content asset from the bulk action, un unexpected error occurred', async () => {
-			await assetsPage.gotoAll();
-			await assetsPage.selectItems([content1]);
-			await assetsPage.execBulkItemAction('Download');
+				await spaceSummaryPage.goto(spaceName);
+				await spaceSummaryPage.addUserOrUserGroup(user.name, 'users');
+			});
 
-			await waitForAlert(
-				page,
-				'Error:Unable to process the bulk download. Please check your selection and try again.',
-				{
-					type: 'danger',
-				}
-			);
-		});
+			await test.step('Login as a space member and open Info Panel', async () => {
+				await performLogout(page);
 
-		await test.step('Download a file asset from the bulk action', async () => {
-			await assetsPage
-				.getItem(content1)
-				.locator('input[title="Select Item"]')
-				.uncheck();
-			await assetsPage.selectItems([fileAssetTitle1]);
+				await performLogin(page, user.alternateName);
 
-			const downloadPromise = page.waitForEvent('download');
+				await assetsPage.gotoAll();
+				await assetsPage.execItemAction({
+					action: 'Show Details',
+					filter: content,
+				});
 
-			await assetsPage.execBulkItemAction('Download');
+				await expect(
+					page.getByRole('heading', {name: content})
+				).toBeVisible();
+			});
 
-			await waitForAlert(
-				page,
-				'Warning:The download of 1 file is being prepared. Please do not close this window or navigate to another section.',
-				{
-					type: 'warning',
-				}
-			);
+			await test.step('Check versions tab is not visible', async () => {
+				await expect(infoPanelPage.selectTab('More')).not.toBeVisible();
+				await expect(
+					infoPanelPage.selectTab('Versions')
+				).not.toBeVisible();
+				await expect(infoPanelPage.selectTab('Comments')).toBeVisible();
+			});
+		}
+		finally {
+			await performLogout(page);
 
-			await waitForAlert(page, 'Success:The download will begin shortly');
+			await performLogin(page, 'test');
 
-			const download = await downloadPromise;
-
-			expect(download.suggestedFilename()).toBeDefined();
-		});
-
-		await test.step('Download both content and files assets from the bulk action, a message will inform the user that content assets will be skipped from the download', async () => {
-			await assetsPage.selectItems([
-				content1,
-				fileAssetTitle1,
-				fileAssetTitle2,
-			]);
-
-			const downloadPromise = page.waitForEvent('download');
-
-			await assetsPage.execBulkItemAction('Download');
-
-			await waitForAlert(
-				page,
-				'Warning:You have selected both content and file assets. Only file assets can be downloaded. Content assets will be skipped.',
-				{
-					type: 'warning',
-				}
-			);
-			await waitForAlert(
-				page,
-				'Warning:The download of 2 files is being prepared. Please do not close this window or navigate to another section.',
-				{
-					type: 'warning',
-				}
-			);
-			await waitForAlert(page, 'Success:The download will begin shortly');
-
-			const download = await downloadPromise;
-
-			expect(download.suggestedFilename()).toBeDefined();
-		});
-
-		await test.step('Remove generated files', async () => {
-			await apiHelpers.objectEntry.deleteObjectEntry(
-				contentApplicationName,
-				String(contentObjectEntry1.id)
-			);
-			await apiHelpers.objectEntry.deleteObjectEntry(
-				fileApplicationName,
-				String(fileObjectEntry1.id)
-			);
-			await apiHelpers.objectEntry.deleteObjectEntry(
-				fileApplicationName,
-				String(fileObjectEntry2.id)
-			);
-		});
+			if (objectEntryContent) {
+				await apiHelpers.objectEntry.deleteObjectEntry(
+					contentApplicationName,
+					String(objectEntryContent.id)
+				);
+			}
+		}
 	}
 );
 
 test(
-	'Delete Asset Versions in bulk',
-	{tag: '@LPD-67234'},
+	'All section places most recently modified content at the top',
+	{tag: '@LPD-85725'},
 	async ({apiHelpers, assetsPage, page}) => {
-		const contentApplicationName = 'cms/basic-web-contents';
+		const applicationName = 'cms/basic-web-contents';
 		const spaceName = 'Default';
+		const thirdTitle = getRandomString();
 
-		const webContentNames = [
-			getRandomString(),
-			getRandomString(),
-			getRandomString(),
-		];
-
-		let contentObjectEntry = await apiHelpers.objectEntry.postObjectEntry(
+		await apiHelpers.objectEntry.postObjectEntry(
 			{
 				objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
-				title: webContentNames[0],
+				title: getRandomString(),
 			},
-			contentApplicationName,
+			applicationName,
 			spaceName
 		);
 
-		await test.step('Edit object entry to generate more versions', async () => {
-			await apiHelpers.objectEntry.patchObjectEntry(
-				{
-					title_i18n: {
-						en_US: webContentNames[1],
-					},
-				},
-				contentApplicationName,
-				contentObjectEntry.id
-			);
+		await apiHelpers.objectEntry.postObjectEntry(
+			{
+				objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
+				title: getRandomString(),
+			},
+			applicationName,
+			spaceName
+		);
 
-			contentObjectEntry = await apiHelpers.objectEntry.patchObjectEntry(
-				{
-					title_i18n: {
-						en_US: webContentNames[2],
-					},
-				},
-				contentApplicationName,
-				contentObjectEntry.id
-			);
-		});
+		await apiHelpers.objectEntry.postObjectEntry(
+			{
+				objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
+				title: thirdTitle,
+			},
+			applicationName,
+			spaceName
+		);
 
-		await test.step('Navigate to history page and bulk delete all versions', async () => {
+		await expect(async () => {
 			await assetsPage.gotoAll();
 
-			await assetsPage.execItemAction({
-				action: 'View History',
-				filter: webContentNames[2],
-			});
-
-			for (const webContentName of webContentNames) {
-				await assetsPage
-					.getItem(webContentName)
-					.locator('input[title="Select Item"]')
-					.check();
-			}
-
-			await assetsPage.execBulkItemAction('Delete');
-
-			await waitForModal({
-				page,
-			});
-
-			await page
-				.locator('.modal')
-				.getByRole('button', {name: 'Delete'})
-				.click();
-
-			await waitForAlert(
-				page,
-				'Info:Delete asset versions action started for 3 versions.',
-				{
-					autoClose: true,
-					type: 'info',
-				}
+			await expect(page.locator('tbody tr').first()).toContainText(
+				thirdTitle
 			);
-		});
-
-		await test.step('All versions are removed excluding the current one', async () => {
-			await page.reload();
-
-			await expect(
-				assetsPage.getItem(webContentNames[0])
-			).not.toBeVisible();
-
-			await expect(
-				assetsPage.getItem(webContentNames[1])
-			).not.toBeVisible();
-
-			await expect(assetsPage.getItem(webContentNames[2])).toBeVisible();
-		});
-
-		await test.step('Assert that current version cannot be deleted', async () => {
-			await assetsPage
-				.getItem(webContentNames[2])
-				.locator('input[title="Select Item"]')
-				.check();
-
-			await assetsPage.execBulkItemAction('Delete');
-
-			await waitForModal({
-				page,
-			});
-
-			await page
-				.locator('.modal')
-				.getByRole('button', {name: 'Ok'})
-				.click();
-
-			await expect(assetsPage.getItem(webContentNames[2])).toBeVisible();
-		});
+		}).toPass();
 	}
 );

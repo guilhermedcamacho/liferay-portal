@@ -12,7 +12,6 @@ import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
-import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.NoSuchMembershipRequestException;
@@ -26,6 +25,8 @@ import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.MembershipRequestPersistence;
 import com.liferay.portal.kernel.service.persistence.MembershipRequestUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.service.persistence.impl.CollectionPersistenceFinder;
+import com.liferay.portal.kernel.service.persistence.impl.FinderColumn;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -77,6 +78,8 @@ public class MembershipRequestPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByGroupId;
 	private FinderPath _finderPathWithoutPaginationFindByGroupId;
 	private FinderPath _finderPathCountByGroupId;
+	private CollectionPersistenceFinder<MembershipRequest>
+		_collectionPersistenceFinderByGroupId;
 
 	/**
 	 * Returns all the membership requests where groupId = &#63;.
@@ -150,93 +153,9 @@ public class MembershipRequestPersistenceImpl
 		OrderByComparator<MembershipRequest> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByGroupId;
-				finderArgs = new Object[] {groupId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByGroupId;
-			finderArgs = new Object[] {groupId, start, end, orderByComparator};
-		}
-
-		List<MembershipRequest> list = null;
-
-		if (useFinderCache) {
-			list = (List<MembershipRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (MembershipRequest membershipRequest : list) {
-					if (groupId != membershipRequest.getGroupId()) {
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_MEMBERSHIPREQUEST_WHERE);
-
-			sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(MembershipRequestModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(groupId);
-
-				list = (List<MembershipRequest>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					FinderCacheUtil.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByGroupId.find(
+			FinderCacheUtil.getFinderCache(), new Object[] {groupId}, start,
+			end, orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -260,16 +179,9 @@ public class MembershipRequestPersistenceImpl
 			return membershipRequest;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("groupId=");
-		sb.append(groupId);
-
-		sb.append("}");
-
-		throw new NoSuchMembershipRequestException(sb.toString());
+		throw new NoSuchMembershipRequestException(
+			_collectionPersistenceFinderByGroupId.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {groupId}));
 	}
 
 	/**
@@ -283,14 +195,9 @@ public class MembershipRequestPersistenceImpl
 	public MembershipRequest fetchByGroupId_First(
 		long groupId, OrderByComparator<MembershipRequest> orderByComparator) {
 
-		List<MembershipRequest> list = findByGroupId(
-			groupId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByGroupId.fetchFirst(
+			FinderCacheUtil.getFinderCache(), new Object[] {groupId},
+			orderByComparator);
 	}
 
 	/**
@@ -300,12 +207,8 @@ public class MembershipRequestPersistenceImpl
 	 */
 	@Override
 	public void removeByGroupId(long groupId) {
-		for (MembershipRequest membershipRequest :
-				findByGroupId(
-					groupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
-
-			remove(membershipRequest);
-		}
+		_collectionPersistenceFinderByGroupId.remove(
+			FinderCacheUtil.getFinderCache(), new Object[] {groupId});
 	}
 
 	/**
@@ -316,54 +219,15 @@ public class MembershipRequestPersistenceImpl
 	 */
 	@Override
 	public int countByGroupId(long groupId) {
-		FinderPath finderPath = _finderPathCountByGroupId;
-
-		Object[] finderArgs = new Object[] {groupId};
-
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_MEMBERSHIPREQUEST_WHERE);
-
-			sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(groupId);
-
-				count = (Long)query.uniqueResult();
-
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByGroupId.count(
+			FinderCacheUtil.getFinderCache(), new Object[] {groupId});
 	}
-
-	private static final String _FINDER_COLUMN_GROUPID_GROUPID_2 =
-		"membershipRequest.groupId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByUserId;
 	private FinderPath _finderPathWithoutPaginationFindByUserId;
 	private FinderPath _finderPathCountByUserId;
+	private CollectionPersistenceFinder<MembershipRequest>
+		_collectionPersistenceFinderByUserId;
 
 	/**
 	 * Returns all the membership requests where userId = &#63;.
@@ -436,93 +300,9 @@ public class MembershipRequestPersistenceImpl
 		OrderByComparator<MembershipRequest> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByUserId;
-				finderArgs = new Object[] {userId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByUserId;
-			finderArgs = new Object[] {userId, start, end, orderByComparator};
-		}
-
-		List<MembershipRequest> list = null;
-
-		if (useFinderCache) {
-			list = (List<MembershipRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (MembershipRequest membershipRequest : list) {
-					if (userId != membershipRequest.getUserId()) {
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_MEMBERSHIPREQUEST_WHERE);
-
-			sb.append(_FINDER_COLUMN_USERID_USERID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(MembershipRequestModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(userId);
-
-				list = (List<MembershipRequest>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					FinderCacheUtil.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByUserId.find(
+			FinderCacheUtil.getFinderCache(), new Object[] {userId}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -545,16 +325,9 @@ public class MembershipRequestPersistenceImpl
 			return membershipRequest;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("userId=");
-		sb.append(userId);
-
-		sb.append("}");
-
-		throw new NoSuchMembershipRequestException(sb.toString());
+		throw new NoSuchMembershipRequestException(
+			_collectionPersistenceFinderByUserId.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {userId}));
 	}
 
 	/**
@@ -568,14 +341,9 @@ public class MembershipRequestPersistenceImpl
 	public MembershipRequest fetchByUserId_First(
 		long userId, OrderByComparator<MembershipRequest> orderByComparator) {
 
-		List<MembershipRequest> list = findByUserId(
-			userId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByUserId.fetchFirst(
+			FinderCacheUtil.getFinderCache(), new Object[] {userId},
+			orderByComparator);
 	}
 
 	/**
@@ -585,12 +353,8 @@ public class MembershipRequestPersistenceImpl
 	 */
 	@Override
 	public void removeByUserId(long userId) {
-		for (MembershipRequest membershipRequest :
-				findByUserId(
-					userId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
-
-			remove(membershipRequest);
-		}
+		_collectionPersistenceFinderByUserId.remove(
+			FinderCacheUtil.getFinderCache(), new Object[] {userId});
 	}
 
 	/**
@@ -601,54 +365,15 @@ public class MembershipRequestPersistenceImpl
 	 */
 	@Override
 	public int countByUserId(long userId) {
-		FinderPath finderPath = _finderPathCountByUserId;
-
-		Object[] finderArgs = new Object[] {userId};
-
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_MEMBERSHIPREQUEST_WHERE);
-
-			sb.append(_FINDER_COLUMN_USERID_USERID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(userId);
-
-				count = (Long)query.uniqueResult();
-
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByUserId.count(
+			FinderCacheUtil.getFinderCache(), new Object[] {userId});
 	}
-
-	private static final String _FINDER_COLUMN_USERID_USERID_2 =
-		"membershipRequest.userId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByG_S;
 	private FinderPath _finderPathWithoutPaginationFindByG_S;
 	private FinderPath _finderPathCountByG_S;
+	private CollectionPersistenceFinder<MembershipRequest>
+		_collectionPersistenceFinderByG_S;
 
 	/**
 	 * Returns all the membership requests where groupId = &#63; and statusId = &#63;.
@@ -727,101 +452,9 @@ public class MembershipRequestPersistenceImpl
 		OrderByComparator<MembershipRequest> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByG_S;
-				finderArgs = new Object[] {groupId, statusId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByG_S;
-			finderArgs = new Object[] {
-				groupId, statusId, start, end, orderByComparator
-			};
-		}
-
-		List<MembershipRequest> list = null;
-
-		if (useFinderCache) {
-			list = (List<MembershipRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (MembershipRequest membershipRequest : list) {
-					if ((groupId != membershipRequest.getGroupId()) ||
-						(statusId != membershipRequest.getStatusId())) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					4 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(4);
-			}
-
-			sb.append(_SQL_SELECT_MEMBERSHIPREQUEST_WHERE);
-
-			sb.append(_FINDER_COLUMN_G_S_GROUPID_2);
-
-			sb.append(_FINDER_COLUMN_G_S_STATUSID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(MembershipRequestModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(groupId);
-
-				queryPos.add(statusId);
-
-				list = (List<MembershipRequest>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					FinderCacheUtil.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByG_S.find(
+			FinderCacheUtil.getFinderCache(), new Object[] {groupId, statusId},
+			start, end, orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -846,19 +479,9 @@ public class MembershipRequestPersistenceImpl
 			return membershipRequest;
 		}
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("groupId=");
-		sb.append(groupId);
-
-		sb.append(", statusId=");
-		sb.append(statusId);
-
-		sb.append("}");
-
-		throw new NoSuchMembershipRequestException(sb.toString());
+		throw new NoSuchMembershipRequestException(
+			_collectionPersistenceFinderByG_S.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {groupId, statusId}));
 	}
 
 	/**
@@ -874,14 +497,9 @@ public class MembershipRequestPersistenceImpl
 		long groupId, long statusId,
 		OrderByComparator<MembershipRequest> orderByComparator) {
 
-		List<MembershipRequest> list = findByG_S(
-			groupId, statusId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByG_S.fetchFirst(
+			FinderCacheUtil.getFinderCache(), new Object[] {groupId, statusId},
+			orderByComparator);
 	}
 
 	/**
@@ -892,13 +510,8 @@ public class MembershipRequestPersistenceImpl
 	 */
 	@Override
 	public void removeByG_S(long groupId, long statusId) {
-		for (MembershipRequest membershipRequest :
-				findByG_S(
-					groupId, statusId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(membershipRequest);
-		}
+		_collectionPersistenceFinderByG_S.remove(
+			FinderCacheUtil.getFinderCache(), new Object[] {groupId, statusId});
 	}
 
 	/**
@@ -910,61 +523,15 @@ public class MembershipRequestPersistenceImpl
 	 */
 	@Override
 	public int countByG_S(long groupId, long statusId) {
-		FinderPath finderPath = _finderPathCountByG_S;
-
-		Object[] finderArgs = new Object[] {groupId, statusId};
-
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_MEMBERSHIPREQUEST_WHERE);
-
-			sb.append(_FINDER_COLUMN_G_S_GROUPID_2);
-
-			sb.append(_FINDER_COLUMN_G_S_STATUSID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(groupId);
-
-				queryPos.add(statusId);
-
-				count = (Long)query.uniqueResult();
-
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByG_S.count(
+			FinderCacheUtil.getFinderCache(), new Object[] {groupId, statusId});
 	}
-
-	private static final String _FINDER_COLUMN_G_S_GROUPID_2 =
-		"membershipRequest.groupId = ? AND ";
-
-	private static final String _FINDER_COLUMN_G_S_STATUSID_2 =
-		"membershipRequest.statusId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByG_U_S;
 	private FinderPath _finderPathWithoutPaginationFindByG_U_S;
 	private FinderPath _finderPathCountByG_U_S;
+	private CollectionPersistenceFinder<MembershipRequest>
+		_collectionPersistenceFinderByG_U_S;
 
 	/**
 	 * Returns all the membership requests where groupId = &#63; and userId = &#63; and statusId = &#63;.
@@ -1050,106 +617,10 @@ public class MembershipRequestPersistenceImpl
 		OrderByComparator<MembershipRequest> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByG_U_S;
-				finderArgs = new Object[] {groupId, userId, statusId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByG_U_S;
-			finderArgs = new Object[] {
-				groupId, userId, statusId, start, end, orderByComparator
-			};
-		}
-
-		List<MembershipRequest> list = null;
-
-		if (useFinderCache) {
-			list = (List<MembershipRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (MembershipRequest membershipRequest : list) {
-					if ((groupId != membershipRequest.getGroupId()) ||
-						(userId != membershipRequest.getUserId()) ||
-						(statusId != membershipRequest.getStatusId())) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					5 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(5);
-			}
-
-			sb.append(_SQL_SELECT_MEMBERSHIPREQUEST_WHERE);
-
-			sb.append(_FINDER_COLUMN_G_U_S_GROUPID_2);
-
-			sb.append(_FINDER_COLUMN_G_U_S_USERID_2);
-
-			sb.append(_FINDER_COLUMN_G_U_S_STATUSID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(MembershipRequestModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(groupId);
-
-				queryPos.add(userId);
-
-				queryPos.add(statusId);
-
-				list = (List<MembershipRequest>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					FinderCacheUtil.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByG_U_S.find(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {groupId, userId, statusId}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -1175,22 +646,10 @@ public class MembershipRequestPersistenceImpl
 			return membershipRequest;
 		}
 
-		StringBundler sb = new StringBundler(8);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("groupId=");
-		sb.append(groupId);
-
-		sb.append(", userId=");
-		sb.append(userId);
-
-		sb.append(", statusId=");
-		sb.append(statusId);
-
-		sb.append("}");
-
-		throw new NoSuchMembershipRequestException(sb.toString());
+		throw new NoSuchMembershipRequestException(
+			_collectionPersistenceFinderByG_U_S.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY,
+				new Object[] {groupId, userId, statusId}));
 	}
 
 	/**
@@ -1207,14 +666,9 @@ public class MembershipRequestPersistenceImpl
 		long groupId, long userId, long statusId,
 		OrderByComparator<MembershipRequest> orderByComparator) {
 
-		List<MembershipRequest> list = findByG_U_S(
-			groupId, userId, statusId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByG_U_S.fetchFirst(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {groupId, userId, statusId}, orderByComparator);
 	}
 
 	/**
@@ -1226,13 +680,9 @@ public class MembershipRequestPersistenceImpl
 	 */
 	@Override
 	public void removeByG_U_S(long groupId, long userId, long statusId) {
-		for (MembershipRequest membershipRequest :
-				findByG_U_S(
-					groupId, userId, statusId, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null)) {
-
-			remove(membershipRequest);
-		}
+		_collectionPersistenceFinderByG_U_S.remove(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {groupId, userId, statusId});
 	}
 
 	/**
@@ -1245,64 +695,10 @@ public class MembershipRequestPersistenceImpl
 	 */
 	@Override
 	public int countByG_U_S(long groupId, long userId, long statusId) {
-		FinderPath finderPath = _finderPathCountByG_U_S;
-
-		Object[] finderArgs = new Object[] {groupId, userId, statusId};
-
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_SQL_COUNT_MEMBERSHIPREQUEST_WHERE);
-
-			sb.append(_FINDER_COLUMN_G_U_S_GROUPID_2);
-
-			sb.append(_FINDER_COLUMN_G_U_S_USERID_2);
-
-			sb.append(_FINDER_COLUMN_G_U_S_STATUSID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(groupId);
-
-				queryPos.add(userId);
-
-				queryPos.add(statusId);
-
-				count = (Long)query.uniqueResult();
-
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByG_U_S.count(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {groupId, userId, statusId});
 	}
-
-	private static final String _FINDER_COLUMN_G_U_S_GROUPID_2 =
-		"membershipRequest.groupId = ? AND ";
-
-	private static final String _FINDER_COLUMN_G_U_S_USERID_2 =
-		"membershipRequest.userId = ? AND ";
-
-	private static final String _FINDER_COLUMN_G_U_S_STATUSID_2 =
-		"membershipRequest.statusId = ?";
 
 	public MembershipRequestPersistenceImpl() {
 		setModelClass(MembershipRequest.class);
@@ -1864,6 +1260,18 @@ public class MembershipRequestPersistenceImpl
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			false);
 
+		_collectionPersistenceFinderByGroupId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByGroupId,
+				_finderPathWithoutPaginationFindByGroupId,
+				_finderPathCountByGroupId, _SQL_SELECT_MEMBERSHIPREQUEST_WHERE,
+				_SQL_COUNT_MEMBERSHIPREQUEST_WHERE,
+				MembershipRequestModelImpl.ORDER_BY_JPQL,
+				_ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"membershipRequest.", "groupId", FinderColumn.Type.LONG,
+					"=", true, true, MembershipRequest::getGroupId));
+
 		_finderPathWithPaginationFindByUserId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUserId",
 			new String[] {
@@ -1880,6 +1288,18 @@ public class MembershipRequestPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
 			new String[] {Long.class.getName()}, new String[] {"userId"},
 			false);
+
+		_collectionPersistenceFinderByUserId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByUserId,
+				_finderPathWithoutPaginationFindByUserId,
+				_finderPathCountByUserId, _SQL_SELECT_MEMBERSHIPREQUEST_WHERE,
+				_SQL_COUNT_MEMBERSHIPREQUEST_WHERE,
+				MembershipRequestModelImpl.ORDER_BY_JPQL,
+				_ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"membershipRequest.", "userId", FinderColumn.Type.LONG, "=",
+					true, true, MembershipRequest::getUserId));
 
 		_finderPathWithPaginationFindByG_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_S",
@@ -1899,6 +1319,19 @@ public class MembershipRequestPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_S",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"groupId", "statusId"}, false);
+
+		_collectionPersistenceFinderByG_S = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByG_S,
+			_finderPathWithoutPaginationFindByG_S, _finderPathCountByG_S,
+			_SQL_SELECT_MEMBERSHIPREQUEST_WHERE,
+			_SQL_COUNT_MEMBERSHIPREQUEST_WHERE,
+			MembershipRequestModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"membershipRequest.", "groupId", FinderColumn.Type.LONG, "=",
+				true, false, MembershipRequest::getGroupId),
+			new FinderColumn<>(
+				"membershipRequest.", "statusId", FinderColumn.Type.LONG, "=",
+				true, true, MembershipRequest::getStatusId));
 
 		_finderPathWithPaginationFindByG_U_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_U_S",
@@ -1922,6 +1355,22 @@ public class MembershipRequestPersistenceImpl
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"groupId", "userId", "statusId"}, false);
+
+		_collectionPersistenceFinderByG_U_S = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByG_U_S,
+			_finderPathWithoutPaginationFindByG_U_S, _finderPathCountByG_U_S,
+			_SQL_SELECT_MEMBERSHIPREQUEST_WHERE,
+			_SQL_COUNT_MEMBERSHIPREQUEST_WHERE,
+			MembershipRequestModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"membershipRequest.", "groupId", FinderColumn.Type.LONG, "=",
+				true, false, MembershipRequest::getGroupId),
+			new FinderColumn<>(
+				"membershipRequest.", "userId", FinderColumn.Type.LONG, "=",
+				true, false, MembershipRequest::getUserId),
+			new FinderColumn<>(
+				"membershipRequest.", "statusId", FinderColumn.Type.LONG, "=",
+				true, true, MembershipRequest::getStatusId));
 
 		MembershipRequestUtil.setPersistence(this);
 	}
@@ -1961,4 +1410,4 @@ public class MembershipRequestPersistenceImpl
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-219353909
+// LIFERAY-SERVICE-BUILDER-HASH:926241996

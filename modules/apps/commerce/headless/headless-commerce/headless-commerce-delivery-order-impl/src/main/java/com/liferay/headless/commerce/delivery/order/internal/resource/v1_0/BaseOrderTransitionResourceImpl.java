@@ -978,3 +978,4 @@ public abstract class BaseOrderTransitionResourceImpl
 		LogFactoryUtil.getLog(BaseOrderTransitionResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1529941984

@@ -3048,3 +3048,4 @@ public abstract class BaseSXPElementResourceTestCase {
 		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1656739572

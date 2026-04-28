@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
-import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
@@ -31,13 +30,15 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.service.persistence.impl.CollectionPersistenceFinder;
+import com.liferay.portal.kernel.service.persistence.impl.FinderColumn;
+import com.liferay.portal.kernel.service.persistence.impl.UniquePersistenceFinder;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
@@ -51,7 +52,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import javax.sql.DataSource;
@@ -95,6 +95,8 @@ public class DLContentPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByC_R;
 	private FinderPath _finderPathWithoutPaginationFindByC_R;
 	private FinderPath _finderPathCountByC_R;
+	private CollectionPersistenceFinder<DLContent>
+		_collectionPersistenceFinderByC_R;
 
 	/**
 	 * Returns all the document library contents where companyId = &#63; and repositoryId = &#63;.
@@ -178,101 +180,9 @@ public class DLContentPersistenceImpl
 				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
 					DLContent.class)) {
 
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath = _finderPathWithoutPaginationFindByC_R;
-					finderArgs = new Object[] {companyId, repositoryId};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath = _finderPathWithPaginationFindByC_R;
-				finderArgs = new Object[] {
-					companyId, repositoryId, start, end, orderByComparator
-				};
-			}
-
-			List<DLContent> list = null;
-
-			if (useFinderCache) {
-				list = (List<DLContent>)finderCache.getResult(
-					finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (DLContent dlContent : list) {
-						if ((companyId != dlContent.getCompanyId()) ||
-							(repositoryId != dlContent.getRepositoryId())) {
-
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						4 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(4);
-				}
-
-				sb.append(_SQL_SELECT_DLCONTENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_R_COMPANYID_2);
-
-				sb.append(_FINDER_COLUMN_C_R_REPOSITORYID_2);
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(DLContentModelImpl.ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					queryPos.add(repositoryId);
-
-					list = (List<DLContent>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						finderCache.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByC_R.find(
+				finderCache, new Object[] {companyId, repositoryId}, start, end,
+				orderByComparator, useFinderCache);
 		}
 	}
 
@@ -298,19 +208,10 @@ public class DLContentPersistenceImpl
 			return dlContent;
 		}
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append(", repositoryId=");
-		sb.append(repositoryId);
-
-		sb.append("}");
-
-		throw new NoSuchContentException(sb.toString());
+		throw new NoSuchContentException(
+			_collectionPersistenceFinderByC_R.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY,
+				new Object[] {companyId, repositoryId}));
 	}
 
 	/**
@@ -326,14 +227,9 @@ public class DLContentPersistenceImpl
 		long companyId, long repositoryId,
 		OrderByComparator<DLContent> orderByComparator) {
 
-		List<DLContent> list = findByC_R(
-			companyId, repositoryId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByC_R.fetchFirst(
+			finderCache, new Object[] {companyId, repositoryId},
+			orderByComparator);
 	}
 
 	/**
@@ -344,13 +240,8 @@ public class DLContentPersistenceImpl
 	 */
 	@Override
 	public void removeByC_R(long companyId, long repositoryId) {
-		for (DLContent dlContent :
-				findByC_R(
-					companyId, repositoryId, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null)) {
-
-			remove(dlContent);
-		}
+		_collectionPersistenceFinderByC_R.remove(
+			finderCache, new Object[] {companyId, repositoryId});
 	}
 
 	/**
@@ -366,62 +257,16 @@ public class DLContentPersistenceImpl
 				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
 					DLContent.class)) {
 
-			FinderPath finderPath = _finderPathCountByC_R;
-
-			Object[] finderArgs = new Object[] {companyId, repositoryId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_DLCONTENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_R_COMPANYID_2);
-
-				sb.append(_FINDER_COLUMN_C_R_REPOSITORYID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					queryPos.add(repositoryId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByC_R.count(
+				finderCache, new Object[] {companyId, repositoryId});
 		}
 	}
-
-	private static final String _FINDER_COLUMN_C_R_COMPANYID_2 =
-		"dlContent.companyId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_R_REPOSITORYID_2 =
-		"dlContent.repositoryId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByC_R_P;
 	private FinderPath _finderPathWithoutPaginationFindByC_R_P;
 	private FinderPath _finderPathCountByC_R_P;
+	private CollectionPersistenceFinder<DLContent>
+		_collectionPersistenceFinderByC_R_P;
 
 	/**
 	 * Returns all the document library contents where companyId = &#63; and repositoryId = &#63; and path = &#63;.
@@ -511,119 +356,9 @@ public class DLContentPersistenceImpl
 				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
 					DLContent.class)) {
 
-			path = Objects.toString(path, "");
-
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath = _finderPathWithoutPaginationFindByC_R_P;
-					finderArgs = new Object[] {companyId, repositoryId, path};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath = _finderPathWithPaginationFindByC_R_P;
-				finderArgs = new Object[] {
-					companyId, repositoryId, path, start, end, orderByComparator
-				};
-			}
-
-			List<DLContent> list = null;
-
-			if (useFinderCache) {
-				list = (List<DLContent>)finderCache.getResult(
-					finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (DLContent dlContent : list) {
-						if ((companyId != dlContent.getCompanyId()) ||
-							(repositoryId != dlContent.getRepositoryId()) ||
-							!path.equals(dlContent.getPath())) {
-
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						5 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(5);
-				}
-
-				sb.append(_SQL_SELECT_DLCONTENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_R_P_COMPANYID_2);
-
-				sb.append(_FINDER_COLUMN_C_R_P_REPOSITORYID_2);
-
-				boolean bindPath = false;
-
-				if (path.isEmpty()) {
-					sb.append(_FINDER_COLUMN_C_R_P_PATH_3);
-				}
-				else {
-					bindPath = true;
-
-					sb.append(_FINDER_COLUMN_C_R_P_PATH_2);
-				}
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(DLContentModelImpl.ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					queryPos.add(repositoryId);
-
-					if (bindPath) {
-						queryPos.add(path);
-					}
-
-					list = (List<DLContent>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						finderCache.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByC_R_P.find(
+				finderCache, new Object[] {companyId, repositoryId, path},
+				start, end, orderByComparator, useFinderCache);
 		}
 	}
 
@@ -650,22 +385,10 @@ public class DLContentPersistenceImpl
 			return dlContent;
 		}
 
-		StringBundler sb = new StringBundler(8);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append(", repositoryId=");
-		sb.append(repositoryId);
-
-		sb.append(", path=");
-		sb.append(path);
-
-		sb.append("}");
-
-		throw new NoSuchContentException(sb.toString());
+		throw new NoSuchContentException(
+			_collectionPersistenceFinderByC_R_P.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY,
+				new Object[] {companyId, repositoryId, path}));
 	}
 
 	/**
@@ -682,14 +405,9 @@ public class DLContentPersistenceImpl
 		long companyId, long repositoryId, String path,
 		OrderByComparator<DLContent> orderByComparator) {
 
-		List<DLContent> list = findByC_R_P(
-			companyId, repositoryId, path, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByC_R_P.fetchFirst(
+			finderCache, new Object[] {companyId, repositoryId, path},
+			orderByComparator);
 	}
 
 	/**
@@ -701,13 +419,8 @@ public class DLContentPersistenceImpl
 	 */
 	@Override
 	public void removeByC_R_P(long companyId, long repositoryId, String path) {
-		for (DLContent dlContent :
-				findByC_R_P(
-					companyId, repositoryId, path, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null)) {
-
-			remove(dlContent);
-		}
+		_collectionPersistenceFinderByC_R_P.remove(
+			finderCache, new Object[] {companyId, repositoryId, path});
 	}
 
 	/**
@@ -724,84 +437,15 @@ public class DLContentPersistenceImpl
 				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
 					DLContent.class)) {
 
-			path = Objects.toString(path, "");
-
-			FinderPath finderPath = _finderPathCountByC_R_P;
-
-			Object[] finderArgs = new Object[] {companyId, repositoryId, path};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(_SQL_COUNT_DLCONTENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_R_P_COMPANYID_2);
-
-				sb.append(_FINDER_COLUMN_C_R_P_REPOSITORYID_2);
-
-				boolean bindPath = false;
-
-				if (path.isEmpty()) {
-					sb.append(_FINDER_COLUMN_C_R_P_PATH_3);
-				}
-				else {
-					bindPath = true;
-
-					sb.append(_FINDER_COLUMN_C_R_P_PATH_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					queryPos.add(repositoryId);
-
-					if (bindPath) {
-						queryPos.add(path);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByC_R_P.count(
+				finderCache, new Object[] {companyId, repositoryId, path});
 		}
 	}
 
-	private static final String _FINDER_COLUMN_C_R_P_COMPANYID_2 =
-		"dlContent.companyId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_R_P_REPOSITORYID_2 =
-		"dlContent.repositoryId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_R_P_PATH_2 =
-		"dlContent.path = ?";
-
-	private static final String _FINDER_COLUMN_C_R_P_PATH_3 =
-		"(dlContent.path IS NULL OR dlContent.path = '')";
-
 	private FinderPath _finderPathWithPaginationFindByC_R_LikeP;
 	private FinderPath _finderPathWithPaginationCountByC_R_LikeP;
+	private CollectionPersistenceFinder<DLContent>
+		_collectionPersistenceFinderByC_R_LikeP;
 
 	/**
 	 * Returns all the document library contents where companyId = &#63; and repositoryId = &#63; and path LIKE &#63;.
@@ -891,111 +535,9 @@ public class DLContentPersistenceImpl
 				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
 					DLContent.class)) {
 
-			path = Objects.toString(path, "");
-
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			finderPath = _finderPathWithPaginationFindByC_R_LikeP;
-			finderArgs = new Object[] {
-				companyId, repositoryId, path, start, end, orderByComparator
-			};
-
-			List<DLContent> list = null;
-
-			if (useFinderCache) {
-				list = (List<DLContent>)finderCache.getResult(
-					finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (DLContent dlContent : list) {
-						if ((companyId != dlContent.getCompanyId()) ||
-							(repositoryId != dlContent.getRepositoryId()) ||
-							!StringUtil.wildcardMatches(
-								dlContent.getPath(), path, '_', '%', '\\',
-								true)) {
-
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						5 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(5);
-				}
-
-				sb.append(_SQL_SELECT_DLCONTENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_R_LIKEP_COMPANYID_2);
-
-				sb.append(_FINDER_COLUMN_C_R_LIKEP_REPOSITORYID_2);
-
-				boolean bindPath = false;
-
-				if (path.isEmpty()) {
-					sb.append(_FINDER_COLUMN_C_R_LIKEP_PATH_3);
-				}
-				else {
-					bindPath = true;
-
-					sb.append(_FINDER_COLUMN_C_R_LIKEP_PATH_2);
-				}
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(DLContentModelImpl.ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					queryPos.add(repositoryId);
-
-					if (bindPath) {
-						queryPos.add(path);
-					}
-
-					list = (List<DLContent>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						finderCache.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByC_R_LikeP.find(
+				finderCache, new Object[] {companyId, repositoryId, path},
+				start, end, orderByComparator, useFinderCache);
 		}
 	}
 
@@ -1022,22 +564,10 @@ public class DLContentPersistenceImpl
 			return dlContent;
 		}
 
-		StringBundler sb = new StringBundler(8);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append(", repositoryId=");
-		sb.append(repositoryId);
-
-		sb.append(", pathLIKE");
-		sb.append(path);
-
-		sb.append("}");
-
-		throw new NoSuchContentException(sb.toString());
+		throw new NoSuchContentException(
+			_collectionPersistenceFinderByC_R_LikeP.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY,
+				new Object[] {companyId, repositoryId, path}));
 	}
 
 	/**
@@ -1054,14 +584,9 @@ public class DLContentPersistenceImpl
 		long companyId, long repositoryId, String path,
 		OrderByComparator<DLContent> orderByComparator) {
 
-		List<DLContent> list = findByC_R_LikeP(
-			companyId, repositoryId, path, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByC_R_LikeP.fetchFirst(
+			finderCache, new Object[] {companyId, repositoryId, path},
+			orderByComparator);
 	}
 
 	/**
@@ -1075,13 +600,8 @@ public class DLContentPersistenceImpl
 	public void removeByC_R_LikeP(
 		long companyId, long repositoryId, String path) {
 
-		for (DLContent dlContent :
-				findByC_R_LikeP(
-					companyId, repositoryId, path, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null)) {
-
-			remove(dlContent);
-		}
+		_collectionPersistenceFinderByC_R_LikeP.remove(
+			finderCache, new Object[] {companyId, repositoryId, path});
 	}
 
 	/**
@@ -1100,83 +620,14 @@ public class DLContentPersistenceImpl
 				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
 					DLContent.class)) {
 
-			path = Objects.toString(path, "");
-
-			FinderPath finderPath = _finderPathWithPaginationCountByC_R_LikeP;
-
-			Object[] finderArgs = new Object[] {companyId, repositoryId, path};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(_SQL_COUNT_DLCONTENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_R_LIKEP_COMPANYID_2);
-
-				sb.append(_FINDER_COLUMN_C_R_LIKEP_REPOSITORYID_2);
-
-				boolean bindPath = false;
-
-				if (path.isEmpty()) {
-					sb.append(_FINDER_COLUMN_C_R_LIKEP_PATH_3);
-				}
-				else {
-					bindPath = true;
-
-					sb.append(_FINDER_COLUMN_C_R_LIKEP_PATH_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					queryPos.add(repositoryId);
-
-					if (bindPath) {
-						queryPos.add(path);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByC_R_LikeP.count(
+				finderCache, new Object[] {companyId, repositoryId, path});
 		}
 	}
 
-	private static final String _FINDER_COLUMN_C_R_LIKEP_COMPANYID_2 =
-		"dlContent.companyId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_R_LIKEP_REPOSITORYID_2 =
-		"dlContent.repositoryId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_R_LIKEP_PATH_2 =
-		"dlContent.path LIKE ?";
-
-	private static final String _FINDER_COLUMN_C_R_LIKEP_PATH_3 =
-		"(dlContent.path IS NULL OR dlContent.path LIKE '')";
-
 	private FinderPath _finderPathFetchByC_R_P_V;
+	private UniquePersistenceFinder<DLContent>
+		_uniquePersistenceFinderByC_R_P_V;
 
 	/**
 	 * Returns the document library content where companyId = &#63; and repositoryId = &#63; and path = &#63; and version = &#63; or throws a <code>NoSuchContentException</code> if it could not be found.
@@ -1197,29 +648,16 @@ public class DLContentPersistenceImpl
 			companyId, repositoryId, path, version);
 
 		if (dlContent == null) {
-			StringBundler sb = new StringBundler(10);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("companyId=");
-			sb.append(companyId);
-
-			sb.append(", repositoryId=");
-			sb.append(repositoryId);
-
-			sb.append(", path=");
-			sb.append(path);
-
-			sb.append(", version=");
-			sb.append(version);
-
-			sb.append("}");
+			String message =
+				_uniquePersistenceFinderByC_R_P_V.buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY,
+					new Object[] {companyId, repositoryId, path, version});
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
+				_log.debug(message);
 			}
 
-			throw new NoSuchContentException(sb.toString());
+			throw new NoSuchContentException(message);
 		}
 
 		return dlContent;
@@ -1260,120 +698,10 @@ public class DLContentPersistenceImpl
 				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
 					DLContent.class)) {
 
-			path = Objects.toString(path, "");
-			version = Objects.toString(version, "");
-
-			Object[] finderArgs = null;
-
-			if (useFinderCache) {
-				finderArgs = new Object[] {
-					companyId, repositoryId, path, version
-				};
-			}
-
-			Object result = null;
-
-			if (useFinderCache) {
-				result = finderCache.getResult(
-					_finderPathFetchByC_R_P_V, finderArgs, this);
-			}
-
-			if (result instanceof DLContent) {
-				DLContent dlContent = (DLContent)result;
-
-				if ((companyId != dlContent.getCompanyId()) ||
-					(repositoryId != dlContent.getRepositoryId()) ||
-					!Objects.equals(path, dlContent.getPath()) ||
-					!Objects.equals(version, dlContent.getVersion())) {
-
-					result = null;
-				}
-			}
-
-			if (result == null) {
-				StringBundler sb = new StringBundler(6);
-
-				sb.append(_SQL_SELECT_DLCONTENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_R_P_V_COMPANYID_2);
-
-				sb.append(_FINDER_COLUMN_C_R_P_V_REPOSITORYID_2);
-
-				boolean bindPath = false;
-
-				if (path.isEmpty()) {
-					sb.append(_FINDER_COLUMN_C_R_P_V_PATH_3);
-				}
-				else {
-					bindPath = true;
-
-					sb.append(_FINDER_COLUMN_C_R_P_V_PATH_2);
-				}
-
-				boolean bindVersion = false;
-
-				if (version.isEmpty()) {
-					sb.append(_FINDER_COLUMN_C_R_P_V_VERSION_3);
-				}
-				else {
-					bindVersion = true;
-
-					sb.append(_FINDER_COLUMN_C_R_P_V_VERSION_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					queryPos.add(repositoryId);
-
-					if (bindPath) {
-						queryPos.add(path);
-					}
-
-					if (bindVersion) {
-						queryPos.add(version);
-					}
-
-					List<DLContent> list = query.list();
-
-					if (list.isEmpty()) {
-						if (useFinderCache) {
-							finderCache.putResult(
-								_finderPathFetchByC_R_P_V, finderArgs, list);
-						}
-					}
-					else {
-						DLContent dlContent = list.get(0);
-
-						result = dlContent;
-
-						cacheResult(dlContent);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			if (result instanceof List<?>) {
-				return null;
-			}
-			else {
-				return (DLContent)result;
-			}
+			return _uniquePersistenceFinderByC_R_P_V.fetch(
+				finderCache,
+				new Object[] {companyId, repositoryId, path, version},
+				useFinderCache);
 		}
 	}
 
@@ -1410,33 +738,9 @@ public class DLContentPersistenceImpl
 	public int countByC_R_P_V(
 		long companyId, long repositoryId, String path, String version) {
 
-		DLContent dlContent = fetchByC_R_P_V(
-			companyId, repositoryId, path, version);
-
-		if (dlContent == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByC_R_P_V.count(
+			finderCache, new Object[] {companyId, repositoryId, path, version});
 	}
-
-	private static final String _FINDER_COLUMN_C_R_P_V_COMPANYID_2 =
-		"dlContent.companyId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_R_P_V_REPOSITORYID_2 =
-		"dlContent.repositoryId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_R_P_V_PATH_2 =
-		"dlContent.path = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_R_P_V_PATH_3 =
-		"(dlContent.path IS NULL OR dlContent.path = '') AND ";
-
-	private static final String _FINDER_COLUMN_C_R_P_V_VERSION_2 =
-		"dlContent.version = ?";
-
-	private static final String _FINDER_COLUMN_C_R_P_V_VERSION_3 =
-		"(dlContent.version IS NULL OR dlContent.version = '')";
 
 	public DLContentPersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
@@ -2268,6 +1572,18 @@ public class DLContentPersistenceImpl
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"companyId", "repositoryId"}, false);
 
+		_collectionPersistenceFinderByC_R = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByC_R,
+			_finderPathWithoutPaginationFindByC_R, _finderPathCountByC_R,
+			_SQL_SELECT_DLCONTENT_WHERE, _SQL_COUNT_DLCONTENT_WHERE,
+			DLContentModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"dlContent.", "companyId", FinderColumn.Type.LONG, "=", true,
+				false, DLContent::getCompanyId),
+			new FinderColumn<>(
+				"dlContent.", "repositoryId", FinderColumn.Type.LONG, "=", true,
+				true, DLContent::getRepositoryId));
+
 		_finderPathWithPaginationFindByC_R_P = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_R_P",
 			new String[] {
@@ -2293,6 +1609,21 @@ public class DLContentPersistenceImpl
 			},
 			new String[] {"companyId", "repositoryId", "path_"}, false);
 
+		_collectionPersistenceFinderByC_R_P = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByC_R_P,
+			_finderPathWithoutPaginationFindByC_R_P, _finderPathCountByC_R_P,
+			_SQL_SELECT_DLCONTENT_WHERE, _SQL_COUNT_DLCONTENT_WHERE,
+			DLContentModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"dlContent.", "companyId", FinderColumn.Type.LONG, "=", true,
+				false, DLContent::getCompanyId),
+			new FinderColumn<>(
+				"dlContent.", "repositoryId", FinderColumn.Type.LONG, "=", true,
+				false, DLContent::getRepositoryId),
+			new FinderColumn<>(
+				"dlContent.", "path", FinderColumn.Type.STRING, "=", true, true,
+				DLContent::getPath));
+
 		_finderPathWithPaginationFindByC_R_LikeP = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_R_LikeP",
 			new String[] {
@@ -2310,6 +1641,22 @@ public class DLContentPersistenceImpl
 			},
 			new String[] {"companyId", "repositoryId", "path_"}, false);
 
+		_collectionPersistenceFinderByC_R_LikeP =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByC_R_LikeP, null,
+				_finderPathWithPaginationCountByC_R_LikeP,
+				_SQL_SELECT_DLCONTENT_WHERE, _SQL_COUNT_DLCONTENT_WHERE,
+				DLContentModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"dlContent.", "companyId", FinderColumn.Type.LONG, "=",
+					true, false, DLContent::getCompanyId),
+				new FinderColumn<>(
+					"dlContent.", "repositoryId", FinderColumn.Type.LONG, "=",
+					true, false, DLContent::getRepositoryId),
+				new FinderColumn<>(
+					"dlContent.", "path", FinderColumn.Type.STRING, "LIKE",
+					true, true, DLContent::getPath));
+
 		_finderPathFetchByC_R_P_V = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_R_P_V",
 			new String[] {
@@ -2318,6 +1665,21 @@ public class DLContentPersistenceImpl
 			},
 			new String[] {"companyId", "repositoryId", "path_", "version"},
 			true);
+
+		_uniquePersistenceFinderByC_R_P_V = new UniquePersistenceFinder<>(
+			this, _finderPathFetchByC_R_P_V, _SQL_SELECT_DLCONTENT_WHERE,
+			new FinderColumn<>(
+				"dlContent.", "companyId", FinderColumn.Type.LONG, "=", true,
+				false, DLContent::getCompanyId),
+			new FinderColumn<>(
+				"dlContent.", "repositoryId", FinderColumn.Type.LONG, "=", true,
+				false, DLContent::getRepositoryId),
+			new FinderColumn<>(
+				"dlContent.", "path", FinderColumn.Type.STRING, "=", true,
+				false, DLContent::getPath),
+			new FinderColumn<>(
+				"dlContent.", "version", FinderColumn.Type.STRING, "=", true,
+				true, DLContent::getVersion));
 
 		DLContentUtil.setPersistence(this);
 	}
@@ -2396,4 +1758,4 @@ public class DLContentPersistenceImpl
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1520768987
+// LIFERAY-SERVICE-BUILDER-HASH:1844723542

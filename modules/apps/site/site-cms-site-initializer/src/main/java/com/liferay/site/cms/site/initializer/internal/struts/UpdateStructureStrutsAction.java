@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.vulcan.jaxrs.exception.mapper.ExceptionMapperUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -91,6 +92,18 @@ public class UpdateStructureStrutsAction implements StrutsAction {
 				_language.get(
 					httpServletRequest.getLocale(),
 					"an-unexpected-error-occurred"));
+
+			Throwable throwable = exception;
+
+			while (throwable.getCause() != null) {
+				throwable = throwable.getCause();
+			}
+
+			Class<?> clazz = throwable.getClass();
+
+			jsonObject.put(
+				"type",
+				ExceptionMapperUtil.getType(clazz.getName()));
 
 			if (_log.isWarnEnabled()) {
 				_log.warn(exception);
@@ -300,27 +313,24 @@ public class UpdateStructureStrutsAction implements StrutsAction {
 				_objectDefinition.getExternalReferenceCode(),
 				_objectDefinition);
 
+			com.liferay.object.model.ObjectDefinition
+				serviceBuilderObjectDefinition =
+					_objectDefinitionLocalService.
+						fetchObjectDefinitionByExternalReferenceCode(
+							_objectDefinition.getExternalReferenceCode(),
+							_companyId);
+
+			if (serviceBuilderObjectDefinition != null) {
+				_deleteRelationships(
+					serviceBuilderObjectDefinition.getObjectDefinitionId());
+			}
+
 			if (ListUtil.isNotEmpty(_objectRelationships)) {
 				ObjectRelationshipResource objectRelationshipResource =
 					_getObjectRelationshipResource(_user);
 
 				for (ObjectRelationship objectRelationship :
 						_objectRelationships) {
-
-					com.liferay.object.model.ObjectDefinition
-						serviceBuilderObjectDefinition =
-							_objectDefinitionLocalService.
-								fetchObjectDefinitionByExternalReferenceCode(
-									objectRelationship.
-										getObjectDefinitionExternalReferenceCode2(),
-									_companyId);
-
-					if (serviceBuilderObjectDefinition == null) {
-						continue;
-					}
-
-					_deleteRelationships(
-						serviceBuilderObjectDefinition.getObjectDefinitionId());
 
 					objectRelationshipResource.
 						postObjectDefinitionByExternalReferenceCodeObjectRelationship(

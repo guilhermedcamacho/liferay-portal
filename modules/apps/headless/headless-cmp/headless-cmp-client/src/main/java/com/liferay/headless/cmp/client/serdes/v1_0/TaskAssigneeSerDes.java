@@ -318,3 +318,4 @@ public class TaskAssigneeSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2030068102

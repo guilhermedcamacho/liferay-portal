@@ -24,6 +24,7 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.storage.StorageType;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestHelper;
+import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
 import com.liferay.fragment.constants.FragmentConstants;
@@ -73,6 +74,7 @@ import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -103,6 +105,7 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -184,10 +187,28 @@ public class EditableFragmentEntryProcessorTest {
 				_company, _group, _layout));
 
 		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
+
+		_companyConfigurationTemporarySwapper =
+			new CompanyConfigurationTemporarySwapper(
+				_company.getCompanyId(),
+				"com.liferay.analytics.settings.configuration." +
+					"AnalyticsConfiguration",
+				HashMapDictionaryBuilder.<String, Object>put(
+					"liferayAnalyticsDataSourceId",
+					RandomTestUtil.randomString()
+				).put(
+					"liferayAnalyticsFaroBackendSecuritySignature",
+					RandomTestUtil.randomString()
+				).put(
+					"liferayAnalyticsFaroBackendURL",
+					"http://" + RandomTestUtil.randomString()
+				).build());
 	}
 
 	@After
-	public void tearDown() {
+	public void tearDown() throws Exception {
+		_companyConfigurationTemporarySwapper.close();
+
 		LocaleThreadLocal.setSiteDefaultLocale(_originalSiteDefaultLocale);
 		LocaleThreadLocal.setThemeDisplayLocale(
 			_originalThemeDisplayDefaultLocale);
@@ -1003,9 +1024,48 @@ public class EditableFragmentEntryProcessorTest {
 		FragmentEntry fragmentEntry = _addFragmentEntry(
 			"fragment_entry_image.html");
 
-		JournalArticle journalArticle = JournalTestUtil.addArticle(
-			_group.getGroupId(),
-			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+		Map<Locale, String> titleMap = HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(), "Test Article"
+		).build();
+
+		StringBundler sb = new StringBundler(16);
+
+		FileEntry fileEntry = _addImageFileEntry(RandomTestUtil.randomString());
+
+		sb.append("<?xml version=\"1.0\"?>  ");
+		sb.append("<root available-locales=\"en_US\" ");
+		sb.append("default-locale=\"en_US\"> \t");
+		sb.append("<dynamic-element name=\"smallImage\" ");
+		sb.append("type=\"image\" index-type=\"keyword\" ");
+		sb.append("instance-id=\"lvsi\"> \t\t");
+		sb.append("<dynamic-content language-id=\"en_US\">");
+		sb.append("<![CDATA[{\"classPK\":\"");
+		sb.append(fileEntry.getFileEntryId());
+		sb.append("\",\"groupId\":\"");
+		sb.append(fileEntry.getGroupId());
+		sb.append("\",\"title\":\"");
+		sb.append(fileEntry.getTitle());
+		sb.append("\",\"type\":\"document\",\"uuid\":\"");
+		sb.append(fileEntry.getUuid());
+		sb.append("\"}]]></dynamic-content> \t</dynamic-element> </root>");
+
+		DDMForm ddmForm = DDMStructureTestUtil.getSampleDDMForm(
+			"smallImage", "string", "text", true,
+			DDMFormFieldTypeConstants.IMAGE,
+			new Locale[] {LocaleUtil.getSiteDefault()},
+			LocaleUtil.getSiteDefault());
+
+		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
+			_group.getGroupId(), JournalArticle.class.getName(), 0, ddmForm,
+			LocaleUtil.getSiteDefault(),
+			ServiceContextTestUtil.getServiceContext());
+
+		JournalArticle journalArticle = _journalArticleLocalService.addArticle(
+			null, _serviceContext.getUserId(),
+			_serviceContext.getScopeGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, titleMap, null,
+			sb.toString(), ddmStructure.getStructureId(), null,
+			_serviceContext);
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
@@ -1047,6 +1107,9 @@ public class EditableFragmentEntryProcessorTest {
 		Assert.assertEquals(
 			String.valueOf(journalArticle.getResourcePrimKey()),
 			element.attr("data-analytics-asset-id"));
+		Assert.assertEquals(
+			String.valueOf(fileEntry.getMimeType()),
+			element.attr("data-analytics-asset-mime-type"));
 		Assert.assertEquals(
 			String.valueOf(journalArticle.getDDMStructureId()),
 			element.attr("data-analytics-asset-subtype"));
@@ -2185,8 +2248,8 @@ public class EditableFragmentEntryProcessorTest {
 	private ObjectDefinition _addObjectDefinition() throws Exception {
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				null, TestPropsValues.getUserId(), 0, null, false, true, false,
-				true, false, false, false, false, null,
+				null, TestPropsValues.getUserId(), 0, null, true, false, true,
+				false, true, false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null,
 				"control_panel.sites",
@@ -2557,6 +2620,8 @@ public class EditableFragmentEntryProcessorTest {
 	private static DDMFormDeserializer _jsonDDMFormDeserializer;
 
 	private Company _company;
+	private CompanyConfigurationTemporarySwapper
+		_companyConfigurationTemporarySwapper;
 
 	@Inject
 	private CompanyLocalService _companyLocalService;

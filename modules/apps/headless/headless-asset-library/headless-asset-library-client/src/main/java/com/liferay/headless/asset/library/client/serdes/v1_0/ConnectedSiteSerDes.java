@@ -409,3 +409,4 @@ public class ConnectedSiteSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2070842123

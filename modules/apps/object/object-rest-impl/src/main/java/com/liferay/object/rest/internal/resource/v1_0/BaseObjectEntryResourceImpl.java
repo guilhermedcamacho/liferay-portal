@@ -3727,3 +3727,4 @@ public abstract class BaseObjectEntryResourceImpl
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:746632082

@@ -438,6 +438,39 @@ public class CloudBucketUtil {
 		System.out.println("Synced " + source + " to " + destination);
 	}
 
+	public static void touchS3File(String s3Path) throws IOException {
+		s3Path = _replaceS3ObjectPath(s3Path);
+
+		long start = System.currentTimeMillis();
+
+		_executeAWSCommands(
+			_getFileTransferCommand(
+				JenkinsResultsParserUtil.combine(
+					"aws s3 cp --metadata timestamp=",
+					JenkinsResultsParserUtil.getDistinctTimeStamp(),
+					" --no-progress"),
+				s3Path, s3Path));
+
+		System.out.println(
+			JenkinsResultsParserUtil.combine(
+				"Touched ", s3Path, " in ",
+				JenkinsResultsParserUtil.toDurationString(
+					System.currentTimeMillis() - start)));
+
+		if (!s3Path.endsWith(_CHECKSUM_FILE_EXTENSION)) {
+			String s3ChecksumPath = s3Path + _CHECKSUM_FILE_EXTENSION;
+
+			try {
+				if (_exists(s3ChecksumPath)) {
+					touchS3File(s3ChecksumPath);
+				}
+			}
+			catch (TimeoutException timeoutException) {
+				throw new IOException(timeoutException);
+			}
+		}
+	}
+
 	public static void uploadS3File(String s3DestinationPath, File sourceFile)
 		throws IOException {
 
@@ -686,10 +719,6 @@ public class CloudBucketUtil {
 			String destination, String source)
 		throws IOException {
 
-		StringBuilder sb = new StringBuilder();
-
-		sb.append("gcloud auth activate-service-account --key-file ");
-
 		String gcpApplicationCredentialFilePath = null;
 
 		if (destination.startsWith(GCP_BUCKET_PATH_JENKINS_CI_DATA) ||
@@ -719,7 +748,19 @@ public class CloudBucketUtil {
 				gcpApplicationCredentialFilePath);
 
 			if (gcpApplicationCredentialFile.exists()) {
+				String credentialFileName =
+					gcpApplicationCredentialFile.getName();
+
+				String configurationName = credentialFileName.substring(
+					0, credentialFileName.lastIndexOf('.'));
+
+				StringBuilder sb = new StringBuilder();
+
+				sb.append("(gcloud config configurations activate ");
+				sb.append(configurationName);
+				sb.append(" --quiet || gcloud auth login --cred-file=");
 				sb.append(gcpApplicationCredentialFilePath);
+				sb.append(" --quiet)");
 
 				return sb.toString();
 			}

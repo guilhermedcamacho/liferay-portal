@@ -20,6 +20,7 @@ import com.liferay.fragment.service.base.FragmentEntryLinkLocalServiceBaseImpl;
 import com.liferay.fragment.service.persistence.FragmentCollectionPersistence;
 import com.liferay.fragment.service.persistence.FragmentEntryPersistence;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntryTable;
+import com.liferay.layout.page.template.util.CheckUnlockedLayoutThreadLocal;
 import com.liferay.layout.util.CheckNoninstanceablePortletThreadLocal;
 import com.liferay.layout.util.UpdateLayoutStatusThreadLocal;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -700,7 +701,6 @@ public class FragmentEntryLinkLocalServiceImpl
 				fragmentEntryLink.getEditableValuesJSONObject();
 
 			fragmentEntryLink.setHtml(html);
-			fragmentEntryLink.setEditableValues(null);
 
 			fragmentEntryLink.setEditableValues(
 				_fragmentEntryProcessorRegistry.mergeDefaultEditableValues(
@@ -767,9 +767,14 @@ public class FragmentEntryLinkLocalServiceImpl
 		FragmentEntry fragmentEntry = fragmentEntryLink.fetchFragmentEntry();
 
 		if (fragmentEntry == null) {
-			throw new UnsupportedOperationException(
-				"Unable to propagate fragment entry link " +
-					fragmentEntryLinkId);
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Unable to propagate fragment entry link " +
+						fragmentEntryLinkId +
+							" because its fragment entry is missing");
+			}
+
+			return;
 		}
 
 		updateLatestChanges(
@@ -780,6 +785,10 @@ public class FragmentEntryLinkLocalServiceImpl
 
 	private void _checkUnlockedLayout(long plid, long userId)
 		throws PortalException {
+
+		if (!CheckUnlockedLayoutThreadLocal.isCheckUnlockedLayout()) {
+			return;
+		}
 
 		Layout layout = _layoutLocalService.fetchLayout(plid);
 
@@ -1013,7 +1022,8 @@ public class FragmentEntryLinkLocalServiceImpl
 				fragmentEntryLink.getGroupId());
 
 		return _fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
-			fragmentEntryLink, fragmentEntryProcessorContext);
+			_jsonFactory.createJSONObject(), fragmentEntryLink,
+			fragmentEntryProcessorContext);
 	}
 
 	private boolean _isValidFragmentEntry(

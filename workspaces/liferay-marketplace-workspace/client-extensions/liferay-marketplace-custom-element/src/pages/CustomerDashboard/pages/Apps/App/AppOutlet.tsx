@@ -31,7 +31,7 @@ type BaseOutletProps = {
 	actionButtons?: ReactNode | ((data: ProductAndOrderPayload) => ReactNode);
 	backTitle: string;
 	backURL?: string;
-	description?: string | ((data: ProductAndOrderPayload) => string);
+	description?: ReactNode | ((data: ProductAndOrderPayload) => ReactNode);
 	routes:
 		| NavbarProps['routes']
 		| ((data: ProductAndOrderPayload) => NavbarProps['routes']);
@@ -64,7 +64,7 @@ const BaseOutlet: React.FC<BaseOutletProps> = ({
 			<BackLink path={backURL}>{backTitle}</BackLink>
 
 			<div className="d-flex justify-content-between">
-				<div className="d-flex flex-column">
+				<div className="d-flex flex-column w-100">
 					<div className="d-flex justify-content-between">
 						<OrderDetailsHeader
 							beta={beta}

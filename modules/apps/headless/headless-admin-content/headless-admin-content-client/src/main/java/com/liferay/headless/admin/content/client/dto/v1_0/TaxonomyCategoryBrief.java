@@ -226,3 +226,4 @@ public class TaxonomyCategoryBrief implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1871489837

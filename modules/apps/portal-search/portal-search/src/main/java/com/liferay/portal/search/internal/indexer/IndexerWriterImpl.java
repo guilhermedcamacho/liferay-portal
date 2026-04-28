@@ -112,6 +112,9 @@ public class IndexerWriterImpl<T extends BaseModel<?>>
 			_batchIndexingHelper.getBulkSize(
 				_modelSearchSettings.getClassName()));
 
+		_modelIndexerWriterContributor.customize(
+			indexableActionableDynamicQuery, _indexerDocumentBuilder);
+
 		return indexableActionableDynamicQuery;
 	}
 
@@ -205,9 +208,7 @@ public class IndexerWriterImpl<T extends BaseModel<?>>
 
 	@Override
 	public void reindexCompany(long companyId) {
-		if (!isEnabled() ||
-			!_modelIndexerWriterContributor.shouldRun(companyId)) {
-
+		if (!isEnabled() || !shouldRun(companyId)) {
 			return;
 		}
 
@@ -221,6 +222,11 @@ public class IndexerWriterImpl<T extends BaseModel<?>>
 	@Override
 	public void setEnabled(boolean enabled) {
 		_indexerEnabled = enabled;
+	}
+
+	@Override
+	public boolean shouldRun(long companyId) {
+		return _modelIndexerWriterContributor.shouldRun(companyId);
 	}
 
 	@Override
@@ -287,9 +293,6 @@ public class IndexerWriterImpl<T extends BaseModel<?>>
 						getIndexableActionableDynamicQuery();
 
 				indexableActionableDynamicQuery.setCompanyId(companyId);
-
-				_modelIndexerWriterContributor.customize(
-					indexableActionableDynamicQuery, _indexerDocumentBuilder);
 
 				try {
 					indexableActionableDynamicQuery.performActions();

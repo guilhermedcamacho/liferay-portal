@@ -2471,3 +2471,4 @@ public abstract class BaseCollaboratorResourceTestCase {
 		_collaboratorResource;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1008502985

@@ -43,7 +43,6 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -70,6 +69,16 @@ public class ViewRecycleBinSectionDisplayContextTest
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
+
+	@Override
+	public Map<String, Object> getBaseAdditionalProps() throws Exception {
+		Map<String, Object> baseAdditionalProps =
+			super.getBaseAdditionalProps();
+
+		baseAdditionalProps.remove("additionalAPIURLParameters");
+
+		return baseAdditionalProps;
+	}
 
 	@Test
 	public void testGetBreadcrumbProps() throws Exception {
@@ -200,6 +209,11 @@ public class ViewRecycleBinSectionDisplayContextTest
 	}
 
 	@Override
+	protected String appendStatus(String filterString) {
+		return filterString + " and status eq 8";
+	}
+
+	@Override
 	protected CreationMenu getCreationMenu(
 		ObjectEntryFolder objectEntryFolder) {
 
@@ -209,6 +223,12 @@ public class ViewRecycleBinSectionDisplayContextTest
 	@Override
 	protected Map<String, String> getExpectedCreationMenuItems() {
 		return Collections.emptyMap();
+	}
+
+	@Override
+	protected String getFilterString() {
+		return "cmsRoot eq true and (cmsSection eq 'contents' or cmsSection " +
+			"eq 'files')";
 	}
 
 	@Override
@@ -271,7 +291,7 @@ public class ViewRecycleBinSectionDisplayContextTest
 				depotGroup.getTypeSettingsProperty("trashEnabled")));
 	}
 
-	private HashMap<String, Object> _getBreadcrumbProps(Object displayContext) {
+	private Map<String, Object> _getBreadcrumbProps(Object displayContext) {
 		return ReflectionTestUtil.invoke(
 			displayContext, "getBreadcrumbProps", new Class<?>[0]);
 	}

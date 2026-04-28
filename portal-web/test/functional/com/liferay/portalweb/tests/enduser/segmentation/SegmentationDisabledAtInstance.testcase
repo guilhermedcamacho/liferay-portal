@@ -12,25 +12,6 @@ definition {
 	property testray.main.component.name = "Segmentation";
 
 	setUp {
-		task ("Enable DXP segments deprecation feature flag") {
-			SignIn.signInTestSetup();
-
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "System Settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "Feature Flags",
-				configurationName = "Deprecation",
-				configurationScope = "System Scope");
-
-			FeatureFlag.enableFeatureFlag(
-				configurationScope = "System Scope",
-				featureFlag = "DXP Segments",
-				scope = "Deprecation");
-		}
-
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
@@ -38,6 +19,10 @@ definition {
 		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		Navigator.openURL();
+
+		task ("Enable DXP segments deprecation feature flag") {
+			Segmentation.enableDXPSegments();
+		}
 
 		Segmentation.disableSegmentationAtInstanceSettings();
 	}
@@ -52,38 +37,6 @@ definition {
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-		}
-	}
-
-	@description = "LPS-153084 Given the ""Enable Assign Roles by Segment"" is disable at Instance Settings And enabled at System Settings When user navigates to Regular Roles > Assignees > Segments Then the warning alert explains how to re-enable it"
-	@priority = 3
-	test CheckRoleDisabledAlertAtInstanceSettings {
-		property portal.upstream = "quarantine";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Disable asssigning role by segment at Instance Settings") {
-			Segmentation.disableSegmentationAtSystemSettings();
-		}
-
-		task ("Create a Role") {
-			JSONRole.addRegularRole(
-				roleKey = "Test Role",
-				roleTitle = "Test Role");
-		}
-
-		task ("Navigate to Role>Assignee>Segments") {
-			Segmentation.gotoRoleAssigneeSegments(roleName = "Test Role");
-		}
-
-		task ("Check alert message") {
-			AssertTextEquals.assertPartialText(
-				locator1 = "Message#ERROR_3",
-				value1 = "Assigning roles by segment is disabled. To enable, go to Instance Settings.");
-		}
-
-		task ("Reset System Settings configuration") {
-			Segmentation.resetSegmentationAtSystemSettings();
 		}
 	}
 

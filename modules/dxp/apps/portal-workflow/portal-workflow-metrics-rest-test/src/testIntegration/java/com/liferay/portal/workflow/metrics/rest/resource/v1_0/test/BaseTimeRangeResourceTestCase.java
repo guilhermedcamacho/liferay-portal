@@ -993,3 +993,4 @@ public abstract class BaseTimeRangeResourceTestCase {
 			_timeRangeResource;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1771270907

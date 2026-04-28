@@ -16,7 +16,9 @@ import com.liferay.jenkins.results.parser.failure.message.generator.LocalGitMirr
 import com.liferay.jenkins.results.parser.failure.message.generator.ModulesCompilationFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.PMDFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.PlaywrightCompilationFailureMessageGenerator;
+import com.liferay.jenkins.results.parser.failure.message.generator.PlaywrightTimeoutFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.PluginGitIDFailureMessageGenerator;
+import com.liferay.jenkins.results.parser.failure.message.generator.RESTBuilderFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.SemanticVersioningFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.ServiceBuilderFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.SourceFormatFailureMessageGenerator;
@@ -1264,7 +1266,9 @@ public class BaseDownstreamBuild extends BaseBuild implements DownstreamBuild {
 		new JSUnitTestFailureMessageGenerator(),
 		new PMDFailureMessageGenerator(),
 		new PlaywrightCompilationFailureMessageGenerator(),
+		new PlaywrightTimeoutFailureMessageGenerator(),
 		new PluginGitIDFailureMessageGenerator(),
+		new RESTBuilderFailureMessageGenerator(),
 		new SemanticVersioningFailureMessageGenerator(),
 		new ServiceBuilderFailureMessageGenerator(),
 		new SourceFormatFailureMessageGenerator(),

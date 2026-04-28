@@ -1811,3 +1811,4 @@ public interface WorkflowDefinitionResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1398571199

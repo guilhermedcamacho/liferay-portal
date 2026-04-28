@@ -2242,3 +2242,4 @@ public abstract class BaseProductConfigurationListAccountGroupResourceTestCase {
 			_productConfigurationListAccountGroupResource;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1751635281

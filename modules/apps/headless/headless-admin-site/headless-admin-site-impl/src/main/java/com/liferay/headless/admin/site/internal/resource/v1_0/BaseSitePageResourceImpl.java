@@ -1934,3 +1934,4 @@ public abstract class BaseSitePageResourceImpl
 		LogFactoryUtil.getLog(BaseSitePageResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1203876236

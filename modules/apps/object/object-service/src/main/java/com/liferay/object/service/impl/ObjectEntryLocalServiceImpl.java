@@ -595,7 +595,7 @@ public class ObjectEntryLocalServiceImpl
 			DynamicObjectDefinitionTableUtil.getDynamicObjectDefinitionTable(
 				true, objectDefinition, _objectFieldLocalService);
 
-		int count = _count(dynamicObjectDefinitionTable, primaryKey);
+		long count = _count(dynamicObjectDefinitionTable, primaryKey);
 
 		String defaultLanguageId = _language.getLanguageId(
 			_portal.getSiteDefaultLocale(
@@ -787,10 +787,16 @@ public class ObjectEntryLocalServiceImpl
 
 		serviceContext.setAttribute(Constants.ACTION, Constants.COPY);
 
-		return addObjectEntry(
+		ObjectEntry newObjectEntry = addObjectEntry(
 			groupId, userId, objectDefinition.getObjectDefinitionId(),
 			objectEntryFolderId, objectEntry.getDefaultLanguageId(), values,
 			serviceContext);
+
+		_copyRelatedObjectEntries(
+			userId, 1, objectDefinition, serviceContext, objectEntry,
+			newObjectEntry);
+
+		return newObjectEntry;
 	}
 
 	@Override
@@ -1874,7 +1880,7 @@ public class ObjectEntryLocalServiceImpl
 			DynamicObjectDefinitionTableUtil.getDynamicObjectDefinitionTable(
 				true, objectDefinition, _objectFieldLocalService);
 
-		int count = _count(dynamicObjectDefinitionTable, primaryKey);
+		long count = _count(dynamicObjectDefinitionTable, primaryKey);
 
 		String defaultLanguageId = _language.getLanguageId(
 			_portal.getSiteDefaultLocale(
@@ -2588,6 +2594,26 @@ public class ObjectEntryLocalServiceImpl
 			return;
 		}
 
+		boolean duplicateFile = false;
+
+		if (StringUtil.equals(
+				GetterUtil.getString(
+					serviceContext.getAttribute(Constants.ACTION)),
+				Constants.COPY)) {
+
+			String showFilesInLibrary = ObjectFieldSettingUtil.getValue(
+				ObjectFieldSettingConstants.NAME_SHOW_FILES_IN_LIBRARY,
+				objectField.getObjectFieldSettings());
+
+			if (Validator.isNull(showFilesInLibrary) ||
+				GetterUtil.getBoolean(showFilesInLibrary)) {
+
+				return;
+			}
+
+			duplicateFile = true;
+		}
+
 		DLFolder dlFileEntryFolder = dlFileEntry.getFolder();
 
 		if ((groupId == 0) ||
@@ -2602,8 +2628,19 @@ public class ObjectEntryLocalServiceImpl
 			dlFileEntry.getCompanyId(), groupId, objectField.getObjectFieldId(),
 			serviceContext, userId);
 
-		if (Objects.equals(
+		if (!duplicateFile &&
+			Objects.equals(
 				dlFileEntryFolder.getFolderId(), dlFolder.getFolderId())) {
+
+			if (Validator.isNull(dlFileEntry.getClassName()) ||
+				(dlFileEntry.getClassPK() <= 0)) {
+
+				dlFileEntry.setClassName(objectDefinition.getClassName());
+				dlFileEntry.setClassPK(objectEntryId);
+
+				dlFileEntry = _dlFileEntryLocalService.updateDLFileEntry(
+					dlFileEntry);
+			}
 
 			return;
 		}
@@ -2680,7 +2717,21 @@ public class ObjectEntryLocalServiceImpl
 		Map<String, String> urlTitleMap = new HashMap<>();
 
 		for (Map.Entry<String, String> entry : friendlyUrlMap.entrySet()) {
-			if (Validator.isNull(entry.getValue())) {
+			String friendlyURL = entry.getValue();
+
+			if (Validator.isNull(friendlyURL)) {
+				continue;
+			}
+
+			if (friendlyURL.startsWith(StringPool.SLASH)) {
+				friendlyURL = friendlyURL.replaceAll("^/+", StringPool.BLANK);
+			}
+
+			if (friendlyURL.contains(StringPool.SLASH)) {
+				friendlyURL = friendlyURL.replaceAll("/+", StringPool.SLASH);
+			}
+
+			if (Validator.isNull(friendlyURL)) {
 				continue;
 			}
 
@@ -2688,7 +2739,7 @@ public class ObjectEntryLocalServiceImpl
 				entry.getKey(),
 				_friendlyURLEntryLocalService.getUniqueUrlTitle(
 					groupId, classNameId, objectEntry.getObjectEntryId(),
-					entry.getValue(), entry.getKey()));
+					friendlyURL, entry.getKey()));
 		}
 
 		urlTitleMap.computeIfAbsent(
@@ -3255,7 +3306,113 @@ public class ObjectEntryLocalServiceImpl
 		}
 	}
 
-	private int _count(
+	private void _copyRelatedObjectEntries(
+			long userId, int currentCopyDepth,
+			ObjectDefinition objectDefinition, ServiceContext serviceContext,
+			ObjectEntry sourceObjectEntry, ObjectEntry targetObjectEntry)
+		throws PortalException {
+
+		if (currentCopyDepth > _RELATED_OBJECT_ENTRY_MAX_COPY_DEPTH) {
+			return;
+		}
+
+		ObjectRelationshipLocalService objectRelationshipLocalService =
+			_objectRelationshipLocalServiceSnapshot.get();
+
+		for (ObjectRelationship objectRelationship :
+				_objectRelationshipPersistence.findByObjectDefinitionId1(
+					objectDefinition.getObjectDefinitionId())) {
+
+			if (Objects.equals(
+					objectRelationship.getType(),
+					ObjectRelationshipConstants.TYPE_MANY_TO_MANY)) {
+
+				List<ObjectEntry> relatedObjectEntries =
+					getManyToManyObjectEntries(
+						sourceObjectEntry.getGroupId(),
+						objectRelationship.getObjectRelationshipId(),
+						sourceObjectEntry.getObjectEntryId(), true, false, null,
+						QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+
+				for (ObjectEntry relatedObjectEntry : relatedObjectEntries) {
+					objectRelationshipLocalService.
+						addObjectRelationshipMappingTableValues(
+							userId,
+							objectRelationship.getObjectRelationshipId(),
+							targetObjectEntry.getObjectEntryId(),
+							relatedObjectEntry.getObjectEntryId(),
+							serviceContext);
+				}
+			}
+			else if (Objects.equals(
+						objectRelationship.getType(),
+						ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
+
+				if (!objectRelationship.isEdge()) {
+					continue;
+				}
+
+				ObjectDefinition relatedObjectDefinition =
+					_objectDefinitionPersistence.findByPrimaryKey(
+						objectRelationship.getObjectDefinitionId2());
+
+				if (!relatedObjectDefinition.isApproved() ||
+					relatedObjectDefinition.isUnmodifiableSystemObject()) {
+
+					continue;
+				}
+
+				int originalWorkflowAction = serviceContext.getWorkflowAction();
+
+				if (relatedObjectDefinition.isEnableObjectEntryDraft()) {
+					serviceContext.setWorkflowAction(
+						WorkflowConstants.ACTION_SAVE_DRAFT);
+				}
+				else {
+					serviceContext.setWorkflowAction(
+						WorkflowConstants.ACTION_PUBLISH);
+				}
+
+				List<ObjectEntry> relatedObjectEntries =
+					getOneToManyObjectEntries(
+						sourceObjectEntry.getGroupId(),
+						objectRelationship.getObjectRelationshipId(), null,
+						false, sourceObjectEntry.getObjectEntryId(), true, null,
+						QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
+				String relationshipFieldName =
+					ObjectRelationshipUtil.getObjectRelationshipFieldName(
+						objectDefinition, objectRelationship.getName());
+
+				for (ObjectEntry relatedObjectEntry : relatedObjectEntries) {
+					Map<String, Serializable> relatedValues =
+						HashMapBuilder.<String, Serializable>putAll(
+							getValues(relatedObjectEntry.getObjectEntryId())
+						).put(
+							relationshipFieldName,
+							targetObjectEntry.getObjectEntryId()
+						).put(
+							"externalReferenceCode", () -> null
+						).build();
+
+					ObjectEntry newObjectEntry = addObjectEntry(
+						relatedObjectEntry.getGroupId(), userId,
+						relatedObjectDefinition.getObjectDefinitionId(),
+						relatedObjectEntry.getObjectEntryFolderId(),
+						relatedObjectEntry.getDefaultLanguageId(),
+						relatedValues, serviceContext);
+
+					_copyRelatedObjectEntries(
+						userId, currentCopyDepth + 1, relatedObjectDefinition,
+						serviceContext, relatedObjectEntry, newObjectEntry);
+				}
+
+				serviceContext.setWorkflowAction(originalWorkflowAction);
+			}
+		}
+	}
+
+	private long _count(
 			DynamicObjectDefinitionTable dynamicObjectDefinitionTable,
 			long primaryKey)
 		throws PortalException {
@@ -3281,7 +3438,7 @@ public class ObjectEntryLocalServiceImpl
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				resultSet.next();
 
-				return resultSet.getInt("count");
+				return resultSet.getLong("count");
 			}
 		}
 		catch (SQLException sqlException) {
@@ -6566,11 +6723,6 @@ public class ObjectEntryLocalServiceImpl
 			_objectDefinitionPersistence.findByPrimaryKey(
 				objectEntry.getObjectDefinitionId());
 
-		if (!objectDefinition.isEnableCategorization()) {
-			assetCategoryIds = null;
-			assetTagNames = null;
-		}
-
 		String mimeType = ContentTypes.TEXT_PLAIN;
 		String title = StringPool.BLANK;
 
@@ -6606,19 +6758,35 @@ public class ObjectEntryLocalServiceImpl
 			}
 		}
 
-		AssetEntry assetEntry = _assetEntryLocalService.updateEntry(
-			userId, objectEntry.getNonzeroGroupId(),
-			objectEntry.getCreateDate(), objectEntry.getModifiedDate(),
-			objectDefinition.getClassName(), objectEntry.getObjectEntryId(),
-			objectEntry.getUuid(), 0, assetCategoryIds, assetTagNames, true,
-			objectEntry.isApproved(), null, null, null, null, mimeType, title,
-			String.valueOf(objectEntry.getObjectEntryId()), null, null, null, 0,
-			0, priority, serviceContext);
+		boolean originalSkipRequiredCategoryValidation =
+			AssetVocabularyThreadLocal.isSkipRequiredCategoryValidation();
 
-		if (assetLinkEntryIds != null) {
-			_assetLinkLocalService.updateLinks(
-				userId, assetEntry.getEntryId(), assetLinkEntryIds,
-				AssetLinkConstants.TYPE_RELATED);
+		if (!objectDefinition.isEnableCategorization()) {
+			assetCategoryIds = null;
+			assetTagNames = null;
+
+			AssetVocabularyThreadLocal.setSkipRequiredCategoryValidation(true);
+		}
+
+		try {
+			AssetEntry assetEntry = _assetEntryLocalService.updateEntry(
+				userId, objectEntry.getNonzeroGroupId(),
+				objectEntry.getCreateDate(), objectEntry.getModifiedDate(),
+				objectDefinition.getClassName(), objectEntry.getObjectEntryId(),
+				objectEntry.getUuid(), 0, assetCategoryIds, assetTagNames, true,
+				objectEntry.isApproved(), null, null, null, null, mimeType,
+				title, String.valueOf(objectEntry.getObjectEntryId()), null,
+				null, null, 0, 0, priority, serviceContext);
+
+			if (assetLinkEntryIds != null) {
+				_assetLinkLocalService.updateLinks(
+					userId, assetEntry.getEntryId(), assetLinkEntryIds,
+					AssetLinkConstants.TYPE_RELATED);
+			}
+		}
+		finally {
+			AssetVocabularyThreadLocal.setSkipRequiredCategoryValidation(
+				originalSkipRequiredCategoryValidation);
 		}
 	}
 
@@ -7164,6 +7332,11 @@ public class ObjectEntryLocalServiceImpl
 			GetterUtil.getBoolean(
 				ObjectDefinitionSettingUtil.getValue(
 					ObjectDefinitionSettingConstants.NAME_ACCEPT_ALL_GROUPS,
+					objectDefinition.getObjectDefinitionSettings())) ||
+			GetterUtil.getBoolean(
+				ObjectDefinitionSettingUtil.getValue(
+					ObjectDefinitionSettingConstants.
+						NAME_AUTOGENERATED_GROUP_ID,
 					objectDefinition.getObjectDefinitionSettings()))) {
 
 			return;
@@ -7316,7 +7489,7 @@ public class ObjectEntryLocalServiceImpl
 			return;
 		}
 
-		int count = 0;
+		long count = 0;
 
 		Connection connection = _currentConnection.getConnection(
 			objectEntryPersistence.getDataSource());
@@ -7332,7 +7505,7 @@ public class ObjectEntryLocalServiceImpl
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				resultSet.next();
 
-				count = resultSet.getInt("count");
+				count = resultSet.getLong("count");
 			}
 		}
 		catch (SQLException sqlException) {
@@ -7356,7 +7529,7 @@ public class ObjectEntryLocalServiceImpl
 			return;
 		}
 
-		int count = 0;
+		long count = 0;
 
 		Connection connection = _currentConnection.getConnection(
 			objectEntryPersistence.getDataSource());
@@ -7374,7 +7547,7 @@ public class ObjectEntryLocalServiceImpl
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				resultSet.next();
 
-				count = resultSet.getInt("count");
+				count = resultSet.getLong("count");
 			}
 		}
 		catch (SQLException sqlException) {
@@ -7844,8 +8017,17 @@ public class ObjectEntryLocalServiceImpl
 				defaultLanguageId, existingValues, objectField, partialUpdate,
 				serviceContext, status, validationErrors, values);
 
+			ObjectFieldBusinessType objectFieldBusinessType =
+				_objectFieldBusinessTypeRegistry.getObjectFieldBusinessType(
+					objectField.getBusinessType());
+
 			if (!objectField.isLocalized() &&
 				(values.get(objectField.getName()) != null)) {
+
+				values.put(
+					objectField.getName(),
+					objectFieldBusinessType.processValue(
+						objectField, values.get(objectField.getName())));
 
 				_validateValues(
 					dlFileEntriesMap, existingValues, groupId, guestUser,
@@ -7864,6 +8046,10 @@ public class ObjectEntryLocalServiceImpl
 
 			for (Map.Entry<String, Serializable> entry :
 					localizedValues.entrySet()) {
+
+				entry.setValue(
+					objectFieldBusinessType.processValue(
+						objectField, entry.getValue()));
 
 				_validateValues(
 					dlFileEntriesMap, existingValues, groupId, guestUser,
@@ -7898,6 +8084,8 @@ public class ObjectEntryLocalServiceImpl
 		ObjectEntryTable.INSTANCE.externalReferenceCode,
 		ObjectEntryTable.INSTANCE.status
 	};
+
+	private static final int _RELATED_OBJECT_ENTRY_MAX_COPY_DEPTH = 5;
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectEntryLocalServiceImpl.class);

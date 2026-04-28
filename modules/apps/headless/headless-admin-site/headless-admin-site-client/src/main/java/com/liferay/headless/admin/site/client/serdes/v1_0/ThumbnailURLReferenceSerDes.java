@@ -238,3 +238,4 @@ public class ThumbnailURLReferenceSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1329564606

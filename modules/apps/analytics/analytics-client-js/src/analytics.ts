@@ -5,21 +5,22 @@
 
 import {v4 as uuidv4} from 'uuid';
 
+import {Demandbase} from './demandbase';
 import middlewares from './middlewares/defaults';
 import defaultPlugins from './plugins/defaults';
 import QueueFlushService from './queueFlushService';
+import AccountMessageQueue from './queues/accountMessageQueue';
 import EventMessageQueue from './queues/eventMessageQueue';
 import EventQueue from './queues/eventsQueue';
 import IdentityMessageQueue from './queues/identityMessageQueue';
+import {Segment} from './segment';
 import {Analytics as AnalyticsType} from './types';
 import {
-	ANALYTICS_BATCH_SEGMENT_IDS,
 	ANALYTICS_CLIENT_VERSION,
 	FLUSH_INTERVAL,
-	HEADER_PROJECT_ID,
+	QUEUE_PRIORITY_ACCOUNT,
 	QUEUE_PRIORITY_DEFAULT,
 	QUEUE_PRIORITY_IDENTITY,
-	THREE_HOURS_IN_MILLISECONDS,
 	VALIDATION_CONTEXT_VALUE_MAXIMUM_LENGTH,
 } from './utils/constants';
 import {getContexts, setContexts} from './utils/contexts';
@@ -39,6 +40,7 @@ export const ENV: any = window || global;
  * and flushes it to the defined endpoint at regular intervals.
  */
 class Analytics {
+	[AnalyticsType.Queues.AccountMessage]!: AccountMessageQueue;
 	[AnalyticsType.Queues.Events]!: EventQueue;
 	[AnalyticsType.Queues.Messages]!: EventMessageQueue;
 	[AnalyticsType.Queues.IdentityMessage]!: IdentityMessageQueue;
@@ -50,6 +52,7 @@ class Analytics {
 	config: AnalyticsType.Config = {
 		channelId: '',
 		dataSourceId: '',
+		demandbaseAccountEndpoint: '',
 		endpointUrl: '',
 		faroBackendUrl: '',
 		flushInterval: 0,
@@ -60,7 +63,9 @@ class Analytics {
 		projectId: '',
 		userId: '',
 	};
+	demandbase!: Demandbase;
 	middlewares: AnalyticsType.Middleware[] = [];
+	segment!: Segment;
 	version: string = '';
 
 	/**
@@ -81,6 +86,7 @@ class Analytics {
 		const faroBackendUrl = (config.faroBackendUrl || '').replace(/\/$/, '');
 
 		this.config = Object.assign(config, {
+			demandbaseAccountEndpoint: `${endpointUrl}/demandbase-account`,
 			endpointUrl,
 			faroBackendUrl,
 			flushInterval: config.flushInterval || FLUSH_INTERVAL,
@@ -100,6 +106,10 @@ class Analytics {
 		this._initializeEventQueue();
 		this._initializeEventMessageQueue();
 		this._initializeIdentityMessageQueue();
+		this._initializeAccountMessageQueue();
+
+		this.demandbase = new Demandbase(this);
+		this.segment = new Segment(this);
 
 		// Upgrade storage
 
@@ -179,55 +189,12 @@ class Analytics {
 		].getItems<AnalyticsType.Event>();
 	}
 
-	getBatchSegmentIds() {
-		const analyticsBatchSegmentIds = getItem<{
-			createDate: number;
-			segmentIds: number[];
-		}>(ANALYTICS_BATCH_SEGMENT_IDS);
+	getBatchSegmentExternalReferenceCodes() {
+		return this.segment.getBatchSegmentExternalReferenceCodes();
+	}
 
-		if (analyticsBatchSegmentIds) {
-			const date = new Date();
-
-			const createDate = analyticsBatchSegmentIds.createDate;
-
-			if (date.getTime() - createDate < THREE_HOURS_IN_MILLISECONDS) {
-				return Promise.resolve(analyticsBatchSegmentIds.segmentIds);
-			}
-		}
-
-		const headers = {'Content-Type': 'application/json'};
-		if (this.config.projectId) {
-			Object.assign(headers, {
-				[HEADER_PROJECT_ID]: this.config.projectId,
-			});
-		}
-
-		return fetch(
-			`${this.config.faroBackendUrl}/api/1.0/segment-memberships/${this._getUserId()}/batch-segment-ids`,
-			{
-				cache: 'default',
-				credentials: 'same-origin',
-				headers,
-				method: 'GET',
-				mode: 'cors',
-			}
-		)
-			.then((response) => response.json())
-			.then((data) => {
-				try {
-					const date = new Date();
-
-					setItem(ANALYTICS_BATCH_SEGMENT_IDS, {
-						createDate: date.getTime(),
-						segmentIds: data,
-					});
-
-					return data;
-				}
-				catch (error) {
-					return;
-				}
-			});
+	getRealTimeSegmentExternalReferenceCodes() {
+		return this.segment.getRealTimeSegmentExternalReferenceCodes();
 	}
 
 	/**
@@ -362,6 +329,8 @@ class Analytics {
 		const userId = this._getUserId();
 
 		this._sendIdentity(hashedIdentity, userId);
+
+		this.demandbase.sendAccountMessage(userId);
 
 		return Promise.resolve(userId);
 	}
@@ -611,6 +580,22 @@ class Analytics {
 
 		this._queueFlushService.addQueue(identityMessageQueue, {
 			priority: QUEUE_PRIORITY_IDENTITY,
+		});
+	}
+
+	/**
+	 * Create member instance of AccountMessageQueue to store Demandbase
+	 * account messages.
+	 */
+	_initializeAccountMessageQueue() {
+		const accountMessageQueue = new AccountMessageQueue({
+			analyticsInstance: this,
+		});
+
+		this[AnalyticsType.Queues.AccountMessage] = accountMessageQueue;
+
+		this._queueFlushService.addQueue(accountMessageQueue, {
+			priority: QUEUE_PRIORITY_ACCOUNT,
 		});
 	}
 }

@@ -357,3 +357,4 @@ public class ImportProcessSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1429408930

@@ -263,3 +263,4 @@ public class Collaborator implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1761515157

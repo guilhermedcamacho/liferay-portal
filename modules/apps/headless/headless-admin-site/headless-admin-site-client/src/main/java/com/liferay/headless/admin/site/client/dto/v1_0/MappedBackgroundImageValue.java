@@ -86,3 +86,4 @@ public class MappedBackgroundImageValue
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1613984029

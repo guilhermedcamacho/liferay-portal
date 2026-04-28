@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
-import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
@@ -29,6 +28,8 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.service.persistence.impl.CollectionPersistenceFinder;
+import com.liferay.portal.kernel.service.persistence.impl.FinderColumn;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -88,6 +89,8 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByCommerceTaxMethodId;
 	private FinderPath _finderPathWithoutPaginationFindByCommerceTaxMethodId;
 	private FinderPath _finderPathCountByCommerceTaxMethodId;
+	private CollectionPersistenceFinder<CommerceTaxFixedRateAddressRel>
+		_collectionPersistenceFinderByCommerceTaxMethodId;
 
 	/**
 	 * Returns all the commerce tax fixed rate address rels where commerceTaxMethodId = &#63;.
@@ -164,102 +167,9 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 		OrderByComparator<CommerceTaxFixedRateAddressRel> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath =
-					_finderPathWithoutPaginationFindByCommerceTaxMethodId;
-				finderArgs = new Object[] {commerceTaxMethodId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByCommerceTaxMethodId;
-			finderArgs = new Object[] {
-				commerceTaxMethodId, start, end, orderByComparator
-			};
-		}
-
-		List<CommerceTaxFixedRateAddressRel> list = null;
-
-		if (useFinderCache) {
-			list = (List<CommerceTaxFixedRateAddressRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (CommerceTaxFixedRateAddressRel
-						commerceTaxFixedRateAddressRel : list) {
-
-					if (commerceTaxMethodId !=
-							commerceTaxFixedRateAddressRel.
-								getCommerceTaxMethodId()) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_COMMERCETAXFIXEDRATEADDRESSREL_WHERE);
-
-			sb.append(_FINDER_COLUMN_COMMERCETAXMETHODID_COMMERCETAXMETHODID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(
-					CommerceTaxFixedRateAddressRelModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(commerceTaxMethodId);
-
-				list = (List<CommerceTaxFixedRateAddressRel>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByCommerceTaxMethodId.find(
+			finderCache, new Object[] {commerceTaxMethodId}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -284,16 +194,11 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 			return commerceTaxFixedRateAddressRel;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("commerceTaxMethodId=");
-		sb.append(commerceTaxMethodId);
-
-		sb.append("}");
-
-		throw new NoSuchTaxFixedRateAddressRelException(sb.toString());
+		throw new NoSuchTaxFixedRateAddressRelException(
+			_collectionPersistenceFinderByCommerceTaxMethodId.
+				buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY,
+					new Object[] {commerceTaxMethodId}));
 	}
 
 	/**
@@ -308,14 +213,8 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 		long commerceTaxMethodId,
 		OrderByComparator<CommerceTaxFixedRateAddressRel> orderByComparator) {
 
-		List<CommerceTaxFixedRateAddressRel> list = findByCommerceTaxMethodId(
-			commerceTaxMethodId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByCommerceTaxMethodId.fetchFirst(
+			finderCache, new Object[] {commerceTaxMethodId}, orderByComparator);
 	}
 
 	/**
@@ -325,13 +224,8 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 	 */
 	@Override
 	public void removeByCommerceTaxMethodId(long commerceTaxMethodId) {
-		for (CommerceTaxFixedRateAddressRel commerceTaxFixedRateAddressRel :
-				findByCommerceTaxMethodId(
-					commerceTaxMethodId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(commerceTaxFixedRateAddressRel);
-		}
+		_collectionPersistenceFinderByCommerceTaxMethodId.remove(
+			finderCache, new Object[] {commerceTaxMethodId});
 	}
 
 	/**
@@ -342,54 +236,15 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 	 */
 	@Override
 	public int countByCommerceTaxMethodId(long commerceTaxMethodId) {
-		FinderPath finderPath = _finderPathCountByCommerceTaxMethodId;
-
-		Object[] finderArgs = new Object[] {commerceTaxMethodId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_COMMERCETAXFIXEDRATEADDRESSREL_WHERE);
-
-			sb.append(_FINDER_COLUMN_COMMERCETAXMETHODID_COMMERCETAXMETHODID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(commerceTaxMethodId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByCommerceTaxMethodId.count(
+			finderCache, new Object[] {commerceTaxMethodId});
 	}
-
-	private static final String
-		_FINDER_COLUMN_COMMERCETAXMETHODID_COMMERCETAXMETHODID_2 =
-			"commerceTaxFixedRateAddressRel.commerceTaxMethodId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByCPTaxCategoryId;
 	private FinderPath _finderPathWithoutPaginationFindByCPTaxCategoryId;
 	private FinderPath _finderPathCountByCPTaxCategoryId;
+	private CollectionPersistenceFinder<CommerceTaxFixedRateAddressRel>
+		_collectionPersistenceFinderByCPTaxCategoryId;
 
 	/**
 	 * Returns all the commerce tax fixed rate address rels where CPTaxCategoryId = &#63;.
@@ -466,101 +321,9 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 		OrderByComparator<CommerceTaxFixedRateAddressRel> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByCPTaxCategoryId;
-				finderArgs = new Object[] {CPTaxCategoryId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByCPTaxCategoryId;
-			finderArgs = new Object[] {
-				CPTaxCategoryId, start, end, orderByComparator
-			};
-		}
-
-		List<CommerceTaxFixedRateAddressRel> list = null;
-
-		if (useFinderCache) {
-			list = (List<CommerceTaxFixedRateAddressRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (CommerceTaxFixedRateAddressRel
-						commerceTaxFixedRateAddressRel : list) {
-
-					if (CPTaxCategoryId !=
-							commerceTaxFixedRateAddressRel.
-								getCPTaxCategoryId()) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_COMMERCETAXFIXEDRATEADDRESSREL_WHERE);
-
-			sb.append(_FINDER_COLUMN_CPTAXCATEGORYID_CPTAXCATEGORYID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(
-					CommerceTaxFixedRateAddressRelModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(CPTaxCategoryId);
-
-				list = (List<CommerceTaxFixedRateAddressRel>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByCPTaxCategoryId.find(
+			finderCache, new Object[] {CPTaxCategoryId}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -584,16 +347,9 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 			return commerceTaxFixedRateAddressRel;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("CPTaxCategoryId=");
-		sb.append(CPTaxCategoryId);
-
-		sb.append("}");
-
-		throw new NoSuchTaxFixedRateAddressRelException(sb.toString());
+		throw new NoSuchTaxFixedRateAddressRelException(
+			_collectionPersistenceFinderByCPTaxCategoryId.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {CPTaxCategoryId}));
 	}
 
 	/**
@@ -608,14 +364,8 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 		long CPTaxCategoryId,
 		OrderByComparator<CommerceTaxFixedRateAddressRel> orderByComparator) {
 
-		List<CommerceTaxFixedRateAddressRel> list = findByCPTaxCategoryId(
-			CPTaxCategoryId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByCPTaxCategoryId.fetchFirst(
+			finderCache, new Object[] {CPTaxCategoryId}, orderByComparator);
 	}
 
 	/**
@@ -625,13 +375,8 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 	 */
 	@Override
 	public void removeByCPTaxCategoryId(long CPTaxCategoryId) {
-		for (CommerceTaxFixedRateAddressRel commerceTaxFixedRateAddressRel :
-				findByCPTaxCategoryId(
-					CPTaxCategoryId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(commerceTaxFixedRateAddressRel);
-		}
+		_collectionPersistenceFinderByCPTaxCategoryId.remove(
+			finderCache, new Object[] {CPTaxCategoryId});
 	}
 
 	/**
@@ -642,54 +387,15 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 	 */
 	@Override
 	public int countByCPTaxCategoryId(long CPTaxCategoryId) {
-		FinderPath finderPath = _finderPathCountByCPTaxCategoryId;
-
-		Object[] finderArgs = new Object[] {CPTaxCategoryId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_COMMERCETAXFIXEDRATEADDRESSREL_WHERE);
-
-			sb.append(_FINDER_COLUMN_CPTAXCATEGORYID_CPTAXCATEGORYID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(CPTaxCategoryId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByCPTaxCategoryId.count(
+			finderCache, new Object[] {CPTaxCategoryId});
 	}
-
-	private static final String
-		_FINDER_COLUMN_CPTAXCATEGORYID_CPTAXCATEGORYID_2 =
-			"commerceTaxFixedRateAddressRel.CPTaxCategoryId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByCountryId;
 	private FinderPath _finderPathWithoutPaginationFindByCountryId;
 	private FinderPath _finderPathCountByCountryId;
+	private CollectionPersistenceFinder<CommerceTaxFixedRateAddressRel>
+		_collectionPersistenceFinderByCountryId;
 
 	/**
 	 * Returns all the commerce tax fixed rate address rels where countryId = &#63;.
@@ -765,100 +471,9 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 		OrderByComparator<CommerceTaxFixedRateAddressRel> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByCountryId;
-				finderArgs = new Object[] {countryId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByCountryId;
-			finderArgs = new Object[] {
-				countryId, start, end, orderByComparator
-			};
-		}
-
-		List<CommerceTaxFixedRateAddressRel> list = null;
-
-		if (useFinderCache) {
-			list = (List<CommerceTaxFixedRateAddressRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (CommerceTaxFixedRateAddressRel
-						commerceTaxFixedRateAddressRel : list) {
-
-					if (countryId !=
-							commerceTaxFixedRateAddressRel.getCountryId()) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_COMMERCETAXFIXEDRATEADDRESSREL_WHERE);
-
-			sb.append(_FINDER_COLUMN_COUNTRYID_COUNTRYID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(
-					CommerceTaxFixedRateAddressRelModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(countryId);
-
-				list = (List<CommerceTaxFixedRateAddressRel>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByCountryId.find(
+			finderCache, new Object[] {countryId}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -882,16 +497,9 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 			return commerceTaxFixedRateAddressRel;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("countryId=");
-		sb.append(countryId);
-
-		sb.append("}");
-
-		throw new NoSuchTaxFixedRateAddressRelException(sb.toString());
+		throw new NoSuchTaxFixedRateAddressRelException(
+			_collectionPersistenceFinderByCountryId.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {countryId}));
 	}
 
 	/**
@@ -906,14 +514,8 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 		long countryId,
 		OrderByComparator<CommerceTaxFixedRateAddressRel> orderByComparator) {
 
-		List<CommerceTaxFixedRateAddressRel> list = findByCountryId(
-			countryId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByCountryId.fetchFirst(
+			finderCache, new Object[] {countryId}, orderByComparator);
 	}
 
 	/**
@@ -923,12 +525,8 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 	 */
 	@Override
 	public void removeByCountryId(long countryId) {
-		for (CommerceTaxFixedRateAddressRel commerceTaxFixedRateAddressRel :
-				findByCountryId(
-					countryId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
-
-			remove(commerceTaxFixedRateAddressRel);
-		}
+		_collectionPersistenceFinderByCountryId.remove(
+			finderCache, new Object[] {countryId});
 	}
 
 	/**
@@ -939,49 +537,9 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 	 */
 	@Override
 	public int countByCountryId(long countryId) {
-		FinderPath finderPath = _finderPathCountByCountryId;
-
-		Object[] finderArgs = new Object[] {countryId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_COMMERCETAXFIXEDRATEADDRESSREL_WHERE);
-
-			sb.append(_FINDER_COLUMN_COUNTRYID_COUNTRYID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(countryId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByCountryId.count(
+			finderCache, new Object[] {countryId});
 	}
-
-	private static final String _FINDER_COLUMN_COUNTRYID_COUNTRYID_2 =
-		"commerceTaxFixedRateAddressRel.countryId = ?";
 
 	public CommerceTaxFixedRateAddressRelPersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
@@ -1607,6 +1165,20 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 			"countByCommerceTaxMethodId", new String[] {Long.class.getName()},
 			new String[] {"commerceTaxMethodId"}, false);
 
+		_collectionPersistenceFinderByCommerceTaxMethodId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByCommerceTaxMethodId,
+				_finderPathWithoutPaginationFindByCommerceTaxMethodId,
+				_finderPathCountByCommerceTaxMethodId,
+				_SQL_SELECT_COMMERCETAXFIXEDRATEADDRESSREL_WHERE,
+				_SQL_COUNT_COMMERCETAXFIXEDRATEADDRESSREL_WHERE,
+				CommerceTaxFixedRateAddressRelModelImpl.ORDER_BY_JPQL,
+				_ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"commerceTaxFixedRateAddressRel.", "commerceTaxMethodId",
+					FinderColumn.Type.LONG, "=", true, true,
+					CommerceTaxFixedRateAddressRel::getCommerceTaxMethodId));
+
 		_finderPathWithPaginationFindByCPTaxCategoryId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCPTaxCategoryId",
 			new String[] {
@@ -1625,6 +1197,20 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 			new String[] {Long.class.getName()},
 			new String[] {"CPTaxCategoryId"}, false);
 
+		_collectionPersistenceFinderByCPTaxCategoryId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByCPTaxCategoryId,
+				_finderPathWithoutPaginationFindByCPTaxCategoryId,
+				_finderPathCountByCPTaxCategoryId,
+				_SQL_SELECT_COMMERCETAXFIXEDRATEADDRESSREL_WHERE,
+				_SQL_COUNT_COMMERCETAXFIXEDRATEADDRESSREL_WHERE,
+				CommerceTaxFixedRateAddressRelModelImpl.ORDER_BY_JPQL,
+				_ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"commerceTaxFixedRateAddressRel.", "CPTaxCategoryId",
+					FinderColumn.Type.LONG, "=", true, true,
+					CommerceTaxFixedRateAddressRel::getCPTaxCategoryId));
+
 		_finderPathWithPaginationFindByCountryId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCountryId",
 			new String[] {
@@ -1642,6 +1228,20 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCountryId",
 			new String[] {Long.class.getName()}, new String[] {"countryId"},
 			false);
+
+		_collectionPersistenceFinderByCountryId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByCountryId,
+				_finderPathWithoutPaginationFindByCountryId,
+				_finderPathCountByCountryId,
+				_SQL_SELECT_COMMERCETAXFIXEDRATEADDRESSREL_WHERE,
+				_SQL_COUNT_COMMERCETAXFIXEDRATEADDRESSREL_WHERE,
+				CommerceTaxFixedRateAddressRelModelImpl.ORDER_BY_JPQL,
+				_ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"commerceTaxFixedRateAddressRel.", "countryId",
+					FinderColumn.Type.LONG, "=", true, true,
+					CommerceTaxFixedRateAddressRel::getCountryId));
 
 		CommerceTaxFixedRateAddressRelUtil.setPersistence(this);
 	}
@@ -1721,4 +1321,4 @@ public class CommerceTaxFixedRateAddressRelPersistenceImpl
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-598709433
+// LIFERAY-SERVICE-BUILDER-HASH:278932718

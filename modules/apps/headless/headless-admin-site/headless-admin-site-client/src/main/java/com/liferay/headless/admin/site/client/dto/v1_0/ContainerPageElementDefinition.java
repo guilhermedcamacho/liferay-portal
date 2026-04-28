@@ -296,3 +296,4 @@ public class ContainerPageElementDefinition
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1602906725

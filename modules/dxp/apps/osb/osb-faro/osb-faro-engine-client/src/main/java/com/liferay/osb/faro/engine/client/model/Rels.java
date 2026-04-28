@@ -12,12 +12,17 @@ public interface Rels {
 
 	public static final String ACCOUNT = "account";
 
+	public static final String ACCOUNT_LIFECYCLE_OVERVIEW =
+		"account-lifecycle-overview";
+
 	public static final String ACCOUNTS = "accounts";
 
 	public static final String ACCOUNTS_DISTRIBUTION = "accounts-distribution";
 
 	public static final String ACCOUNTS_INDIVIDUAL_SEGMENTS =
 		"accounts-individual-segments";
+
+	public static final String ACCOUNTS_METRICS = "accounts-metrics";
 
 	public static final String ACTIVITIES = "activities";
 
@@ -44,6 +49,9 @@ public interface Rels {
 
 	public static final String ASSET_SUMMARY_CATEGORIES =
 		"asset-summary-categories";
+
+	public static final String ASSET_SUMMARY_MIME_TYPES =
+		"asset-summary-mime-types";
 
 	public static final String ASSET_SUMMARY_TAGS = "asset-summary-tags";
 
@@ -109,6 +117,9 @@ public interface Rels {
 	public static final String DEFINITIONS_INDIVIDUAL_ATTRIBUTES =
 		"definitions-individual-attributes";
 
+	public static final String DEMANDBASE_ACCOUNTS_COUNT =
+		"demandbase-accounts-count";
+
 	public static final String DXP_ENTITIES_USERS_COUNT =
 		"dxp-entities-users-count";
 
@@ -130,9 +141,6 @@ public interface Rels {
 		"individual-individual-segments";
 
 	public static final String INDIVIDUAL_SEGMENT = "individual-segment";
-
-	public static final String INDIVIDUAL_SEGMENT_ACCOUNTS =
-		"individual-segment-accounts";
 
 	public static final String INDIVIDUAL_SEGMENT_ACTIVATION =
 		"individual-segment-activation";
@@ -209,6 +217,8 @@ public interface Rels {
 	public static final String MEMBERSHIPS = "memberships";
 
 	public static final String ORGANIZATIONS = "organizations";
+
+	public static final String PAGE_EXPERIENCES = "page-experiences";
 
 	public static final String PAGE_VISIT = "page-visited";
 

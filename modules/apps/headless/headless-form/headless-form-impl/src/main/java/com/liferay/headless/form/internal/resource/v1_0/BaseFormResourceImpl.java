@@ -959,3 +959,4 @@ public abstract class BaseFormResourceImpl
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-831924900

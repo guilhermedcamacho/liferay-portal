@@ -9,6 +9,7 @@ import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.service.ClientExtensionEntryRelLocalServiceUtil;
 import com.liferay.client.extension.type.CET;
 import com.liferay.client.extension.type.manager.CETManager;
+import com.liferay.expando.kernel.util.ExpandoUtil;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.headless.admin.site.dto.v1_0.BasicWidgetPageWidgetInstance;
@@ -39,7 +40,6 @@ import com.liferay.layout.importer.util.PortletPreferencesPortletConfigurationIm
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
-import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.layout.util.LayoutServiceContextHelperUtil;
 import com.liferay.layout.util.UpdateLayoutModifiedDateThreadLocal;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -80,9 +80,10 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
-import com.liferay.segments.service.SegmentsExperienceServiceUtil;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
+
+import java.io.Serializable;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -717,7 +718,7 @@ public class LayoutUtil {
 		}
 
 		layoutPageTemplateEntry =
-			LayoutPageTemplateEntryServiceUtil.
+			LayoutPageTemplateEntryLocalServiceUtil.
 				fetchLayoutPageTemplateEntryByExternalReferenceCode(
 					itemExternalReference.getExternalReferenceCode(), groupId);
 
@@ -899,10 +900,15 @@ public class LayoutUtil {
 			serviceContext.setExpandoBridgeAttributes(null);
 		}
 		else {
-			serviceContext.setExpandoBridgeAttributes(
+			Map<String, Serializable> expandoBridgeAttributes =
 				CustomFieldsUtil.toMap(
 					Layout.class.getName(), serviceContext.getCompanyId(),
-					pageSpecification.getCustomFields(), null));
+					pageSpecification.getCustomFields(),
+					LocaleUtil.getSiteDefault());
+
+			ExpandoUtil.fillMissingDefaultLocaleValues(expandoBridgeAttributes);
+
+			serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
 		}
 	}
 
@@ -1181,8 +1187,8 @@ public class LayoutUtil {
 				new HashMap<>();
 
 			for (SegmentsExperience segmentsExperience :
-					SegmentsExperienceServiceUtil.getSegmentsExperiences(
-						layout.getGroupId(), layout.getPlid(), true)) {
+					SegmentsExperienceLocalServiceUtil.getSegmentsExperiences(
+						layout.getGroupId(), layout.getPlid())) {
 
 				originalSegmentsExperiencesMap.put(
 					segmentsExperience.getExternalReferenceCode(),
@@ -1239,11 +1245,13 @@ public class LayoutUtil {
 					actualSegmentsExperiencesMap.get(
 						pageExperience.getExternalReferenceCode());
 
-				SegmentsExperienceServiceUtil.updateSegmentsExperiencePriority(
-					actualSegmentsExperience.getSegmentsExperienceId(),
-					SegmentsExperienceUtil.getPriority(
-						pageExperience.getKey(), layout,
-						pageExperience.getPriority()));
+				SegmentsExperienceLocalServiceUtil.
+					updateSegmentsExperiencePriority(
+						serviceContext.getUserId(),
+						actualSegmentsExperience.getSegmentsExperienceId(),
+						SegmentsExperienceUtil.getPriority(
+							pageExperience.getKey(), layout,
+							pageExperience.getPriority()));
 			}
 		}
 	}

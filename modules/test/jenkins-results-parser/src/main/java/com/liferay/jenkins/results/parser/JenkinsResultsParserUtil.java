@@ -125,10 +125,7 @@ import org.json.JSONObject;
  */
 public class JenkinsResultsParserUtil {
 
-	public static final String[] CACHED_REPOSITORIES = {
-		"liferay-jenkins-ee", "liferay-jenkins-results-parser-samples-ee",
-		"liferay-portal"
-	};
+	public static final String JENKINS_REPOSITORY_NAME = "liferay-jenkins-ee";
 
 	public static final int PAGES_GITHUB_API_PAGES_SIZE_MAX = 10;
 
@@ -138,10 +135,7 @@ public class JenkinsResultsParserUtil {
 
 	public static final String[] URLS_BUILD_PROPERTIES_DEFAULT = {
 		URL_CACHE + "/liferay-jenkins-ee/build.properties",
-		URL_CACHE + "/liferay-jenkins-ee/commands/build.properties",
-		URL_CACHE + "/liferay-portal/build.properties",
-		URL_CACHE + "/liferay-portal/ci.properties",
-		URL_CACHE + "/liferay-portal/test.properties"
+		URL_CACHE + "/liferay-jenkins-ee/commands/build.properties"
 	};
 
 	public static final String[] URLS_GIT_DIRECTORIES_JSON_DEFAULT = {
@@ -150,11 +144,6 @@ public class JenkinsResultsParserUtil {
 
 	public static final String[] URLS_GIT_WORKING_DIRECTORIES_JSON_DEFAULT = {
 		URL_CACHE + "/liferay-jenkins-ee/git-working-directories.json"
-	};
-
-	public static final String[] URLS_JENKINS_BUILD_PROPERTIES_DEFAULT = {
-		URL_CACHE + "/liferay-jenkins-ee/build.properties",
-		URL_CACHE + "/liferay-jenkins-ee/commands/build.properties"
 	};
 
 	public static final String[] URLS_JENKINS_PROPERTIES_DEFAULT = {
@@ -580,10 +569,30 @@ public class JenkinsResultsParserUtil {
 			String... commands)
 		throws IOException, TimeoutException {
 
-		System.out.print("Executing commands: ");
+		return executeBashCommands(
+			baseDir, exitOnFirstFail, true, timeout, commands);
+	}
 
-		for (String command : commands) {
-			System.out.println(command);
+	public static Process executeBashCommands(
+			boolean exitOnFirstFail, String... commands)
+		throws IOException, TimeoutException {
+
+		return executeBashCommands(
+			exitOnFirstFail, new File("."),
+			_MILLIS_BASH_COMMAND_TIMEOUT_DEFAULT, commands);
+	}
+
+	public static Process executeBashCommands(
+			File baseDir, boolean exitOnFirstFail, boolean printCommands,
+			long timeout, String... commands)
+		throws IOException, TimeoutException {
+
+		if (printCommands) {
+			System.out.print("Executing commands: ");
+
+			for (String command : commands) {
+				System.out.println(command);
+			}
 		}
 
 		String[] bashCommands = new String[3];
@@ -700,15 +709,6 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return process;
-	}
-
-	public static Process executeBashCommands(
-			boolean exitOnFirstFail, String... commands)
-		throws IOException, TimeoutException {
-
-		return executeBashCommands(
-			exitOnFirstFail, new File("."),
-			_MILLIS_BASH_COMMAND_TIMEOUT_DEFAULT, commands);
 	}
 
 	public static Process executeBashCommands(File baseDir, String... commands)
@@ -2390,41 +2390,13 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static Properties getJenkinsBuildProperties() {
-		Properties properties = new Properties();
-
-		synchronized (_jenkinsBuildProperties) {
-			if (!_jenkinsBuildProperties.isEmpty()) {
-				properties.putAll(_jenkinsBuildProperties);
-
-				return properties;
-			}
-
-			for (String url : URLS_JENKINS_BUILD_PROPERTIES_DEFAULT) {
-				if (url.startsWith("file://")) {
-					properties.putAll(
-						getProperties(new File(url.replace("file://", ""))));
-
-					continue;
-				}
-
-				try {
-					properties.load(
-						new StringReader(
-							toString(
-								getLocalURL(url), false, 0, null, null, 0,
-								_MILLIS_TIMEOUT_DEFAULT, null, true)));
-				}
-				catch (IOException ioException) {
-					throw new RuntimeException(ioException);
-				}
-			}
-
-			_jenkinsBuildProperties.clear();
-
-			_jenkinsBuildProperties.putAll(properties);
+		try {
+			return getBuildProperties();
 		}
-
-		return new SecureProperties(properties);
+		catch (IOException ioException) {
+			throw new RuntimeException(
+				"Unable to get build properties", ioException);
+		}
 	}
 
 	public static String getJenkinsBuildResult(String buildURL) {
@@ -2885,10 +2857,6 @@ public class JenkinsResultsParserUtil {
 
 			if (file.exists()) {
 				remoteURL = fileURL;
-			}
-			else {
-				remoteURL = remoteURL.replace(
-					Build.DEPENDENCIES_URL_TOKEN, urlDependenciesHttp);
 			}
 		}
 
@@ -3780,6 +3748,7 @@ public class JenkinsResultsParserUtil {
 
 			GZIPOutputStream gzipOutputStream = new GZIPOutputStream(
 				fileOutputStream);
+
 			FileInputStream fileInputStream = new FileInputStream(sourceFile)) {
 
 			byte[] bytes = new byte[1024];
@@ -4209,6 +4178,71 @@ public class JenkinsResultsParserUtil {
 		Matcher matcher = _shaPattern.matcher(sha);
 
 		return matcher.matches();
+	}
+
+	public static synchronized boolean isTopLevelJobName(String jobName) {
+		if (isNullOrEmpty(jobName)) {
+			return false;
+		}
+
+		if (_topLevelJobNames != null) {
+			return _topLevelJobNames.contains(jobName);
+		}
+
+		String masterHostname = System.getenv("MASTER_HOSTNAME");
+
+		if (isNullOrEmpty(masterHostname)) {
+			return false;
+		}
+
+		final JenkinsMaster jenkinsMaster = JenkinsMaster.getInstance(
+			masterHostname);
+
+		Retryable<Set<String>> retryable = new Retryable<Set<String>>(
+			true, 3, 5, false) {
+
+			@Override
+			public Set<String> execute() {
+				JSONObject topLevelBuildsJSONObject;
+
+				try {
+					topLevelBuildsJSONObject = toJSONObject(
+						jenkinsMaster.getRemoteURL() +
+							"/view/Top%20Level/api/json?tree=jobs[name]");
+				}
+				catch (IOException ioException) {
+					throw new RuntimeException(ioException);
+				}
+
+				JSONArray jobsJSONArray = topLevelBuildsJSONObject.optJSONArray(
+					"jobs");
+
+				Set<String> topLevelJobNames = new HashSet<>();
+
+				if ((jobsJSONArray == null) || jobsJSONArray.isEmpty()) {
+					return topLevelJobNames;
+				}
+
+				for (int i = 0; i < jobsJSONArray.length(); i++) {
+					JSONObject jobJSONObject = jobsJSONArray.optJSONObject(i);
+
+					if (jobJSONObject == null) {
+						continue;
+					}
+
+					String topLevelJobName = jobJSONObject.getString("name");
+
+					topLevelJobNames.add(topLevelJobName);
+				}
+
+				return topLevelJobNames;
+			}
+
+		};
+
+		_topLevelJobNames = retryable.executeWithRetries();
+
+		return _topLevelJobNames.contains(jobName);
 	}
 
 	public static boolean isURL(String urlString) {
@@ -4904,7 +4938,7 @@ public class JenkinsResultsParserUtil {
 		}
 
 		Retryable<Process> retryable = new Retryable<Process>(
-			true, 3, 3000, false) {
+			true, 3, 3, false) {
 
 			@Override
 			public Process execute() {
@@ -5206,22 +5240,6 @@ public class JenkinsResultsParserUtil {
 			HttpRequestMethod httpRequestMethod, String postContent,
 			int retryPeriod, int timeout, HTTPAuthorization httpAuthorization)
 		throws IOException {
-
-		if (url.startsWith("file:") &&
-			url.contains("liferay-jenkins-results-parser-samples-ee")) {
-
-			File file = new File(url.replace("file:", ""));
-
-			if (!file.exists()) {
-				if (url.contains("json?")) {
-					url = url.substring(0, url.indexOf("json?") + 4);
-				}
-
-				if (url.contains("json[qt]")) {
-					url = url.substring(0, url.indexOf("json[qt]") + 4);
-				}
-			}
-		}
 
 		if (url.contains("/userContent/") && (timeout == 0)) {
 			timeout = 5000;
@@ -6046,8 +6064,10 @@ public class JenkinsResultsParserUtil {
 	public static void unGzip(File sourceGzipFile, File targetFile) {
 		try (FileOutputStream fileOutputStream = new FileOutputStream(
 				targetFile);
+
 			FileInputStream fileInputStream = new FileInputStream(
 				sourceGzipFile);
+
 			GZIPInputStream gzipInputStream = new GZIPInputStream(
 				fileInputStream)) {
 
@@ -6563,38 +6583,29 @@ public class JenkinsResultsParserUtil {
 	protected static String initCacheURL() {
 		String cacheDirPath = System.getenv("CACHE_DIR");
 
-		if ((cacheDirPath == null) &&
-			(System.getenv("JENKINS_GITHUB_URL") != null)) {
-
+		if (cacheDirPath == null) {
 			cacheDirPath = "/opt/dev/projects/github";
 		}
 
-		if (cacheDirPath != null) {
-			File cacheDir = new File(cacheDirPath);
+		File cacheDir = new File(cacheDirPath);
 
-			if (cacheDir.exists()) {
-				for (String cachedRepository : CACHED_REPOSITORIES) {
-					File cacheRepositoryDir = new File(
-						cacheDir, cachedRepository);
+		File cacheRepositoryDir = new File(cacheDir, JENKINS_REPOSITORY_NAME);
 
-					if (!cacheRepositoryDir.exists()) {
-						break;
-					}
-				}
+		if (cacheDir.exists() && cacheRepositoryDir.exists()) {
+			System.out.println("Using " + cacheDirPath + " for cached files");
 
-				System.out.println(
-					"Using " + cacheDirPath + " for cached files");
-
-				return "file://" + cacheDirPath;
-			}
+			return "file://" + cacheDirPath;
 		}
 
-		return "http://mirrors-no-cache.lax.liferay.com/github.com/liferay";
+		throw new RuntimeException(
+			combine(
+				"Unable to locate local ", JENKINS_REPOSITORY_NAME,
+				" repository at ", cacheDirPath,
+				". Set CACHE_DIR to a directory containing a ",
+				JENKINS_REPOSITORY_NAME, " checkout."));
 	}
 
 	protected static String urlDependenciesFile;
-	protected static String urlDependenciesHttp =
-		URL_CACHE + "/liferay-jenkins-results-parser-samples-ee/1/";
 
 	static {
 		File dependenciesDir = new File("src/test/resources/dependencies/");
@@ -7421,7 +7432,6 @@ public class JenkinsResultsParserUtil {
 	private static JSONArray _gitWorkingDirectoriesJSONArray;
 	private static final Pattern _javaVersionPattern = Pattern.compile(
 		"(\\d+\\.\\d+)");
-	private static final Properties _jenkinsBuildProperties = new Properties();
 	private static final Pattern _jenkinsBuildQueueURLPattern = Pattern.compile(
 		"https?://test-\\d+-\\d+(.liferay.com)?/queue/item/(?<queueId>\\d+)/?");
 	private static final Pattern _jenkinsMasterPattern = Pattern.compile(
@@ -7473,6 +7483,7 @@ public class JenkinsResultsParserUtil {
 		"(?<baseURL>https://webserver-testray2(-(?<lxcEnvironment>.+))?" +
 			"\\.lfr\\.cloud|https://testray\\.liferay\\.com).*");
 	private static final Set<String> _timeStamps = new HashSet<>();
+	private static Set<String> _topLevelJobNames;
 	private static final List<HttpRequestMethod> _updatingHttpRequestMethods =
 		Arrays.asList(
 			HttpRequestMethod.POST, HttpRequestMethod.PATCH,

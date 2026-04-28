@@ -4,6 +4,12 @@
  */
 
 export const CONTENT_OBJECT_ENTRY = {
+	actions: {
+		versions: {
+			href: 'http://localhost:8080/o/cms/basic-web-contents/scopes/36030/by-external-reference-code/3fd76346-c116-ff19-e398-d7508ca98962/versions',
+			method: 'GET',
+		},
+	},
 	dateCreated: '2026-02-18T17:15:35Z',
 	dateModified: '2026-02-18T17:15:51Z',
 	description: 'content: Example content, title: My Web Content',
@@ -134,6 +140,12 @@ export const CONTENT_OBJECT_ENTRY = {
 };
 
 export const DOCUMENT_OBJECT_ENTRY = {
+	actions: {
+		versions: {
+			href: 'http://localhost:8080/o/cms/basic-documents/scopes/36030/by-external-reference-code/a6d58af4-04a9-63e3-b3fc-002948d514c6/versions',
+			method: 'GET',
+		},
+	},
 	dateCreated: '2026-02-18T17:20:12Z',
 	dateModified: '2026-02-18T17:20:41Z',
 	description: 'file: orange_cat.jpeg, title: My file',
@@ -207,6 +219,7 @@ export const DOCUMENT_OBJECT_ENTRY = {
 		externalReferenceCode: 'a6d58af4-04a9-63e3-b3fc-002948d514c6',
 		file: {
 			alternativeText: '',
+			extension: 'jpeg',
 			externalReferenceCode: 'fea3e5a6-cc47-2459-3583-2f228aef2563',
 			fileURL:
 				'http://localhost:8080/documents/36035/36037/orange_cat.jpeg/fea3e5a6-cc47-2459-3583-2f228aef2563?version=1.0&t=1771435241269&imageThumbnail=1',
@@ -215,9 +228,14 @@ export const DOCUMENT_OBJECT_ENTRY = {
 				href: '/documents/36035/36037/orange_cat.jpeg/fea3e5a6-cc47-2459-3583-2f228aef2563?version=1.0&t=1771435241269&download=true&groupExternalReferenceCode=a0a0a05e-61d2-248e-4ffa-ae1df094e695&objectDefinitionExternalReferenceCode=L_CMS_BASIC_DOCUMENT&objectEntryExternalReferenceCode=a6d58af4-04a9-63e3-b3fc-002948d514c6&objectFieldExternalReferenceCode=FILE',
 				label: 'orange_cat.jpeg',
 			},
+			metadata: {
+				aspectRatio: 'tall',
+				resolution: '1920x1080',
+			},
 			mimeType: 'image/jpeg',
 			name: 'orange_cat.jpeg',
 			previewURL: '/documents/d/asset-library-36029/orange_cat',
+			size: '1.2 MB',
 			thumbnailURL:
 				'/documents/36035/36037/orange_cat.jpeg/fea3e5a6-cc47-2459-3583-2f228aef2563?version=1.0&t=1771435241269&imageThumbnail=1',
 		},

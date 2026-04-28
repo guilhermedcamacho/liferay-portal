@@ -5,6 +5,7 @@
 
 package com.liferay.osb.patcher.web.internal.portlet.action;
 
+import com.liferay.counter.kernel.service.CounterLocalService;
 import com.liferay.osb.patcher.constants.PatcherFixConstants;
 import com.liferay.osb.patcher.constants.PatcherPortletKeys;
 import com.liferay.osb.patcher.constants.WorkflowConstants;
@@ -72,6 +73,7 @@ public class AddFixesMVCActionCommand extends BaseMVCActionCommand {
 		String committish = ParamUtil.getString(actionRequest, "committish");
 		String gitRemoteURL = ParamUtil.getString(
 			actionRequest, "gitRemoteURL");
+		boolean autoFix = ParamUtil.getBoolean(actionRequest, "autoFix");
 		boolean workaround = ParamUtil.getBoolean(actionRequest, "workaround");
 
 		PatcherFixValidator patcherFixValidator = new PatcherFixValidator(
@@ -79,7 +81,8 @@ public class AddFixesMVCActionCommand extends BaseMVCActionCommand {
 
 		patcherFixValidator.validateAdd();
 
-		PatcherFix patcherFix = _patcherFixLocalService.createPatcherFix(0);
+		PatcherFix patcherFix = _patcherFixLocalService.createPatcherFix(
+			_counterLocalService.increment());
 
 		patcherFix.setPatcherProductVersionId(patcherProductVersionId);
 		patcherFix.setPatcherProjectVersionId(patcherProjectVersionId);
@@ -105,6 +108,9 @@ public class AddFixesMVCActionCommand extends BaseMVCActionCommand {
 			}
 
 			type = PatcherFixConstants.TYPE_REBASE;
+		}
+		else if (autoFix) {
+			type = PatcherFixConstants.TYPE_AUTO_FIX;
 		}
 		else if (workaround) {
 			type = PatcherFixConstants.TYPE_WORKAROUND;
@@ -138,6 +144,9 @@ public class AddFixesMVCActionCommand extends BaseMVCActionCommand {
 
 		JenkinsUtil.sendAgentJenkinsRequest(themeDisplay.getUser(), patcherFix);
 	}
+
+	@Reference
+	private CounterLocalService _counterLocalService;
 
 	@Reference
 	private PatcherBuildLocalService _patcherBuildLocalService;

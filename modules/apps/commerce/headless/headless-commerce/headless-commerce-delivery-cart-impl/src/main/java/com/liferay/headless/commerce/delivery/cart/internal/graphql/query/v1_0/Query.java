@@ -196,13 +196,16 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {cartAttachments(cartId: ___, page: ___, pageSize: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {cartAttachments(cartId: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public AttachmentPage cartAttachments(
 			@GraphQLName("cartId") Long cartId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
-			@GraphQLName("page") int page)
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
@@ -210,19 +213,25 @@ public class Query {
 			this::_populateResourceContext,
 			attachmentResource -> new AttachmentPage(
 				attachmentResource.getCartAttachmentsPage(
-					cartId, Pagination.of(page, pageSize))));
+					cartId, search,
+					_filterBiFunction.apply(attachmentResource, filterString),
+					Pagination.of(page, pageSize),
+					_sortsBiFunction.apply(attachmentResource, sortsString))));
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {cartByExternalReferenceCodeAttachments(externalReferenceCode: ___, page: ___, pageSize: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {cartByExternalReferenceCodeAttachments(externalReferenceCode: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public AttachmentPage cartByExternalReferenceCodeAttachments(
 			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
-			@GraphQLName("page") int page)
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
@@ -231,7 +240,12 @@ public class Query {
 			attachmentResource -> new AttachmentPage(
 				attachmentResource.
 					getCartByExternalReferenceCodeAttachmentsPage(
-						externalReferenceCode, Pagination.of(page, pageSize))));
+						externalReferenceCode, search,
+						_filterBiFunction.apply(
+							attachmentResource, filterString),
+						Pagination.of(page, pageSize),
+						_sortsBiFunction.apply(
+							attachmentResource, sortsString))));
 	}
 
 	/**
@@ -722,67 +736,40 @@ public class Query {
 				termResource.getCartPaymentTermsPage(cartId)));
 	}
 
-	@GraphQLTypeExtension(Cart.class)
-	public class GetCartPaymentMethodsPageTypeExtension {
+	@GraphQLTypeExtension(CartTransition.class)
+	public class GetCartTypeExtension {
 
-		public GetCartPaymentMethodsPageTypeExtension(Cart cart) {
-			_cart = cart;
+		public GetCartTypeExtension(CartTransition cartTransition) {
+			_cartTransition = cartTransition;
 		}
 
-		@GraphQLField(
-			description = "Retrieve payment methods available for the Cart."
-		)
-		public PaymentMethodPage paymentMethods() throws Exception {
+		@GraphQLField(description = "Retrieve information of the given Cart.")
+		public Cart cart() throws Exception {
 			return _applyComponentServiceObjects(
-				_paymentMethodResourceComponentServiceObjects,
+				_cartResourceComponentServiceObjects,
 				Query.this::_populateResourceContext,
-				paymentMethodResource -> new PaymentMethodPage(
-					paymentMethodResource.getCartPaymentMethodsPage(
-						_cart.getId())));
+				cartResource -> cartResource.getCart(
+					_cartTransition.getCartId()));
 		}
 
-		private Cart _cart;
+		private CartTransition _cartTransition;
 
 	}
 
 	@GraphQLTypeExtension(Cart.class)
-	public class GetCartPaymentTermsPageTypeExtension {
+	public class GetCartBillingAddresTypeExtension {
 
-		public GetCartPaymentTermsPageTypeExtension(Cart cart) {
+		public GetCartBillingAddresTypeExtension(Cart cart) {
 			_cart = cart;
 		}
 
-		@GraphQLField(
-			description = "Retrieve payment terms available for the Cart."
-		)
-		public TermPage paymentTerms() throws Exception {
+		@GraphQLField(description = "Retrieve cart billing address.")
+		public Address billingAddres() throws Exception {
 			return _applyComponentServiceObjects(
-				_termResourceComponentServiceObjects,
+				_addressResourceComponentServiceObjects,
 				Query.this::_populateResourceContext,
-				termResource -> new TermPage(
-					termResource.getCartPaymentTermsPage(_cart.getId())));
-		}
-
-		private Cart _cart;
-
-	}
-
-	@GraphQLTypeExtension(Cart.class)
-	public class GetCartDeliveryTermsPageTypeExtension {
-
-		public GetCartDeliveryTermsPageTypeExtension(Cart cart) {
-			_cart = cart;
-		}
-
-		@GraphQLField(
-			description = "Retrieve delivery terms available for the Cart."
-		)
-		public TermPage deliveryTerms() throws Exception {
-			return _applyComponentServiceObjects(
-				_termResourceComponentServiceObjects,
-				Query.this::_populateResourceContext,
-				termResource -> new TermPage(
-					termResource.getCartDeliveryTermsPage(_cart.getId())));
+				addressResource -> addressResource.getCartBillingAddres(
+					_cart.getId()));
 		}
 
 		private Cart _cart;
@@ -809,72 +796,27 @@ public class Query {
 
 	}
 
-	@GraphQLTypeExtension(Cart.class)
-	public class GetCartShippingMethodsPageTypeExtension {
+	@GraphQLTypeExtension(CartComment.class)
+	public class GetCartByExternalReferenceCodeTypeExtension {
 
-		public GetCartShippingMethodsPageTypeExtension(Cart cart) {
-			_cart = cart;
+		public GetCartByExternalReferenceCodeTypeExtension(
+			CartComment cartComment) {
+
+			_cartComment = cartComment;
 		}
 
 		@GraphQLField(
-			description = "Retrieve payment methods available for the Cart."
+			description = "Retrieve information of the given Cart by external reference code."
 		)
-		public ShippingMethodPage shippingMethods() throws Exception {
-			return _applyComponentServiceObjects(
-				_shippingMethodResourceComponentServiceObjects,
-				Query.this::_populateResourceContext,
-				shippingMethodResource -> new ShippingMethodPage(
-					shippingMethodResource.getCartShippingMethodsPage(
-						_cart.getId())));
-		}
-
-		private Cart _cart;
-
-	}
-
-	@GraphQLTypeExtension(Cart.class)
-	public class GetCartByExternalReferenceCodePaymentUrlTypeExtension {
-
-		public GetCartByExternalReferenceCodePaymentUrlTypeExtension(
-			Cart cart) {
-
-			_cart = cart;
-		}
-
-		@GraphQLField
-		public String byExternalReferenceCodePaymentUrl(
-				@GraphQLName("callbackURL") String callbackURL)
-			throws Exception {
-
+		public Cart cartByExternalReferenceCode() throws Exception {
 			return _applyComponentServiceObjects(
 				_cartResourceComponentServiceObjects,
 				Query.this::_populateResourceContext,
-				cartResource ->
-					cartResource.getCartByExternalReferenceCodePaymentUrl(
-						_cart.getExternalReferenceCode(), callbackURL));
+				cartResource -> cartResource.getCartByExternalReferenceCode(
+					_cartComment.getExternalReferenceCode()));
 		}
 
-		private Cart _cart;
-
-	}
-
-	@GraphQLTypeExtension(CartTransition.class)
-	public class GetCartTypeExtension {
-
-		public GetCartTypeExtension(CartTransition cartTransition) {
-			_cartTransition = cartTransition;
-		}
-
-		@GraphQLField(description = "Retrieve information of the given Cart.")
-		public Cart cart() throws Exception {
-			return _applyComponentServiceObjects(
-				_cartResourceComponentServiceObjects,
-				Query.this::_populateResourceContext,
-				cartResource -> cartResource.getCart(
-					_cartTransition.getCartId()));
-		}
-
-		private CartTransition _cartTransition;
+		private CartComment _cartComment;
 
 	}
 
@@ -894,6 +836,77 @@ public class Query {
 				Query.this::_populateResourceContext,
 				cartResource -> cartResource.getCartPaymentURL(
 					_cart.getId(), callbackURL));
+		}
+
+		private Cart _cart;
+
+	}
+
+	@GraphQLTypeExtension(Cart.class)
+	public class GetCartCommentByExternalReferenceCodeTypeExtension {
+
+		public GetCartCommentByExternalReferenceCodeTypeExtension(Cart cart) {
+			_cart = cart;
+		}
+
+		@GraphQLField(
+			description = "Retrieve information of the given Cart Comment by external reference code."
+		)
+		public CartComment commentByExternalReferenceCode() throws Exception {
+			return _applyComponentServiceObjects(
+				_cartCommentResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				cartCommentResource ->
+					cartCommentResource.getCartCommentByExternalReferenceCode(
+						_cart.getExternalReferenceCode()));
+		}
+
+		private Cart _cart;
+
+	}
+
+	@GraphQLTypeExtension(Cart.class)
+	public class GetCartCommentsPageTypeExtension {
+
+		public GetCartCommentsPageTypeExtension(Cart cart) {
+			_cart = cart;
+		}
+
+		@GraphQLField
+		public CartCommentPage comments(
+				@GraphQLName("pageSize") int pageSize,
+				@GraphQLName("page") int page)
+			throws Exception {
+
+			return _applyComponentServiceObjects(
+				_cartCommentResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				cartCommentResource -> new CartCommentPage(
+					cartCommentResource.getCartCommentsPage(
+						_cart.getId(), Pagination.of(page, pageSize))));
+		}
+
+		private Cart _cart;
+
+	}
+
+	@GraphQLTypeExtension(Cart.class)
+	public class GetCartItemByExternalReferenceCodeTypeExtension {
+
+		public GetCartItemByExternalReferenceCodeTypeExtension(Cart cart) {
+			_cart = cart;
+		}
+
+		@GraphQLField(
+			description = "Retrieve information of the given Cart Item by external reference code."
+		)
+		public CartItem itemByExternalReferenceCode() throws Exception {
+			return _applyComponentServiceObjects(
+				_cartItemResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				cartItemResource ->
+					cartItemResource.getCartItemByExternalReferenceCode(
+						_cart.getExternalReferenceCode()));
 		}
 
 		private Cart _cart;
@@ -929,19 +942,22 @@ public class Query {
 	}
 
 	@GraphQLTypeExtension(Cart.class)
-	public class GetCartBillingAddresTypeExtension {
+	public class GetCartCartTransitionsPageTypeExtension {
 
-		public GetCartBillingAddresTypeExtension(Cart cart) {
+		public GetCartCartTransitionsPageTypeExtension(Cart cart) {
 			_cart = cart;
 		}
 
-		@GraphQLField(description = "Retrieve cart billing address.")
-		public Address billingAddres() throws Exception {
+		@GraphQLField(
+			description = "Retrieve cart transitions of the given Cart."
+		)
+		public CartTransitionPage cartTransitions() throws Exception {
 			return _applyComponentServiceObjects(
-				_addressResourceComponentServiceObjects,
+				_cartTransitionResourceComponentServiceObjects,
 				Query.this::_populateResourceContext,
-				addressResource -> addressResource.getCartBillingAddres(
-					_cart.getId()));
+				cartTransitionResource -> new CartTransitionPage(
+					cartTransitionResource.getCartCartTransitionsPage(
+						_cart.getId())));
 		}
 
 		private Cart _cart;
@@ -949,22 +965,89 @@ public class Query {
 	}
 
 	@GraphQLTypeExtension(Cart.class)
-	public class GetCartCommentByExternalReferenceCodeTypeExtension {
+	public class GetCartPaymentMethodsPageTypeExtension {
 
-		public GetCartCommentByExternalReferenceCodeTypeExtension(Cart cart) {
+		public GetCartPaymentMethodsPageTypeExtension(Cart cart) {
 			_cart = cart;
 		}
 
 		@GraphQLField(
-			description = "Retrieve information of the given Cart Comment by external reference code."
+			description = "Retrieve payment methods available for the Cart."
 		)
-		public CartComment commentByExternalReferenceCode() throws Exception {
+		public PaymentMethodPage paymentMethods() throws Exception {
 			return _applyComponentServiceObjects(
-				_cartCommentResourceComponentServiceObjects,
+				_paymentMethodResourceComponentServiceObjects,
 				Query.this::_populateResourceContext,
-				cartCommentResource ->
-					cartCommentResource.getCartCommentByExternalReferenceCode(
-						_cart.getExternalReferenceCode()));
+				paymentMethodResource -> new PaymentMethodPage(
+					paymentMethodResource.getCartPaymentMethodsPage(
+						_cart.getId())));
+		}
+
+		private Cart _cart;
+
+	}
+
+	@GraphQLTypeExtension(Cart.class)
+	public class GetCartShippingMethodsPageTypeExtension {
+
+		public GetCartShippingMethodsPageTypeExtension(Cart cart) {
+			_cart = cart;
+		}
+
+		@GraphQLField(
+			description = "Retrieve payment methods available for the Cart."
+		)
+		public ShippingMethodPage shippingMethods() throws Exception {
+			return _applyComponentServiceObjects(
+				_shippingMethodResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				shippingMethodResource -> new ShippingMethodPage(
+					shippingMethodResource.getCartShippingMethodsPage(
+						_cart.getId())));
+		}
+
+		private Cart _cart;
+
+	}
+
+	@GraphQLTypeExtension(Cart.class)
+	public class GetCartDeliveryTermsPageTypeExtension {
+
+		public GetCartDeliveryTermsPageTypeExtension(Cart cart) {
+			_cart = cart;
+		}
+
+		@GraphQLField(
+			description = "Retrieve delivery terms available for the Cart."
+		)
+		public TermPage deliveryTerms() throws Exception {
+			return _applyComponentServiceObjects(
+				_termResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				termResource -> new TermPage(
+					termResource.getCartDeliveryTermsPage(_cart.getId())));
+		}
+
+		private Cart _cart;
+
+	}
+
+	@GraphQLTypeExtension(Cart.class)
+	public class GetCartPaymentTermsPageTypeExtension {
+
+		public GetCartPaymentTermsPageTypeExtension(Cart cart) {
+			_cart = cart;
+		}
+
+		@GraphQLField(
+			description = "Retrieve payment terms available for the Cart."
+		)
+		public TermPage paymentTerms() throws Exception {
+			return _applyComponentServiceObjects(
+				_termResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				termResource -> new TermPage(
+					termResource.getCartPaymentTermsPage(_cart.getId())));
 		}
 
 		private Cart _cart;
@@ -1024,24 +1107,35 @@ public class Query {
 	}
 
 	@GraphQLTypeExtension(Cart.class)
-	public class GetCartCommentsPageTypeExtension {
+	public class GetCartByExternalReferenceCodeAttachmentsPageTypeExtension {
 
-		public GetCartCommentsPageTypeExtension(Cart cart) {
+		public GetCartByExternalReferenceCodeAttachmentsPageTypeExtension(
+			Cart cart) {
+
 			_cart = cart;
 		}
 
 		@GraphQLField
-		public CartCommentPage comments(
+		public AttachmentPage byExternalReferenceCodeAttachments(
+				@GraphQLName("search") String search,
+				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
-				@GraphQLName("page") int page)
+				@GraphQLName("page") int page,
+				@GraphQLName("sort") String sortsString)
 			throws Exception {
 
 			return _applyComponentServiceObjects(
-				_cartCommentResourceComponentServiceObjects,
+				_attachmentResourceComponentServiceObjects,
 				Query.this::_populateResourceContext,
-				cartCommentResource -> new CartCommentPage(
-					cartCommentResource.getCartCommentsPage(
-						_cart.getId(), Pagination.of(page, pageSize))));
+				attachmentResource -> new AttachmentPage(
+					attachmentResource.
+						getCartByExternalReferenceCodeAttachmentsPage(
+							_cart.getExternalReferenceCode(), search,
+							_filterBiFunction.apply(
+								attachmentResource, filterString),
+							Pagination.of(page, pageSize),
+							_sortsBiFunction.apply(
+								attachmentResource, sortsString))));
 		}
 
 		private Cart _cart;
@@ -1049,126 +1143,25 @@ public class Query {
 	}
 
 	@GraphQLTypeExtension(Cart.class)
-	public class GetCartByExternalReferenceCodePaymentTermsPageTypeExtension {
+	public class GetCartByExternalReferenceCodePaymentUrlTypeExtension {
 
-		public GetCartByExternalReferenceCodePaymentTermsPageTypeExtension(
+		public GetCartByExternalReferenceCodePaymentUrlTypeExtension(
 			Cart cart) {
 
 			_cart = cart;
 		}
 
-		@GraphQLField(
-			description = "Retrieve payment terms available for the Cart."
-		)
-		public TermPage byExternalReferenceCodePaymentTerms() throws Exception {
-			return _applyComponentServiceObjects(
-				_termResourceComponentServiceObjects,
-				Query.this::_populateResourceContext,
-				termResource -> new TermPage(
-					termResource.getCartByExternalReferenceCodePaymentTermsPage(
-						_cart.getExternalReferenceCode())));
-		}
-
-		private Cart _cart;
-
-	}
-
-	@GraphQLTypeExtension(Cart.class)
-	public class GetCartByExternalReferenceCodeDeliveryTermsPageTypeExtension {
-
-		public GetCartByExternalReferenceCodeDeliveryTermsPageTypeExtension(
-			Cart cart) {
-
-			_cart = cart;
-		}
-
-		@GraphQLField(
-			description = "Retrieve delivery terms available for the Cart."
-		)
-		public TermPage byExternalReferenceCodeDeliveryTerms()
+		@GraphQLField
+		public String byExternalReferenceCodePaymentUrl(
+				@GraphQLName("callbackURL") String callbackURL)
 			throws Exception {
 
 			return _applyComponentServiceObjects(
-				_termResourceComponentServiceObjects,
+				_cartResourceComponentServiceObjects,
 				Query.this::_populateResourceContext,
-				termResource -> new TermPage(
-					termResource.
-						getCartByExternalReferenceCodeDeliveryTermsPage(
-							_cart.getExternalReferenceCode())));
-		}
-
-		private Cart _cart;
-
-	}
-
-	@GraphQLTypeExtension(Cart.class)
-	public class GetCartItemByExternalReferenceCodeTypeExtension {
-
-		public GetCartItemByExternalReferenceCodeTypeExtension(Cart cart) {
-			_cart = cart;
-		}
-
-		@GraphQLField(
-			description = "Retrieve information of the given Cart Item by external reference code."
-		)
-		public CartItem itemByExternalReferenceCode() throws Exception {
-			return _applyComponentServiceObjects(
-				_cartItemResourceComponentServiceObjects,
-				Query.this::_populateResourceContext,
-				cartItemResource ->
-					cartItemResource.getCartItemByExternalReferenceCode(
-						_cart.getExternalReferenceCode()));
-		}
-
-		private Cart _cart;
-
-	}
-
-	@GraphQLTypeExtension(Cart.class)
-	public class GetCartCartTransitionsPageTypeExtension {
-
-		public GetCartCartTransitionsPageTypeExtension(Cart cart) {
-			_cart = cart;
-		}
-
-		@GraphQLField(
-			description = "Retrieve cart transitions of the given Cart."
-		)
-		public CartTransitionPage cartTransitions() throws Exception {
-			return _applyComponentServiceObjects(
-				_cartTransitionResourceComponentServiceObjects,
-				Query.this::_populateResourceContext,
-				cartTransitionResource -> new CartTransitionPage(
-					cartTransitionResource.getCartCartTransitionsPage(
-						_cart.getId())));
-		}
-
-		private Cart _cart;
-
-	}
-
-	@GraphQLTypeExtension(Cart.class)
-	public class GetCartByExternalReferenceCodePaymentMethodsPageTypeExtension {
-
-		public GetCartByExternalReferenceCodePaymentMethodsPageTypeExtension(
-			Cart cart) {
-
-			_cart = cart;
-		}
-
-		@GraphQLField(
-			description = "Retrieve payment methods available for the Cart."
-		)
-		public PaymentMethodPage byExternalReferenceCodePaymentMethods()
-			throws Exception {
-
-			return _applyComponentServiceObjects(
-				_paymentMethodResourceComponentServiceObjects,
-				Query.this::_populateResourceContext,
-				paymentMethodResource -> new PaymentMethodPage(
-					paymentMethodResource.
-						getCartByExternalReferenceCodePaymentMethodsPage(
-							_cart.getExternalReferenceCode())));
+				cartResource ->
+					cartResource.getCartByExternalReferenceCodePaymentUrl(
+						_cart.getExternalReferenceCode(), callbackURL));
 		}
 
 		private Cart _cart;
@@ -1205,28 +1198,55 @@ public class Query {
 	}
 
 	@GraphQLTypeExtension(Cart.class)
-	public class GetCartByExternalReferenceCodeAttachmentsPageTypeExtension {
+	public class GetCartByExternalReferenceCodeItemsPageTypeExtension {
 
-		public GetCartByExternalReferenceCodeAttachmentsPageTypeExtension(
-			Cart cart) {
-
+		public GetCartByExternalReferenceCodeItemsPageTypeExtension(Cart cart) {
 			_cart = cart;
 		}
 
-		@GraphQLField
-		public AttachmentPage byExternalReferenceCodeAttachments(
+		@GraphQLField(description = "Retrieve cart items of a Cart.")
+		public CartItemPage byExternalReferenceCodeItems(
+				@GraphQLName("search") String search,
+				@GraphQLName("skuId") Long skuId,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page)
 			throws Exception {
 
 			return _applyComponentServiceObjects(
-				_attachmentResourceComponentServiceObjects,
+				_cartItemResourceComponentServiceObjects,
 				Query.this::_populateResourceContext,
-				attachmentResource -> new AttachmentPage(
-					attachmentResource.
-						getCartByExternalReferenceCodeAttachmentsPage(
-							_cart.getExternalReferenceCode(),
-							Pagination.of(page, pageSize))));
+				cartItemResource -> new CartItemPage(
+					cartItemResource.getCartByExternalReferenceCodeItemsPage(
+						_cart.getExternalReferenceCode(), search, skuId,
+						Pagination.of(page, pageSize))));
+		}
+
+		private Cart _cart;
+
+	}
+
+	@GraphQLTypeExtension(Cart.class)
+	public class GetCartByExternalReferenceCodePaymentMethodsPageTypeExtension {
+
+		public GetCartByExternalReferenceCodePaymentMethodsPageTypeExtension(
+			Cart cart) {
+
+			_cart = cart;
+		}
+
+		@GraphQLField(
+			description = "Retrieve payment methods available for the Cart."
+		)
+		public PaymentMethodPage byExternalReferenceCodePaymentMethods()
+			throws Exception {
+
+			return _applyComponentServiceObjects(
+				_paymentMethodResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				paymentMethodResource -> new PaymentMethodPage(
+					paymentMethodResource.
+						getCartByExternalReferenceCodePaymentMethodsPage(
+							_cart.getExternalReferenceCode())));
 		}
 
 		private Cart _cart;
@@ -1262,52 +1282,53 @@ public class Query {
 
 	}
 
-	@GraphQLTypeExtension(CartComment.class)
-	public class GetCartByExternalReferenceCodeTypeExtension {
+	@GraphQLTypeExtension(Cart.class)
+	public class GetCartByExternalReferenceCodeDeliveryTermsPageTypeExtension {
 
-		public GetCartByExternalReferenceCodeTypeExtension(
-			CartComment cartComment) {
+		public GetCartByExternalReferenceCodeDeliveryTermsPageTypeExtension(
+			Cart cart) {
 
-			_cartComment = cartComment;
+			_cart = cart;
 		}
 
 		@GraphQLField(
-			description = "Retrieve information of the given Cart by external reference code."
+			description = "Retrieve delivery terms available for the Cart."
 		)
-		public Cart cartByExternalReferenceCode() throws Exception {
+		public TermPage byExternalReferenceCodeDeliveryTerms()
+			throws Exception {
+
 			return _applyComponentServiceObjects(
-				_cartResourceComponentServiceObjects,
+				_termResourceComponentServiceObjects,
 				Query.this::_populateResourceContext,
-				cartResource -> cartResource.getCartByExternalReferenceCode(
-					_cartComment.getExternalReferenceCode()));
+				termResource -> new TermPage(
+					termResource.
+						getCartByExternalReferenceCodeDeliveryTermsPage(
+							_cart.getExternalReferenceCode())));
 		}
 
-		private CartComment _cartComment;
+		private Cart _cart;
 
 	}
 
 	@GraphQLTypeExtension(Cart.class)
-	public class GetCartByExternalReferenceCodeItemsPageTypeExtension {
+	public class GetCartByExternalReferenceCodePaymentTermsPageTypeExtension {
 
-		public GetCartByExternalReferenceCodeItemsPageTypeExtension(Cart cart) {
+		public GetCartByExternalReferenceCodePaymentTermsPageTypeExtension(
+			Cart cart) {
+
 			_cart = cart;
 		}
 
-		@GraphQLField(description = "Retrieve cart items of a Cart.")
-		public CartItemPage byExternalReferenceCodeItems(
-				@GraphQLName("search") String search,
-				@GraphQLName("skuId") Long skuId,
-				@GraphQLName("pageSize") int pageSize,
-				@GraphQLName("page") int page)
-			throws Exception {
-
+		@GraphQLField(
+			description = "Retrieve payment terms available for the Cart."
+		)
+		public TermPage byExternalReferenceCodePaymentTerms() throws Exception {
 			return _applyComponentServiceObjects(
-				_cartItemResourceComponentServiceObjects,
+				_termResourceComponentServiceObjects,
 				Query.this::_populateResourceContext,
-				cartItemResource -> new CartItemPage(
-					cartItemResource.getCartByExternalReferenceCodeItemsPage(
-						_cart.getExternalReferenceCode(), search, skuId,
-						Pagination.of(page, pageSize))));
+				termResource -> new TermPage(
+					termResource.getCartByExternalReferenceCodePaymentTermsPage(
+						_cart.getExternalReferenceCode())));
 		}
 
 		private Cart _cart;
@@ -1850,3 +1871,4 @@ public class Query {
 	private com.liferay.portal.kernel.model.User _user;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2039693924

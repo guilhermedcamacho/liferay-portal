@@ -37,6 +37,9 @@ import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.service.persistence.impl.CollectionPersistenceFinder;
+import com.liferay.portal.kernel.service.persistence.impl.FinderColumn;
+import com.liferay.portal.kernel.service.persistence.impl.UniquePersistenceFinder;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -53,7 +56,6 @@ import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -103,6 +105,8 @@ public class ObjectDefinitionPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByUuid;
 	private FinderPath _finderPathWithoutPaginationFindByUuid;
 	private FinderPath _finderPathCountByUuid;
+	private CollectionPersistenceFinder<ObjectDefinition>
+		_collectionPersistenceFinderByUuid;
 
 	/**
 	 * Returns all the object definitions where uuid = &#63;.
@@ -173,106 +177,9 @@ public class ObjectDefinitionPersistenceImpl
 		OrderByComparator<ObjectDefinition> orderByComparator,
 		boolean useFinderCache) {
 
-		uuid = Objects.toString(uuid, "");
-
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByUuid;
-				finderArgs = new Object[] {uuid};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByUuid;
-			finderArgs = new Object[] {uuid, start, end, orderByComparator};
-		}
-
-		List<ObjectDefinition> list = null;
-
-		if (useFinderCache) {
-			list = (List<ObjectDefinition>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (ObjectDefinition objectDefinition : list) {
-					if (!uuid.equals(objectDefinition.getUuid())) {
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			boolean bindUuid = false;
-
-			if (uuid.isEmpty()) {
-				sb.append(_FINDER_COLUMN_UUID_UUID_3);
-			}
-			else {
-				bindUuid = true;
-
-				sb.append(_FINDER_COLUMN_UUID_UUID_2);
-			}
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(ObjectDefinitionModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindUuid) {
-					queryPos.add(uuid);
-				}
-
-				list = (List<ObjectDefinition>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByUuid.find(
+			finderCache, new Object[] {uuid}, start, end, orderByComparator,
+			useFinderCache);
 	}
 
 	/**
@@ -295,16 +202,9 @@ public class ObjectDefinitionPersistenceImpl
 			return objectDefinition;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("uuid=");
-		sb.append(uuid);
-
-		sb.append("}");
-
-		throw new NoSuchObjectDefinitionException(sb.toString());
+		throw new NoSuchObjectDefinitionException(
+			_collectionPersistenceFinderByUuid.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {uuid}));
 	}
 
 	/**
@@ -318,13 +218,8 @@ public class ObjectDefinitionPersistenceImpl
 	public ObjectDefinition fetchByUuid_First(
 		String uuid, OrderByComparator<ObjectDefinition> orderByComparator) {
 
-		List<ObjectDefinition> list = findByUuid(uuid, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByUuid.fetchFirst(
+			finderCache, new Object[] {uuid}, orderByComparator);
 	}
 
 	/**
@@ -489,11 +384,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public void removeByUuid(String uuid) {
-		for (ObjectDefinition objectDefinition :
-				findByUuid(uuid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
-
-			remove(objectDefinition);
-		}
+		_collectionPersistenceFinderByUuid.remove(
+			finderCache, new Object[] {uuid});
 	}
 
 	/**
@@ -504,58 +396,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public int countByUuid(String uuid) {
-		uuid = Objects.toString(uuid, "");
-
-		FinderPath finderPath = _finderPathCountByUuid;
-
-		Object[] finderArgs = new Object[] {uuid};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_OBJECTDEFINITION_WHERE);
-
-			boolean bindUuid = false;
-
-			if (uuid.isEmpty()) {
-				sb.append(_FINDER_COLUMN_UUID_UUID_3);
-			}
-			else {
-				bindUuid = true;
-
-				sb.append(_FINDER_COLUMN_UUID_UUID_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindUuid) {
-					queryPos.add(uuid);
-				}
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByUuid.count(
+			finderCache, new Object[] {uuid});
 	}
 
 	/**
@@ -627,12 +469,6 @@ public class ObjectDefinitionPersistenceImpl
 		}
 	}
 
-	private static final String _FINDER_COLUMN_UUID_UUID_2 =
-		"objectDefinition.uuid = ?";
-
-	private static final String _FINDER_COLUMN_UUID_UUID_3 =
-		"(objectDefinition.uuid IS NULL OR objectDefinition.uuid = '')";
-
 	private static final String _FINDER_COLUMN_UUID_UUID_2_SQL =
 		"objectDefinition.uuid_ = ?";
 
@@ -642,6 +478,8 @@ public class ObjectDefinitionPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByUuid_C;
 	private FinderPath _finderPathWithoutPaginationFindByUuid_C;
 	private FinderPath _finderPathCountByUuid_C;
+	private CollectionPersistenceFinder<ObjectDefinition>
+		_collectionPersistenceFinderByUuid_C;
 
 	/**
 	 * Returns all the object definitions where uuid = &#63; and companyId = &#63;.
@@ -720,114 +558,9 @@ public class ObjectDefinitionPersistenceImpl
 		OrderByComparator<ObjectDefinition> orderByComparator,
 		boolean useFinderCache) {
 
-		uuid = Objects.toString(uuid, "");
-
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByUuid_C;
-				finderArgs = new Object[] {uuid, companyId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByUuid_C;
-			finderArgs = new Object[] {
-				uuid, companyId, start, end, orderByComparator
-			};
-		}
-
-		List<ObjectDefinition> list = null;
-
-		if (useFinderCache) {
-			list = (List<ObjectDefinition>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (ObjectDefinition objectDefinition : list) {
-					if (!uuid.equals(objectDefinition.getUuid()) ||
-						(companyId != objectDefinition.getCompanyId())) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					4 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(4);
-			}
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			boolean bindUuid = false;
-
-			if (uuid.isEmpty()) {
-				sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
-			}
-			else {
-				bindUuid = true;
-
-				sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
-			}
-
-			sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(ObjectDefinitionModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindUuid) {
-					queryPos.add(uuid);
-				}
-
-				queryPos.add(companyId);
-
-				list = (List<ObjectDefinition>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByUuid_C.find(
+			finderCache, new Object[] {uuid, companyId}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -852,19 +585,9 @@ public class ObjectDefinitionPersistenceImpl
 			return objectDefinition;
 		}
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("uuid=");
-		sb.append(uuid);
-
-		sb.append(", companyId=");
-		sb.append(companyId);
-
-		sb.append("}");
-
-		throw new NoSuchObjectDefinitionException(sb.toString());
+		throw new NoSuchObjectDefinitionException(
+			_collectionPersistenceFinderByUuid_C.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {uuid, companyId}));
 	}
 
 	/**
@@ -880,14 +603,8 @@ public class ObjectDefinitionPersistenceImpl
 		String uuid, long companyId,
 		OrderByComparator<ObjectDefinition> orderByComparator) {
 
-		List<ObjectDefinition> list = findByUuid_C(
-			uuid, companyId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByUuid_C.fetchFirst(
+			finderCache, new Object[] {uuid, companyId}, orderByComparator);
 	}
 
 	/**
@@ -1062,13 +779,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public void removeByUuid_C(String uuid, long companyId) {
-		for (ObjectDefinition objectDefinition :
-				findByUuid_C(
-					uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(objectDefinition);
-		}
+		_collectionPersistenceFinderByUuid_C.remove(
+			finderCache, new Object[] {uuid, companyId});
 	}
 
 	/**
@@ -1080,62 +792,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public int countByUuid_C(String uuid, long companyId) {
-		uuid = Objects.toString(uuid, "");
-
-		FinderPath finderPath = _finderPathCountByUuid_C;
-
-		Object[] finderArgs = new Object[] {uuid, companyId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_OBJECTDEFINITION_WHERE);
-
-			boolean bindUuid = false;
-
-			if (uuid.isEmpty()) {
-				sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
-			}
-			else {
-				bindUuid = true;
-
-				sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
-			}
-
-			sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindUuid) {
-					queryPos.add(uuid);
-				}
-
-				queryPos.add(companyId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByUuid_C.count(
+			finderCache, new Object[] {uuid, companyId});
 	}
 
 	/**
@@ -1213,12 +871,6 @@ public class ObjectDefinitionPersistenceImpl
 		}
 	}
 
-	private static final String _FINDER_COLUMN_UUID_C_UUID_2 =
-		"objectDefinition.uuid = ? AND ";
-
-	private static final String _FINDER_COLUMN_UUID_C_UUID_3 =
-		"(objectDefinition.uuid IS NULL OR objectDefinition.uuid = '') AND ";
-
 	private static final String _FINDER_COLUMN_UUID_C_UUID_2_SQL =
 		"objectDefinition.uuid_ = ? AND ";
 
@@ -1231,6 +883,8 @@ public class ObjectDefinitionPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByCompanyId;
 	private FinderPath _finderPathWithoutPaginationFindByCompanyId;
 	private FinderPath _finderPathCountByCompanyId;
+	private CollectionPersistenceFinder<ObjectDefinition>
+		_collectionPersistenceFinderByCompanyId;
 
 	/**
 	 * Returns all the object definitions where companyId = &#63;.
@@ -1304,95 +958,9 @@ public class ObjectDefinitionPersistenceImpl
 		OrderByComparator<ObjectDefinition> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByCompanyId;
-				finderArgs = new Object[] {companyId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByCompanyId;
-			finderArgs = new Object[] {
-				companyId, start, end, orderByComparator
-			};
-		}
-
-		List<ObjectDefinition> list = null;
-
-		if (useFinderCache) {
-			list = (List<ObjectDefinition>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (ObjectDefinition objectDefinition : list) {
-					if (companyId != objectDefinition.getCompanyId()) {
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(ObjectDefinitionModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				list = (List<ObjectDefinition>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByCompanyId.find(
+			finderCache, new Object[] {companyId}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -1416,16 +984,9 @@ public class ObjectDefinitionPersistenceImpl
 			return objectDefinition;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append("}");
-
-		throw new NoSuchObjectDefinitionException(sb.toString());
+		throw new NoSuchObjectDefinitionException(
+			_collectionPersistenceFinderByCompanyId.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {companyId}));
 	}
 
 	/**
@@ -1439,14 +1000,8 @@ public class ObjectDefinitionPersistenceImpl
 	public ObjectDefinition fetchByCompanyId_First(
 		long companyId, OrderByComparator<ObjectDefinition> orderByComparator) {
 
-		List<ObjectDefinition> list = findByCompanyId(
-			companyId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByCompanyId.fetchFirst(
+			finderCache, new Object[] {companyId}, orderByComparator);
 	}
 
 	/**
@@ -1598,12 +1153,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public void removeByCompanyId(long companyId) {
-		for (ObjectDefinition objectDefinition :
-				findByCompanyId(
-					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
-
-			remove(objectDefinition);
-		}
+		_collectionPersistenceFinderByCompanyId.remove(
+			finderCache, new Object[] {companyId});
 	}
 
 	/**
@@ -1614,45 +1165,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public int countByCompanyId(long companyId) {
-		FinderPath finderPath = _finderPathCountByCompanyId;
-
-		Object[] finderArgs = new Object[] {companyId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByCompanyId.count(
+			finderCache, new Object[] {companyId});
 	}
 
 	/**
@@ -1718,6 +1232,8 @@ public class ObjectDefinitionPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByObjectFolderId;
 	private FinderPath _finderPathWithoutPaginationFindByObjectFolderId;
 	private FinderPath _finderPathCountByObjectFolderId;
+	private CollectionPersistenceFinder<ObjectDefinition>
+		_collectionPersistenceFinderByObjectFolderId;
 
 	/**
 	 * Returns all the object definitions where objectFolderId = &#63;.
@@ -1792,97 +1308,9 @@ public class ObjectDefinitionPersistenceImpl
 		OrderByComparator<ObjectDefinition> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByObjectFolderId;
-				finderArgs = new Object[] {objectFolderId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByObjectFolderId;
-			finderArgs = new Object[] {
-				objectFolderId, start, end, orderByComparator
-			};
-		}
-
-		List<ObjectDefinition> list = null;
-
-		if (useFinderCache) {
-			list = (List<ObjectDefinition>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (ObjectDefinition objectDefinition : list) {
-					if (objectFolderId !=
-							objectDefinition.getObjectFolderId()) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_OBJECTFOLDERID_OBJECTFOLDERID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(ObjectDefinitionModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(objectFolderId);
-
-				list = (List<ObjectDefinition>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByObjectFolderId.find(
+			finderCache, new Object[] {objectFolderId}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -1906,16 +1334,9 @@ public class ObjectDefinitionPersistenceImpl
 			return objectDefinition;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("objectFolderId=");
-		sb.append(objectFolderId);
-
-		sb.append("}");
-
-		throw new NoSuchObjectDefinitionException(sb.toString());
+		throw new NoSuchObjectDefinitionException(
+			_collectionPersistenceFinderByObjectFolderId.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {objectFolderId}));
 	}
 
 	/**
@@ -1930,14 +1351,8 @@ public class ObjectDefinitionPersistenceImpl
 		long objectFolderId,
 		OrderByComparator<ObjectDefinition> orderByComparator) {
 
-		List<ObjectDefinition> list = findByObjectFolderId(
-			objectFolderId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByObjectFolderId.fetchFirst(
+			finderCache, new Object[] {objectFolderId}, orderByComparator);
 	}
 
 	/**
@@ -2092,13 +1507,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public void removeByObjectFolderId(long objectFolderId) {
-		for (ObjectDefinition objectDefinition :
-				findByObjectFolderId(
-					objectFolderId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(objectDefinition);
-		}
+		_collectionPersistenceFinderByObjectFolderId.remove(
+			finderCache, new Object[] {objectFolderId});
 	}
 
 	/**
@@ -2109,45 +1519,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public int countByObjectFolderId(long objectFolderId) {
-		FinderPath finderPath = _finderPathCountByObjectFolderId;
-
-		Object[] finderArgs = new Object[] {objectFolderId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_OBJECTFOLDERID_OBJECTFOLDERID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(objectFolderId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByObjectFolderId.count(
+			finderCache, new Object[] {objectFolderId});
 	}
 
 	/**
@@ -2213,6 +1586,8 @@ public class ObjectDefinitionPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByAccountEntryRestricted;
 	private FinderPath _finderPathWithoutPaginationFindByAccountEntryRestricted;
 	private FinderPath _finderPathCountByAccountEntryRestricted;
+	private CollectionPersistenceFinder<ObjectDefinition>
+		_collectionPersistenceFinderByAccountEntryRestricted;
 
 	/**
 	 * Returns all the object definitions where accountEntryRestricted = &#63;.
@@ -2290,99 +1665,9 @@ public class ObjectDefinitionPersistenceImpl
 		OrderByComparator<ObjectDefinition> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath =
-					_finderPathWithoutPaginationFindByAccountEntryRestricted;
-				finderArgs = new Object[] {accountEntryRestricted};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByAccountEntryRestricted;
-			finderArgs = new Object[] {
-				accountEntryRestricted, start, end, orderByComparator
-			};
-		}
-
-		List<ObjectDefinition> list = null;
-
-		if (useFinderCache) {
-			list = (List<ObjectDefinition>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (ObjectDefinition objectDefinition : list) {
-					if (accountEntryRestricted !=
-							objectDefinition.isAccountEntryRestricted()) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			sb.append(
-				_FINDER_COLUMN_ACCOUNTENTRYRESTRICTED_ACCOUNTENTRYRESTRICTED_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(ObjectDefinitionModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(accountEntryRestricted);
-
-				list = (List<ObjectDefinition>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByAccountEntryRestricted.find(
+			finderCache, new Object[] {accountEntryRestricted}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -2406,16 +1691,11 @@ public class ObjectDefinitionPersistenceImpl
 			return objectDefinition;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("accountEntryRestricted=");
-		sb.append(accountEntryRestricted);
-
-		sb.append("}");
-
-		throw new NoSuchObjectDefinitionException(sb.toString());
+		throw new NoSuchObjectDefinitionException(
+			_collectionPersistenceFinderByAccountEntryRestricted.
+				buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY,
+					new Object[] {accountEntryRestricted}));
 	}
 
 	/**
@@ -2430,14 +1710,9 @@ public class ObjectDefinitionPersistenceImpl
 		boolean accountEntryRestricted,
 		OrderByComparator<ObjectDefinition> orderByComparator) {
 
-		List<ObjectDefinition> list = findByAccountEntryRestricted(
-			accountEntryRestricted, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByAccountEntryRestricted.fetchFirst(
+			finderCache, new Object[] {accountEntryRestricted},
+			orderByComparator);
 	}
 
 	/**
@@ -2594,13 +1869,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public void removeByAccountEntryRestricted(boolean accountEntryRestricted) {
-		for (ObjectDefinition objectDefinition :
-				findByAccountEntryRestricted(
-					accountEntryRestricted, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null)) {
-
-			remove(objectDefinition);
-		}
+		_collectionPersistenceFinderByAccountEntryRestricted.remove(
+			finderCache, new Object[] {accountEntryRestricted});
 	}
 
 	/**
@@ -2611,46 +1881,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public int countByAccountEntryRestricted(boolean accountEntryRestricted) {
-		FinderPath finderPath = _finderPathCountByAccountEntryRestricted;
-
-		Object[] finderArgs = new Object[] {accountEntryRestricted};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_OBJECTDEFINITION_WHERE);
-
-			sb.append(
-				_FINDER_COLUMN_ACCOUNTENTRYRESTRICTED_ACCOUNTENTRYRESTRICTED_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(accountEntryRestricted);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByAccountEntryRestricted.count(
+			finderCache, new Object[] {accountEntryRestricted});
 	}
 
 	/**
@@ -2718,6 +1950,8 @@ public class ObjectDefinitionPersistenceImpl
 			"objectDefinition.accountEntryRestricted = ?";
 
 	private FinderPath _finderPathFetchByClassName;
+	private UniquePersistenceFinder<ObjectDefinition>
+		_uniquePersistenceFinderByClassName;
 
 	/**
 	 * Returns the object definition where className = &#63; or throws a <code>NoSuchObjectDefinitionException</code> if it could not be found.
@@ -2733,20 +1967,15 @@ public class ObjectDefinitionPersistenceImpl
 		ObjectDefinition objectDefinition = fetchByClassName(className);
 
 		if (objectDefinition == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("className=");
-			sb.append(className);
-
-			sb.append("}");
+			String message =
+				_uniquePersistenceFinderByClassName.buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY, new Object[] {className});
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
+				_log.debug(message);
 			}
 
-			throw new NoSuchObjectDefinitionException(sb.toString());
+			throw new NoSuchObjectDefinitionException(message);
 		}
 
 		return objectDefinition;
@@ -2774,105 +2003,8 @@ public class ObjectDefinitionPersistenceImpl
 	public ObjectDefinition fetchByClassName(
 		String className, boolean useFinderCache) {
 
-		className = Objects.toString(className, "");
-
-		Object[] finderArgs = null;
-
-		if (useFinderCache) {
-			finderArgs = new Object[] {className};
-		}
-
-		Object result = null;
-
-		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByClassName, finderArgs, this);
-		}
-
-		if (result instanceof ObjectDefinition) {
-			ObjectDefinition objectDefinition = (ObjectDefinition)result;
-
-			if (!Objects.equals(className, objectDefinition.getClassName())) {
-				result = null;
-			}
-		}
-
-		if (result == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			boolean bindClassName = false;
-
-			if (className.isEmpty()) {
-				sb.append(_FINDER_COLUMN_CLASSNAME_CLASSNAME_3);
-			}
-			else {
-				bindClassName = true;
-
-				sb.append(_FINDER_COLUMN_CLASSNAME_CLASSNAME_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindClassName) {
-					queryPos.add(className);
-				}
-
-				List<ObjectDefinition> list = query.list();
-
-				if (list.isEmpty()) {
-					if (useFinderCache) {
-						finderCache.putResult(
-							_finderPathFetchByClassName, finderArgs, list);
-					}
-				}
-				else {
-					if (list.size() > 1) {
-						Collections.sort(list, Collections.reverseOrder());
-
-						if (_log.isWarnEnabled()) {
-							if (!useFinderCache) {
-								finderArgs = new Object[] {className};
-							}
-
-							_log.warn(
-								"ObjectDefinitionPersistenceImpl.fetchByClassName(String, boolean) with parameters (" +
-									StringUtil.merge(finderArgs) +
-										") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
-						}
-					}
-
-					ObjectDefinition objectDefinition = list.get(0);
-
-					result = objectDefinition;
-
-					cacheResult(objectDefinition);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		if (result instanceof List<?>) {
-			return null;
-		}
-		else {
-			return (ObjectDefinition)result;
-		}
+		return _uniquePersistenceFinderByClassName.fetch(
+			finderCache, new Object[] {className}, useFinderCache);
 	}
 
 	/**
@@ -2898,24 +2030,15 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public int countByClassName(String className) {
-		ObjectDefinition objectDefinition = fetchByClassName(className);
-
-		if (objectDefinition == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByClassName.count(
+			finderCache, new Object[] {className});
 	}
-
-	private static final String _FINDER_COLUMN_CLASSNAME_CLASSNAME_2 =
-		"objectDefinition.className = ?";
-
-	private static final String _FINDER_COLUMN_CLASSNAME_CLASSNAME_3 =
-		"(objectDefinition.className IS NULL OR objectDefinition.className = '')";
 
 	private FinderPath _finderPathWithPaginationFindBySystem;
 	private FinderPath _finderPathWithoutPaginationFindBySystem;
 	private FinderPath _finderPathCountBySystem;
+	private CollectionPersistenceFinder<ObjectDefinition>
+		_collectionPersistenceFinderBySystem;
 
 	/**
 	 * Returns all the object definitions where system = &#63;.
@@ -2988,93 +2111,9 @@ public class ObjectDefinitionPersistenceImpl
 		OrderByComparator<ObjectDefinition> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindBySystem;
-				finderArgs = new Object[] {system};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindBySystem;
-			finderArgs = new Object[] {system, start, end, orderByComparator};
-		}
-
-		List<ObjectDefinition> list = null;
-
-		if (useFinderCache) {
-			list = (List<ObjectDefinition>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (ObjectDefinition objectDefinition : list) {
-					if (system != objectDefinition.isSystem()) {
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_SYSTEM_SYSTEM_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(ObjectDefinitionModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(system);
-
-				list = (List<ObjectDefinition>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderBySystem.find(
+			finderCache, new Object[] {system}, start, end, orderByComparator,
+			useFinderCache);
 	}
 
 	/**
@@ -3098,16 +2137,9 @@ public class ObjectDefinitionPersistenceImpl
 			return objectDefinition;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("system=");
-		sb.append(system);
-
-		sb.append("}");
-
-		throw new NoSuchObjectDefinitionException(sb.toString());
+		throw new NoSuchObjectDefinitionException(
+			_collectionPersistenceFinderBySystem.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {system}));
 	}
 
 	/**
@@ -3121,14 +2153,8 @@ public class ObjectDefinitionPersistenceImpl
 	public ObjectDefinition fetchBySystem_First(
 		boolean system, OrderByComparator<ObjectDefinition> orderByComparator) {
 
-		List<ObjectDefinition> list = findBySystem(
-			system, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderBySystem.fetchFirst(
+			finderCache, new Object[] {system}, orderByComparator);
 	}
 
 	/**
@@ -3280,12 +2306,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public void removeBySystem(boolean system) {
-		for (ObjectDefinition objectDefinition :
-				findBySystem(
-					system, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
-
-			remove(objectDefinition);
-		}
+		_collectionPersistenceFinderBySystem.remove(
+			finderCache, new Object[] {system});
 	}
 
 	/**
@@ -3296,45 +2318,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public int countBySystem(boolean system) {
-		FinderPath finderPath = _finderPathCountBySystem;
-
-		Object[] finderArgs = new Object[] {system};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_SYSTEM_SYSTEM_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(system);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderBySystem.count(
+			finderCache, new Object[] {system});
 	}
 
 	/**
@@ -3393,15 +2378,14 @@ public class ObjectDefinitionPersistenceImpl
 		}
 	}
 
-	private static final String _FINDER_COLUMN_SYSTEM_SYSTEM_2 =
-		"objectDefinition.system = ?";
-
 	private static final String _FINDER_COLUMN_SYSTEM_SYSTEM_2_SQL =
 		"objectDefinition.system_ = ?";
 
 	private FinderPath _finderPathWithPaginationFindByC_U;
 	private FinderPath _finderPathWithoutPaginationFindByC_U;
 	private FinderPath _finderPathCountByC_U;
+	private CollectionPersistenceFinder<ObjectDefinition>
+		_collectionPersistenceFinderByC_U;
 
 	/**
 	 * Returns all the object definitions where companyId = &#63; and userId = &#63;.
@@ -3480,101 +2464,9 @@ public class ObjectDefinitionPersistenceImpl
 		OrderByComparator<ObjectDefinition> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByC_U;
-				finderArgs = new Object[] {companyId, userId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByC_U;
-			finderArgs = new Object[] {
-				companyId, userId, start, end, orderByComparator
-			};
-		}
-
-		List<ObjectDefinition> list = null;
-
-		if (useFinderCache) {
-			list = (List<ObjectDefinition>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (ObjectDefinition objectDefinition : list) {
-					if ((companyId != objectDefinition.getCompanyId()) ||
-						(userId != objectDefinition.getUserId())) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					4 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(4);
-			}
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_U_COMPANYID_2);
-
-			sb.append(_FINDER_COLUMN_C_U_USERID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(ObjectDefinitionModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				queryPos.add(userId);
-
-				list = (List<ObjectDefinition>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByC_U.find(
+			finderCache, new Object[] {companyId, userId}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -3599,19 +2491,9 @@ public class ObjectDefinitionPersistenceImpl
 			return objectDefinition;
 		}
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append(", userId=");
-		sb.append(userId);
-
-		sb.append("}");
-
-		throw new NoSuchObjectDefinitionException(sb.toString());
+		throw new NoSuchObjectDefinitionException(
+			_collectionPersistenceFinderByC_U.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {companyId, userId}));
 	}
 
 	/**
@@ -3627,14 +2509,8 @@ public class ObjectDefinitionPersistenceImpl
 		long companyId, long userId,
 		OrderByComparator<ObjectDefinition> orderByComparator) {
 
-		List<ObjectDefinition> list = findByC_U(
-			companyId, userId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByC_U.fetchFirst(
+			finderCache, new Object[] {companyId, userId}, orderByComparator);
 	}
 
 	/**
@@ -3794,13 +2670,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public void removeByC_U(long companyId, long userId) {
-		for (ObjectDefinition objectDefinition :
-				findByC_U(
-					companyId, userId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(objectDefinition);
-		}
+		_collectionPersistenceFinderByC_U.remove(
+			finderCache, new Object[] {companyId, userId});
 	}
 
 	/**
@@ -3812,49 +2683,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public int countByC_U(long companyId, long userId) {
-		FinderPath finderPath = _finderPathCountByC_U;
-
-		Object[] finderArgs = new Object[] {companyId, userId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_U_COMPANYID_2);
-
-			sb.append(_FINDER_COLUMN_C_U_USERID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				queryPos.add(userId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByC_U.count(
+			finderCache, new Object[] {companyId, userId});
 	}
 
 	/**
@@ -3926,6 +2756,8 @@ public class ObjectDefinitionPersistenceImpl
 		"objectDefinition.userId = ?";
 
 	private FinderPath _finderPathFetchByC_C;
+	private UniquePersistenceFinder<ObjectDefinition>
+		_uniquePersistenceFinderByC_C;
 
 	/**
 	 * Returns the object definition where companyId = &#63; and className = &#63; or throws a <code>NoSuchObjectDefinitionException</code> if it could not be found.
@@ -3942,23 +2774,16 @@ public class ObjectDefinitionPersistenceImpl
 		ObjectDefinition objectDefinition = fetchByC_C(companyId, className);
 
 		if (objectDefinition == null) {
-			StringBundler sb = new StringBundler(6);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("companyId=");
-			sb.append(companyId);
-
-			sb.append(", className=");
-			sb.append(className);
-
-			sb.append("}");
+			String message =
+				_uniquePersistenceFinderByC_C.buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY,
+					new Object[] {companyId, className});
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
+				_log.debug(message);
 			}
 
-			throw new NoSuchObjectDefinitionException(sb.toString());
+			throw new NoSuchObjectDefinitionException(message);
 		}
 
 		return objectDefinition;
@@ -3988,113 +2813,8 @@ public class ObjectDefinitionPersistenceImpl
 	public ObjectDefinition fetchByC_C(
 		long companyId, String className, boolean useFinderCache) {
 
-		className = Objects.toString(className, "");
-
-		Object[] finderArgs = null;
-
-		if (useFinderCache) {
-			finderArgs = new Object[] {companyId, className};
-		}
-
-		Object result = null;
-
-		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByC_C, finderArgs, this);
-		}
-
-		if (result instanceof ObjectDefinition) {
-			ObjectDefinition objectDefinition = (ObjectDefinition)result;
-
-			if ((companyId != objectDefinition.getCompanyId()) ||
-				!Objects.equals(className, objectDefinition.getClassName())) {
-
-				result = null;
-			}
-		}
-
-		if (result == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_C_COMPANYID_2);
-
-			boolean bindClassName = false;
-
-			if (className.isEmpty()) {
-				sb.append(_FINDER_COLUMN_C_C_CLASSNAME_3);
-			}
-			else {
-				bindClassName = true;
-
-				sb.append(_FINDER_COLUMN_C_C_CLASSNAME_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				if (bindClassName) {
-					queryPos.add(className);
-				}
-
-				List<ObjectDefinition> list = query.list();
-
-				if (list.isEmpty()) {
-					if (useFinderCache) {
-						finderCache.putResult(
-							_finderPathFetchByC_C, finderArgs, list);
-					}
-				}
-				else {
-					if (list.size() > 1) {
-						Collections.sort(list, Collections.reverseOrder());
-
-						if (_log.isWarnEnabled()) {
-							if (!useFinderCache) {
-								finderArgs = new Object[] {
-									companyId, className
-								};
-							}
-
-							_log.warn(
-								"ObjectDefinitionPersistenceImpl.fetchByC_C(long, String, boolean) with parameters (" +
-									StringUtil.merge(finderArgs) +
-										") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
-						}
-					}
-
-					ObjectDefinition objectDefinition = list.get(0);
-
-					result = objectDefinition;
-
-					cacheResult(objectDefinition);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		if (result instanceof List<?>) {
-			return null;
-		}
-		else {
-			return (ObjectDefinition)result;
-		}
+		return _uniquePersistenceFinderByC_C.fetch(
+			finderCache, new Object[] {companyId, className}, useFinderCache);
 	}
 
 	/**
@@ -4122,25 +2842,13 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public int countByC_C(long companyId, String className) {
-		ObjectDefinition objectDefinition = fetchByC_C(companyId, className);
-
-		if (objectDefinition == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByC_C.count(
+			finderCache, new Object[] {companyId, className});
 	}
 
-	private static final String _FINDER_COLUMN_C_C_COMPANYID_2 =
-		"objectDefinition.companyId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_C_CLASSNAME_2 =
-		"objectDefinition.className = ?";
-
-	private static final String _FINDER_COLUMN_C_C_CLASSNAME_3 =
-		"(objectDefinition.className IS NULL OR objectDefinition.className = '')";
-
 	private FinderPath _finderPathFetchByC_N;
+	private UniquePersistenceFinder<ObjectDefinition>
+		_uniquePersistenceFinderByC_N;
 
 	/**
 	 * Returns the object definition where companyId = &#63; and name = &#63; or throws a <code>NoSuchObjectDefinitionException</code> if it could not be found.
@@ -4157,23 +2865,15 @@ public class ObjectDefinitionPersistenceImpl
 		ObjectDefinition objectDefinition = fetchByC_N(companyId, name);
 
 		if (objectDefinition == null) {
-			StringBundler sb = new StringBundler(6);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("companyId=");
-			sb.append(companyId);
-
-			sb.append(", name=");
-			sb.append(name);
-
-			sb.append("}");
+			String message =
+				_uniquePersistenceFinderByC_N.buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY, new Object[] {companyId, name});
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
+				_log.debug(message);
 			}
 
-			throw new NoSuchObjectDefinitionException(sb.toString());
+			throw new NoSuchObjectDefinitionException(message);
 		}
 
 		return objectDefinition;
@@ -4203,111 +2903,8 @@ public class ObjectDefinitionPersistenceImpl
 	public ObjectDefinition fetchByC_N(
 		long companyId, String name, boolean useFinderCache) {
 
-		name = Objects.toString(name, "");
-
-		Object[] finderArgs = null;
-
-		if (useFinderCache) {
-			finderArgs = new Object[] {companyId, name};
-		}
-
-		Object result = null;
-
-		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByC_N, finderArgs, this);
-		}
-
-		if (result instanceof ObjectDefinition) {
-			ObjectDefinition objectDefinition = (ObjectDefinition)result;
-
-			if ((companyId != objectDefinition.getCompanyId()) ||
-				!Objects.equals(name, objectDefinition.getName())) {
-
-				result = null;
-			}
-		}
-
-		if (result == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_N_COMPANYID_2);
-
-			boolean bindName = false;
-
-			if (name.isEmpty()) {
-				sb.append(_FINDER_COLUMN_C_N_NAME_3);
-			}
-			else {
-				bindName = true;
-
-				sb.append(_FINDER_COLUMN_C_N_NAME_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				if (bindName) {
-					queryPos.add(name);
-				}
-
-				List<ObjectDefinition> list = query.list();
-
-				if (list.isEmpty()) {
-					if (useFinderCache) {
-						finderCache.putResult(
-							_finderPathFetchByC_N, finderArgs, list);
-					}
-				}
-				else {
-					if (list.size() > 1) {
-						Collections.sort(list, Collections.reverseOrder());
-
-						if (_log.isWarnEnabled()) {
-							if (!useFinderCache) {
-								finderArgs = new Object[] {companyId, name};
-							}
-
-							_log.warn(
-								"ObjectDefinitionPersistenceImpl.fetchByC_N(long, String, boolean) with parameters (" +
-									StringUtil.merge(finderArgs) +
-										") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
-						}
-					}
-
-					ObjectDefinition objectDefinition = list.get(0);
-
-					result = objectDefinition;
-
-					cacheResult(objectDefinition);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		if (result instanceof List<?>) {
-			return null;
-		}
-		else {
-			return (ObjectDefinition)result;
-		}
+		return _uniquePersistenceFinderByC_N.fetch(
+			finderCache, new Object[] {companyId, name}, useFinderCache);
 	}
 
 	/**
@@ -4335,27 +2932,15 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public int countByC_N(long companyId, String name) {
-		ObjectDefinition objectDefinition = fetchByC_N(companyId, name);
-
-		if (objectDefinition == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByC_N.count(
+			finderCache, new Object[] {companyId, name});
 	}
-
-	private static final String _FINDER_COLUMN_C_N_COMPANYID_2 =
-		"objectDefinition.companyId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_N_NAME_2 =
-		"objectDefinition.name = ?";
-
-	private static final String _FINDER_COLUMN_C_N_NAME_3 =
-		"(objectDefinition.name IS NULL OR objectDefinition.name = '')";
 
 	private FinderPath _finderPathWithPaginationFindByC_S;
 	private FinderPath _finderPathWithoutPaginationFindByC_S;
 	private FinderPath _finderPathCountByC_S;
+	private CollectionPersistenceFinder<ObjectDefinition>
+		_collectionPersistenceFinderByC_S;
 
 	/**
 	 * Returns all the object definitions where companyId = &#63; and status = &#63;.
@@ -4434,101 +3019,9 @@ public class ObjectDefinitionPersistenceImpl
 		OrderByComparator<ObjectDefinition> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByC_S;
-				finderArgs = new Object[] {companyId, status};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByC_S;
-			finderArgs = new Object[] {
-				companyId, status, start, end, orderByComparator
-			};
-		}
-
-		List<ObjectDefinition> list = null;
-
-		if (useFinderCache) {
-			list = (List<ObjectDefinition>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (ObjectDefinition objectDefinition : list) {
-					if ((companyId != objectDefinition.getCompanyId()) ||
-						(status != objectDefinition.getStatus())) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					4 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(4);
-			}
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_S_COMPANYID_2);
-
-			sb.append(_FINDER_COLUMN_C_S_STATUS_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(ObjectDefinitionModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				queryPos.add(status);
-
-				list = (List<ObjectDefinition>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByC_S.find(
+			finderCache, new Object[] {companyId, status}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -4553,19 +3046,9 @@ public class ObjectDefinitionPersistenceImpl
 			return objectDefinition;
 		}
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append(", status=");
-		sb.append(status);
-
-		sb.append("}");
-
-		throw new NoSuchObjectDefinitionException(sb.toString());
+		throw new NoSuchObjectDefinitionException(
+			_collectionPersistenceFinderByC_S.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {companyId, status}));
 	}
 
 	/**
@@ -4581,14 +3064,8 @@ public class ObjectDefinitionPersistenceImpl
 		long companyId, int status,
 		OrderByComparator<ObjectDefinition> orderByComparator) {
 
-		List<ObjectDefinition> list = findByC_S(
-			companyId, status, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByC_S.fetchFirst(
+			finderCache, new Object[] {companyId, status}, orderByComparator);
 	}
 
 	/**
@@ -4748,13 +3225,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public void removeByC_S(long companyId, int status) {
-		for (ObjectDefinition objectDefinition :
-				findByC_S(
-					companyId, status, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(objectDefinition);
-		}
+		_collectionPersistenceFinderByC_S.remove(
+			finderCache, new Object[] {companyId, status});
 	}
 
 	/**
@@ -4766,49 +3238,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public int countByC_S(long companyId, int status) {
-		FinderPath finderPath = _finderPathCountByC_S;
-
-		Object[] finderArgs = new Object[] {companyId, status};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_S_COMPANYID_2);
-
-			sb.append(_FINDER_COLUMN_C_S_STATUS_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				queryPos.add(status);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByC_S.count(
+			finderCache, new Object[] {companyId, status});
 	}
 
 	/**
@@ -4882,6 +3313,8 @@ public class ObjectDefinitionPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByS_S;
 	private FinderPath _finderPathWithoutPaginationFindByS_S;
 	private FinderPath _finderPathCountByS_S;
+	private CollectionPersistenceFinder<ObjectDefinition>
+		_collectionPersistenceFinderByS_S;
 
 	/**
 	 * Returns all the object definitions where system = &#63; and status = &#63;.
@@ -4959,101 +3392,9 @@ public class ObjectDefinitionPersistenceImpl
 		OrderByComparator<ObjectDefinition> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByS_S;
-				finderArgs = new Object[] {system, status};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByS_S;
-			finderArgs = new Object[] {
-				system, status, start, end, orderByComparator
-			};
-		}
-
-		List<ObjectDefinition> list = null;
-
-		if (useFinderCache) {
-			list = (List<ObjectDefinition>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (ObjectDefinition objectDefinition : list) {
-					if ((system != objectDefinition.isSystem()) ||
-						(status != objectDefinition.getStatus())) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					4 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(4);
-			}
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_S_S_SYSTEM_2);
-
-			sb.append(_FINDER_COLUMN_S_S_STATUS_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(ObjectDefinitionModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(system);
-
-				queryPos.add(status);
-
-				list = (List<ObjectDefinition>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByS_S.find(
+			finderCache, new Object[] {system, status}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -5078,19 +3419,9 @@ public class ObjectDefinitionPersistenceImpl
 			return objectDefinition;
 		}
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("system=");
-		sb.append(system);
-
-		sb.append(", status=");
-		sb.append(status);
-
-		sb.append("}");
-
-		throw new NoSuchObjectDefinitionException(sb.toString());
+		throw new NoSuchObjectDefinitionException(
+			_collectionPersistenceFinderByS_S.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {system, status}));
 	}
 
 	/**
@@ -5106,14 +3437,8 @@ public class ObjectDefinitionPersistenceImpl
 		boolean system, int status,
 		OrderByComparator<ObjectDefinition> orderByComparator) {
 
-		List<ObjectDefinition> list = findByS_S(
-			system, status, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByS_S.fetchFirst(
+			finderCache, new Object[] {system, status}, orderByComparator);
 	}
 
 	/**
@@ -5273,13 +3598,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public void removeByS_S(boolean system, int status) {
-		for (ObjectDefinition objectDefinition :
-				findByS_S(
-					system, status, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(objectDefinition);
-		}
+		_collectionPersistenceFinderByS_S.remove(
+			finderCache, new Object[] {system, status});
 	}
 
 	/**
@@ -5291,49 +3611,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public int countByS_S(boolean system, int status) {
-		FinderPath finderPath = _finderPathCountByS_S;
-
-		Object[] finderArgs = new Object[] {system, status};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_S_S_SYSTEM_2);
-
-			sb.append(_FINDER_COLUMN_S_S_STATUS_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(system);
-
-				queryPos.add(status);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByS_S.count(
+			finderCache, new Object[] {system, status});
 	}
 
 	/**
@@ -5398,9 +3677,6 @@ public class ObjectDefinitionPersistenceImpl
 		}
 	}
 
-	private static final String _FINDER_COLUMN_S_S_SYSTEM_2 =
-		"objectDefinition.system = ? AND ";
-
 	private static final String _FINDER_COLUMN_S_S_SYSTEM_2_SQL =
 		"objectDefinition.system_ = ? AND ";
 
@@ -5410,6 +3686,8 @@ public class ObjectDefinitionPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByC_A_S;
 	private FinderPath _finderPathWithoutPaginationFindByC_A_S;
 	private FinderPath _finderPathCountByC_A_S;
+	private CollectionPersistenceFinder<ObjectDefinition>
+		_collectionPersistenceFinderByC_A_S;
 
 	/**
 	 * Returns all the object definitions where companyId = &#63; and active = &#63; and status = &#63;.
@@ -5495,106 +3773,9 @@ public class ObjectDefinitionPersistenceImpl
 		OrderByComparator<ObjectDefinition> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByC_A_S;
-				finderArgs = new Object[] {companyId, active, status};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByC_A_S;
-			finderArgs = new Object[] {
-				companyId, active, status, start, end, orderByComparator
-			};
-		}
-
-		List<ObjectDefinition> list = null;
-
-		if (useFinderCache) {
-			list = (List<ObjectDefinition>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (ObjectDefinition objectDefinition : list) {
-					if ((companyId != objectDefinition.getCompanyId()) ||
-						(active != objectDefinition.isActive()) ||
-						(status != objectDefinition.getStatus())) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					5 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(5);
-			}
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_A_S_COMPANYID_2);
-
-			sb.append(_FINDER_COLUMN_C_A_S_ACTIVE_2);
-
-			sb.append(_FINDER_COLUMN_C_A_S_STATUS_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(ObjectDefinitionModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				queryPos.add(active);
-
-				queryPos.add(status);
-
-				list = (List<ObjectDefinition>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByC_A_S.find(
+			finderCache, new Object[] {companyId, active, status}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -5620,22 +3801,10 @@ public class ObjectDefinitionPersistenceImpl
 			return objectDefinition;
 		}
 
-		StringBundler sb = new StringBundler(8);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append(", active=");
-		sb.append(active);
-
-		sb.append(", status=");
-		sb.append(status);
-
-		sb.append("}");
-
-		throw new NoSuchObjectDefinitionException(sb.toString());
+		throw new NoSuchObjectDefinitionException(
+			_collectionPersistenceFinderByC_A_S.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY,
+				new Object[] {companyId, active, status}));
 	}
 
 	/**
@@ -5652,14 +3821,9 @@ public class ObjectDefinitionPersistenceImpl
 		long companyId, boolean active, int status,
 		OrderByComparator<ObjectDefinition> orderByComparator) {
 
-		List<ObjectDefinition> list = findByC_A_S(
-			companyId, active, status, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByC_A_S.fetchFirst(
+			finderCache, new Object[] {companyId, active, status},
+			orderByComparator);
 	}
 
 	/**
@@ -5831,13 +3995,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public void removeByC_A_S(long companyId, boolean active, int status) {
-		for (ObjectDefinition objectDefinition :
-				findByC_A_S(
-					companyId, active, status, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null)) {
-
-			remove(objectDefinition);
-		}
+		_collectionPersistenceFinderByC_A_S.remove(
+			finderCache, new Object[] {companyId, active, status});
 	}
 
 	/**
@@ -5850,53 +4009,8 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public int countByC_A_S(long companyId, boolean active, int status) {
-		FinderPath finderPath = _finderPathCountByC_A_S;
-
-		Object[] finderArgs = new Object[] {companyId, active, status};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_SQL_COUNT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_A_S_COMPANYID_2);
-
-			sb.append(_FINDER_COLUMN_C_A_S_ACTIVE_2);
-
-			sb.append(_FINDER_COLUMN_C_A_S_STATUS_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				queryPos.add(active);
-
-				queryPos.add(status);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByC_A_S.count(
+			finderCache, new Object[] {companyId, active, status});
 	}
 
 	/**
@@ -5969,9 +4083,6 @@ public class ObjectDefinitionPersistenceImpl
 	private static final String _FINDER_COLUMN_C_A_S_COMPANYID_2 =
 		"objectDefinition.companyId = ? AND ";
 
-	private static final String _FINDER_COLUMN_C_A_S_ACTIVE_2 =
-		"objectDefinition.active = ? AND ";
-
 	private static final String _FINDER_COLUMN_C_A_S_ACTIVE_2_SQL =
 		"objectDefinition.active_ = ? AND ";
 
@@ -5981,6 +4092,8 @@ public class ObjectDefinitionPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByC_M_S;
 	private FinderPath _finderPathWithoutPaginationFindByC_M_S;
 	private FinderPath _finderPathCountByC_M_S;
+	private CollectionPersistenceFinder<ObjectDefinition>
+		_collectionPersistenceFinderByC_M_S;
 
 	/**
 	 * Returns all the object definitions where companyId = &#63; and modifiable = &#63; and system = &#63;.
@@ -6067,106 +4180,9 @@ public class ObjectDefinitionPersistenceImpl
 		OrderByComparator<ObjectDefinition> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByC_M_S;
-				finderArgs = new Object[] {companyId, modifiable, system};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByC_M_S;
-			finderArgs = new Object[] {
-				companyId, modifiable, system, start, end, orderByComparator
-			};
-		}
-
-		List<ObjectDefinition> list = null;
-
-		if (useFinderCache) {
-			list = (List<ObjectDefinition>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (ObjectDefinition objectDefinition : list) {
-					if ((companyId != objectDefinition.getCompanyId()) ||
-						(modifiable != objectDefinition.isModifiable()) ||
-						(system != objectDefinition.isSystem())) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					5 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(5);
-			}
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_M_S_COMPANYID_2);
-
-			sb.append(_FINDER_COLUMN_C_M_S_MODIFIABLE_2);
-
-			sb.append(_FINDER_COLUMN_C_M_S_SYSTEM_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(ObjectDefinitionModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				queryPos.add(modifiable);
-
-				queryPos.add(system);
-
-				list = (List<ObjectDefinition>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByC_M_S.find(
+			finderCache, new Object[] {companyId, modifiable, system}, start,
+			end, orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -6192,22 +4208,10 @@ public class ObjectDefinitionPersistenceImpl
 			return objectDefinition;
 		}
 
-		StringBundler sb = new StringBundler(8);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append(", modifiable=");
-		sb.append(modifiable);
-
-		sb.append(", system=");
-		sb.append(system);
-
-		sb.append("}");
-
-		throw new NoSuchObjectDefinitionException(sb.toString());
+		throw new NoSuchObjectDefinitionException(
+			_collectionPersistenceFinderByC_M_S.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY,
+				new Object[] {companyId, modifiable, system}));
 	}
 
 	/**
@@ -6224,14 +4228,9 @@ public class ObjectDefinitionPersistenceImpl
 		long companyId, boolean modifiable, boolean system,
 		OrderByComparator<ObjectDefinition> orderByComparator) {
 
-		List<ObjectDefinition> list = findByC_M_S(
-			companyId, modifiable, system, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByC_M_S.fetchFirst(
+			finderCache, new Object[] {companyId, modifiable, system},
+			orderByComparator);
 	}
 
 	/**
@@ -6407,13 +4406,8 @@ public class ObjectDefinitionPersistenceImpl
 	public void removeByC_M_S(
 		long companyId, boolean modifiable, boolean system) {
 
-		for (ObjectDefinition objectDefinition :
-				findByC_M_S(
-					companyId, modifiable, system, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null)) {
-
-			remove(objectDefinition);
-		}
+		_collectionPersistenceFinderByC_M_S.remove(
+			finderCache, new Object[] {companyId, modifiable, system});
 	}
 
 	/**
@@ -6428,53 +4422,8 @@ public class ObjectDefinitionPersistenceImpl
 	public int countByC_M_S(
 		long companyId, boolean modifiable, boolean system) {
 
-		FinderPath finderPath = _finderPathCountByC_M_S;
-
-		Object[] finderArgs = new Object[] {companyId, modifiable, system};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_SQL_COUNT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_M_S_COMPANYID_2);
-
-			sb.append(_FINDER_COLUMN_C_M_S_MODIFIABLE_2);
-
-			sb.append(_FINDER_COLUMN_C_M_S_SYSTEM_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				queryPos.add(modifiable);
-
-				queryPos.add(system);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByC_M_S.count(
+			finderCache, new Object[] {companyId, modifiable, system});
 	}
 
 	/**
@@ -6552,15 +4501,14 @@ public class ObjectDefinitionPersistenceImpl
 	private static final String _FINDER_COLUMN_C_M_S_MODIFIABLE_2 =
 		"objectDefinition.modifiable = ? AND ";
 
-	private static final String _FINDER_COLUMN_C_M_S_SYSTEM_2 =
-		"objectDefinition.system = ?";
-
 	private static final String _FINDER_COLUMN_C_M_S_SYSTEM_2_SQL =
 		"objectDefinition.system_ = ?";
 
 	private FinderPath _finderPathWithPaginationFindByC_A_S_S;
 	private FinderPath _finderPathWithoutPaginationFindByC_A_S_S;
 	private FinderPath _finderPathCountByC_A_S_S;
+	private CollectionPersistenceFinder<ObjectDefinition>
+		_collectionPersistenceFinderByC_A_S_S;
 
 	/**
 	 * Returns all the object definitions where companyId = &#63; and active = &#63; and system = &#63; and status = &#63;.
@@ -6653,111 +4601,9 @@ public class ObjectDefinitionPersistenceImpl
 		int end, OrderByComparator<ObjectDefinition> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByC_A_S_S;
-				finderArgs = new Object[] {companyId, active, system, status};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByC_A_S_S;
-			finderArgs = new Object[] {
-				companyId, active, system, status, start, end, orderByComparator
-			};
-		}
-
-		List<ObjectDefinition> list = null;
-
-		if (useFinderCache) {
-			list = (List<ObjectDefinition>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (ObjectDefinition objectDefinition : list) {
-					if ((companyId != objectDefinition.getCompanyId()) ||
-						(active != objectDefinition.isActive()) ||
-						(system != objectDefinition.isSystem()) ||
-						(status != objectDefinition.getStatus())) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					6 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(6);
-			}
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_A_S_S_COMPANYID_2);
-
-			sb.append(_FINDER_COLUMN_C_A_S_S_ACTIVE_2);
-
-			sb.append(_FINDER_COLUMN_C_A_S_S_SYSTEM_2);
-
-			sb.append(_FINDER_COLUMN_C_A_S_S_STATUS_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(ObjectDefinitionModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				queryPos.add(active);
-
-				queryPos.add(system);
-
-				queryPos.add(status);
-
-				list = (List<ObjectDefinition>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByC_A_S_S.find(
+			finderCache, new Object[] {companyId, active, system, status},
+			start, end, orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -6784,25 +4630,10 @@ public class ObjectDefinitionPersistenceImpl
 			return objectDefinition;
 		}
 
-		StringBundler sb = new StringBundler(10);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append(", active=");
-		sb.append(active);
-
-		sb.append(", system=");
-		sb.append(system);
-
-		sb.append(", status=");
-		sb.append(status);
-
-		sb.append("}");
-
-		throw new NoSuchObjectDefinitionException(sb.toString());
+		throw new NoSuchObjectDefinitionException(
+			_collectionPersistenceFinderByC_A_S_S.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY,
+				new Object[] {companyId, active, system, status}));
 	}
 
 	/**
@@ -6820,14 +4651,9 @@ public class ObjectDefinitionPersistenceImpl
 		long companyId, boolean active, boolean system, int status,
 		OrderByComparator<ObjectDefinition> orderByComparator) {
 
-		List<ObjectDefinition> list = findByC_A_S_S(
-			companyId, active, system, status, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByC_A_S_S.fetchFirst(
+			finderCache, new Object[] {companyId, active, system, status},
+			orderByComparator);
 	}
 
 	/**
@@ -7012,13 +4838,8 @@ public class ObjectDefinitionPersistenceImpl
 	public void removeByC_A_S_S(
 		long companyId, boolean active, boolean system, int status) {
 
-		for (ObjectDefinition objectDefinition :
-				findByC_A_S_S(
-					companyId, active, system, status, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null)) {
-
-			remove(objectDefinition);
-		}
+		_collectionPersistenceFinderByC_A_S_S.remove(
+			finderCache, new Object[] {companyId, active, system, status});
 	}
 
 	/**
@@ -7034,57 +4855,8 @@ public class ObjectDefinitionPersistenceImpl
 	public int countByC_A_S_S(
 		long companyId, boolean active, boolean system, int status) {
 
-		FinderPath finderPath = _finderPathCountByC_A_S_S;
-
-		Object[] finderArgs = new Object[] {companyId, active, system, status};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(5);
-
-			sb.append(_SQL_COUNT_OBJECTDEFINITION_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_A_S_S_COMPANYID_2);
-
-			sb.append(_FINDER_COLUMN_C_A_S_S_ACTIVE_2);
-
-			sb.append(_FINDER_COLUMN_C_A_S_S_SYSTEM_2);
-
-			sb.append(_FINDER_COLUMN_C_A_S_S_STATUS_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				queryPos.add(active);
-
-				queryPos.add(system);
-
-				queryPos.add(status);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByC_A_S_S.count(
+			finderCache, new Object[] {companyId, active, system, status});
 	}
 
 	/**
@@ -7164,14 +4936,8 @@ public class ObjectDefinitionPersistenceImpl
 	private static final String _FINDER_COLUMN_C_A_S_S_COMPANYID_2 =
 		"objectDefinition.companyId = ? AND ";
 
-	private static final String _FINDER_COLUMN_C_A_S_S_ACTIVE_2 =
-		"objectDefinition.active = ? AND ";
-
 	private static final String _FINDER_COLUMN_C_A_S_S_ACTIVE_2_SQL =
 		"objectDefinition.active_ = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_A_S_S_SYSTEM_2 =
-		"objectDefinition.system = ? AND ";
 
 	private static final String _FINDER_COLUMN_C_A_S_S_SYSTEM_2_SQL =
 		"objectDefinition.system_ = ? AND ";
@@ -8670,6 +6436,8 @@ public class ObjectDefinitionPersistenceImpl
 		"objectDefinition.status = ?";
 
 	private FinderPath _finderPathFetchByERC_C;
+	private UniquePersistenceFinder<ObjectDefinition>
+		_uniquePersistenceFinderByERC_C;
 
 	/**
 	 * Returns the object definition where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchObjectDefinitionException</code> if it could not be found.
@@ -8688,23 +6456,16 @@ public class ObjectDefinitionPersistenceImpl
 			externalReferenceCode, companyId);
 
 		if (objectDefinition == null) {
-			StringBundler sb = new StringBundler(6);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("externalReferenceCode=");
-			sb.append(externalReferenceCode);
-
-			sb.append(", companyId=");
-			sb.append(companyId);
-
-			sb.append("}");
+			String message =
+				_uniquePersistenceFinderByERC_C.buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY,
+					new Object[] {externalReferenceCode, companyId});
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
+				_log.debug(message);
 			}
 
-			throw new NoSuchObjectDefinitionException(sb.toString());
+			throw new NoSuchObjectDefinitionException(message);
 		}
 
 		return objectDefinition;
@@ -8736,98 +6497,9 @@ public class ObjectDefinitionPersistenceImpl
 	public ObjectDefinition fetchByERC_C(
 		String externalReferenceCode, long companyId, boolean useFinderCache) {
 
-		externalReferenceCode = Objects.toString(externalReferenceCode, "");
-
-		Object[] finderArgs = null;
-
-		if (useFinderCache) {
-			finderArgs = new Object[] {externalReferenceCode, companyId};
-		}
-
-		Object result = null;
-
-		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByERC_C, finderArgs, this);
-		}
-
-		if (result instanceof ObjectDefinition) {
-			ObjectDefinition objectDefinition = (ObjectDefinition)result;
-
-			if (!Objects.equals(
-					externalReferenceCode,
-					objectDefinition.getExternalReferenceCode()) ||
-				(companyId != objectDefinition.getCompanyId())) {
-
-				result = null;
-			}
-		}
-
-		if (result == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_SQL_SELECT_OBJECTDEFINITION_WHERE);
-
-			boolean bindExternalReferenceCode = false;
-
-			if (externalReferenceCode.isEmpty()) {
-				sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3);
-			}
-			else {
-				bindExternalReferenceCode = true;
-
-				sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2);
-			}
-
-			sb.append(_FINDER_COLUMN_ERC_C_COMPANYID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindExternalReferenceCode) {
-					queryPos.add(externalReferenceCode);
-				}
-
-				queryPos.add(companyId);
-
-				List<ObjectDefinition> list = query.list();
-
-				if (list.isEmpty()) {
-					if (useFinderCache) {
-						finderCache.putResult(
-							_finderPathFetchByERC_C, finderArgs, list);
-					}
-				}
-				else {
-					ObjectDefinition objectDefinition = list.get(0);
-
-					result = objectDefinition;
-
-					cacheResult(objectDefinition);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		if (result instanceof List<?>) {
-			return null;
-		}
-		else {
-			return (ObjectDefinition)result;
-		}
+		return _uniquePersistenceFinderByERC_C.fetch(
+			finderCache, new Object[] {externalReferenceCode, companyId},
+			useFinderCache);
 	}
 
 	/**
@@ -8857,24 +6529,9 @@ public class ObjectDefinitionPersistenceImpl
 	 */
 	@Override
 	public int countByERC_C(String externalReferenceCode, long companyId) {
-		ObjectDefinition objectDefinition = fetchByERC_C(
-			externalReferenceCode, companyId);
-
-		if (objectDefinition == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByERC_C.count(
+			finderCache, new Object[] {externalReferenceCode, companyId});
 	}
-
-	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2 =
-		"objectDefinition.externalReferenceCode = ? AND ";
-
-	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3 =
-		"(objectDefinition.externalReferenceCode IS NULL OR objectDefinition.externalReferenceCode = '') AND ";
-
-	private static final String _FINDER_COLUMN_ERC_C_COMPANYID_2 =
-		"objectDefinition.companyId = ?";
 
 	public ObjectDefinitionPersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
@@ -9593,6 +7250,16 @@ public class ObjectDefinitionPersistenceImpl
 			new String[] {String.class.getName()}, new String[] {"uuid_"},
 			false);
 
+		_collectionPersistenceFinderByUuid = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByUuid,
+			_finderPathWithoutPaginationFindByUuid, _finderPathCountByUuid,
+			_SQL_SELECT_OBJECTDEFINITION_WHERE,
+			_SQL_COUNT_OBJECTDEFINITION_WHERE,
+			ObjectDefinitionModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"objectDefinition.", "uuid", FinderColumn.Type.STRING, "=",
+				true, true, ObjectDefinition::getUuid));
+
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
@@ -9612,6 +7279,20 @@ public class ObjectDefinitionPersistenceImpl
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, false);
 
+		_collectionPersistenceFinderByUuid_C =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByUuid_C,
+				_finderPathWithoutPaginationFindByUuid_C,
+				_finderPathCountByUuid_C, _SQL_SELECT_OBJECTDEFINITION_WHERE,
+				_SQL_COUNT_OBJECTDEFINITION_WHERE,
+				ObjectDefinitionModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"objectDefinition.", "uuid", FinderColumn.Type.STRING, "=",
+					true, false, ObjectDefinition::getUuid),
+				new FinderColumn<>(
+					"objectDefinition.", "companyId", FinderColumn.Type.LONG,
+					"=", true, true, ObjectDefinition::getCompanyId));
+
 		_finderPathWithPaginationFindByCompanyId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
 			new String[] {
@@ -9630,6 +7311,17 @@ public class ObjectDefinitionPersistenceImpl
 			new String[] {Long.class.getName()}, new String[] {"companyId"},
 			false);
 
+		_collectionPersistenceFinderByCompanyId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByCompanyId,
+				_finderPathWithoutPaginationFindByCompanyId,
+				_finderPathCountByCompanyId, _SQL_SELECT_OBJECTDEFINITION_WHERE,
+				_SQL_COUNT_OBJECTDEFINITION_WHERE,
+				ObjectDefinitionModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"objectDefinition.", "companyId", FinderColumn.Type.LONG,
+					"=", true, true, ObjectDefinition::getCompanyId));
+
 		_finderPathWithPaginationFindByObjectFolderId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByObjectFolderId",
 			new String[] {
@@ -9647,6 +7339,19 @@ public class ObjectDefinitionPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByObjectFolderId",
 			new String[] {Long.class.getName()},
 			new String[] {"objectFolderId"}, false);
+
+		_collectionPersistenceFinderByObjectFolderId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByObjectFolderId,
+				_finderPathWithoutPaginationFindByObjectFolderId,
+				_finderPathCountByObjectFolderId,
+				_SQL_SELECT_OBJECTDEFINITION_WHERE,
+				_SQL_COUNT_OBJECTDEFINITION_WHERE,
+				ObjectDefinitionModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"objectDefinition.", "objectFolderId",
+					FinderColumn.Type.LONG, "=", true, true,
+					ObjectDefinition::getObjectFolderId));
 
 		_finderPathWithPaginationFindByAccountEntryRestricted = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
@@ -9670,10 +7375,30 @@ public class ObjectDefinitionPersistenceImpl
 			new String[] {Boolean.class.getName()},
 			new String[] {"accountEntryRestricted"}, false);
 
+		_collectionPersistenceFinderByAccountEntryRestricted =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByAccountEntryRestricted,
+				_finderPathWithoutPaginationFindByAccountEntryRestricted,
+				_finderPathCountByAccountEntryRestricted,
+				_SQL_SELECT_OBJECTDEFINITION_WHERE,
+				_SQL_COUNT_OBJECTDEFINITION_WHERE,
+				ObjectDefinitionModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"objectDefinition.", "accountEntryRestricted",
+					FinderColumn.Type.BOOLEAN, "=", true, true,
+					ObjectDefinition::isAccountEntryRestricted));
+
 		_finderPathFetchByClassName = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByClassName",
 			new String[] {String.class.getName()}, new String[] {"className"},
 			true);
+
+		_uniquePersistenceFinderByClassName = new UniquePersistenceFinder<>(
+			this, _finderPathFetchByClassName,
+			_SQL_SELECT_OBJECTDEFINITION_WHERE,
+			new FinderColumn<>(
+				"objectDefinition.", "className", FinderColumn.Type.STRING, "=",
+				true, true, ObjectDefinition::getClassName));
 
 		_finderPathWithPaginationFindBySystem = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findBySystem",
@@ -9692,6 +7417,17 @@ public class ObjectDefinitionPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countBySystem",
 			new String[] {Boolean.class.getName()}, new String[] {"system_"},
 			false);
+
+		_collectionPersistenceFinderBySystem =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindBySystem,
+				_finderPathWithoutPaginationFindBySystem,
+				_finderPathCountBySystem, _SQL_SELECT_OBJECTDEFINITION_WHERE,
+				_SQL_COUNT_OBJECTDEFINITION_WHERE,
+				ObjectDefinitionModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"objectDefinition.", "system", FinderColumn.Type.BOOLEAN,
+					"=", true, true, ObjectDefinition::isSystem));
 
 		_finderPathWithPaginationFindByC_U = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_U",
@@ -9712,10 +7448,32 @@ public class ObjectDefinitionPersistenceImpl
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"companyId", "userId"}, false);
 
+		_collectionPersistenceFinderByC_U = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByC_U,
+			_finderPathWithoutPaginationFindByC_U, _finderPathCountByC_U,
+			_SQL_SELECT_OBJECTDEFINITION_WHERE,
+			_SQL_COUNT_OBJECTDEFINITION_WHERE,
+			ObjectDefinitionModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"objectDefinition.", "companyId", FinderColumn.Type.LONG, "=",
+				true, false, ObjectDefinition::getCompanyId),
+			new FinderColumn<>(
+				"objectDefinition.", "userId", FinderColumn.Type.LONG, "=",
+				true, true, ObjectDefinition::getUserId));
+
 		_finderPathFetchByC_C = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_C",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "className"}, true);
+
+		_uniquePersistenceFinderByC_C = new UniquePersistenceFinder<>(
+			this, _finderPathFetchByC_C, _SQL_SELECT_OBJECTDEFINITION_WHERE,
+			new FinderColumn<>(
+				"objectDefinition.", "companyId", FinderColumn.Type.LONG, "=",
+				true, false, ObjectDefinition::getCompanyId),
+			new FinderColumn<>(
+				"objectDefinition.", "className", FinderColumn.Type.STRING, "=",
+				true, true, ObjectDefinition::getClassName));
 
 		_finderPathFetchByC_N = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_N",
@@ -9723,6 +7481,15 @@ public class ObjectDefinitionPersistenceImpl
 			new String[] {"companyId", "name"}, true);
 
 		_finderPathFetchByC_N.touch();
+
+		_uniquePersistenceFinderByC_N = new UniquePersistenceFinder<>(
+			this, _finderPathFetchByC_N, _SQL_SELECT_OBJECTDEFINITION_WHERE,
+			new FinderColumn<>(
+				"objectDefinition.", "companyId", FinderColumn.Type.LONG, "=",
+				true, false, ObjectDefinition::getCompanyId),
+			new FinderColumn<>(
+				"objectDefinition.", "name", FinderColumn.Type.STRING, "=",
+				true, true, ObjectDefinition::getName));
 
 		_finderPathWithPaginationFindByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_S",
@@ -9743,6 +7510,19 @@ public class ObjectDefinitionPersistenceImpl
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"companyId", "status"}, false);
 
+		_collectionPersistenceFinderByC_S = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByC_S,
+			_finderPathWithoutPaginationFindByC_S, _finderPathCountByC_S,
+			_SQL_SELECT_OBJECTDEFINITION_WHERE,
+			_SQL_COUNT_OBJECTDEFINITION_WHERE,
+			ObjectDefinitionModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"objectDefinition.", "companyId", FinderColumn.Type.LONG, "=",
+				true, false, ObjectDefinition::getCompanyId),
+			new FinderColumn<>(
+				"objectDefinition.", "status", FinderColumn.Type.INTEGER, "=",
+				true, true, ObjectDefinition::getStatus));
+
 		_finderPathWithPaginationFindByS_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByS_S",
 			new String[] {
@@ -9761,6 +7541,19 @@ public class ObjectDefinitionPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByS_S",
 			new String[] {Boolean.class.getName(), Integer.class.getName()},
 			new String[] {"system_", "status"}, false);
+
+		_collectionPersistenceFinderByS_S = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByS_S,
+			_finderPathWithoutPaginationFindByS_S, _finderPathCountByS_S,
+			_SQL_SELECT_OBJECTDEFINITION_WHERE,
+			_SQL_COUNT_OBJECTDEFINITION_WHERE,
+			ObjectDefinitionModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"objectDefinition.", "system", FinderColumn.Type.BOOLEAN, "=",
+				true, false, ObjectDefinition::isSystem),
+			new FinderColumn<>(
+				"objectDefinition.", "status", FinderColumn.Type.INTEGER, "=",
+				true, true, ObjectDefinition::getStatus));
 
 		_finderPathWithPaginationFindByC_A_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_A_S",
@@ -9787,6 +7580,22 @@ public class ObjectDefinitionPersistenceImpl
 			},
 			new String[] {"companyId", "active_", "status"}, false);
 
+		_collectionPersistenceFinderByC_A_S = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByC_A_S,
+			_finderPathWithoutPaginationFindByC_A_S, _finderPathCountByC_A_S,
+			_SQL_SELECT_OBJECTDEFINITION_WHERE,
+			_SQL_COUNT_OBJECTDEFINITION_WHERE,
+			ObjectDefinitionModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"objectDefinition.", "companyId", FinderColumn.Type.LONG, "=",
+				true, false, ObjectDefinition::getCompanyId),
+			new FinderColumn<>(
+				"objectDefinition.", "active", FinderColumn.Type.BOOLEAN, "=",
+				true, false, ObjectDefinition::isActive),
+			new FinderColumn<>(
+				"objectDefinition.", "status", FinderColumn.Type.INTEGER, "=",
+				true, true, ObjectDefinition::getStatus));
+
 		_finderPathWithPaginationFindByC_M_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_M_S",
 			new String[] {
@@ -9811,6 +7620,22 @@ public class ObjectDefinitionPersistenceImpl
 				Boolean.class.getName()
 			},
 			new String[] {"companyId", "modifiable", "system_"}, false);
+
+		_collectionPersistenceFinderByC_M_S = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByC_M_S,
+			_finderPathWithoutPaginationFindByC_M_S, _finderPathCountByC_M_S,
+			_SQL_SELECT_OBJECTDEFINITION_WHERE,
+			_SQL_COUNT_OBJECTDEFINITION_WHERE,
+			ObjectDefinitionModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"objectDefinition.", "companyId", FinderColumn.Type.LONG, "=",
+				true, false, ObjectDefinition::getCompanyId),
+			new FinderColumn<>(
+				"objectDefinition.", "modifiable", FinderColumn.Type.BOOLEAN,
+				"=", true, false, ObjectDefinition::isModifiable),
+			new FinderColumn<>(
+				"objectDefinition.", "system", FinderColumn.Type.BOOLEAN, "=",
+				true, true, ObjectDefinition::isSystem));
 
 		_finderPathWithPaginationFindByC_A_S_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_A_S_S",
@@ -9837,6 +7662,26 @@ public class ObjectDefinitionPersistenceImpl
 				Boolean.class.getName(), Integer.class.getName()
 			},
 			new String[] {"companyId", "active_", "system_", "status"}, false);
+
+		_collectionPersistenceFinderByC_A_S_S =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByC_A_S_S,
+				_finderPathWithoutPaginationFindByC_A_S_S,
+				_finderPathCountByC_A_S_S, _SQL_SELECT_OBJECTDEFINITION_WHERE,
+				_SQL_COUNT_OBJECTDEFINITION_WHERE,
+				ObjectDefinitionModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"objectDefinition.", "companyId", FinderColumn.Type.LONG,
+					"=", true, false, ObjectDefinition::getCompanyId),
+				new FinderColumn<>(
+					"objectDefinition.", "active", FinderColumn.Type.BOOLEAN,
+					"=", true, false, ObjectDefinition::isActive),
+				new FinderColumn<>(
+					"objectDefinition.", "system", FinderColumn.Type.BOOLEAN,
+					"=", true, false, ObjectDefinition::isSystem),
+				new FinderColumn<>(
+					"objectDefinition.", "status", FinderColumn.Type.INTEGER,
+					"=", true, true, ObjectDefinition::getStatus));
 
 		_finderPathWithPaginationFindByC_OFI_A_E_S_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_OFI_A_E_S_S",
@@ -9896,6 +7741,16 @@ public class ObjectDefinitionPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "companyId"}, true);
+
+		_uniquePersistenceFinderByERC_C = new UniquePersistenceFinder<>(
+			this, _finderPathFetchByERC_C, _SQL_SELECT_OBJECTDEFINITION_WHERE,
+			new FinderColumn<>(
+				"objectDefinition.", "externalReferenceCode",
+				FinderColumn.Type.STRING, "=", true, false,
+				ObjectDefinition::getExternalReferenceCode),
+			new FinderColumn<>(
+				"objectDefinition.", "companyId", FinderColumn.Type.LONG, "=",
+				true, true, ObjectDefinition::getCompanyId));
 
 		ObjectDefinitionUtil.setPersistence(this);
 	}
@@ -9996,4 +7851,4 @@ public class ObjectDefinitionPersistenceImpl
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1536413090
+// LIFERAY-SERVICE-BUILDER-HASH:-1872873438

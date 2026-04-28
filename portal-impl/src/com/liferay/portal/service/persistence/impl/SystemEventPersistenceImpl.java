@@ -15,7 +15,6 @@ import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
-import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.NoSuchSystemEventException;
@@ -30,6 +29,8 @@ import com.liferay.portal.kernel.service.persistence.SystemEventPersistence;
 import com.liferay.portal.kernel.service.persistence.SystemEventUtil;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelperUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.service.persistence.impl.CollectionPersistenceFinder;
+import com.liferay.portal.kernel.service.persistence.impl.FinderColumn;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -87,6 +88,8 @@ public class SystemEventPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByGroupId;
 	private FinderPath _finderPathWithoutPaginationFindByGroupId;
 	private FinderPath _finderPathCountByGroupId;
+	private CollectionPersistenceFinder<SystemEvent>
+		_collectionPersistenceFinderByGroupId;
 
 	/**
 	 * Returns all the system events where groupId = &#63;.
@@ -162,95 +165,9 @@ public class SystemEventPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					SystemEvent.class)) {
 
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath = _finderPathWithoutPaginationFindByGroupId;
-					finderArgs = new Object[] {groupId};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath = _finderPathWithPaginationFindByGroupId;
-				finderArgs = new Object[] {
-					groupId, start, end, orderByComparator
-				};
-			}
-
-			List<SystemEvent> list = null;
-
-			if (useFinderCache) {
-				list = (List<SystemEvent>)FinderCacheUtil.getResult(
-					finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (SystemEvent systemEvent : list) {
-						if (groupId != systemEvent.getGroupId()) {
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						3 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(3);
-				}
-
-				sb.append(_SQL_SELECT_SYSTEMEVENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(SystemEventModelImpl.ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					list = (List<SystemEvent>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						FinderCacheUtil.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByGroupId.find(
+				FinderCacheUtil.getFinderCache(), new Object[] {groupId}, start,
+				end, orderByComparator, useFinderCache);
 		}
 	}
 
@@ -274,16 +191,9 @@ public class SystemEventPersistenceImpl
 			return systemEvent;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("groupId=");
-		sb.append(groupId);
-
-		sb.append("}");
-
-		throw new NoSuchSystemEventException(sb.toString());
+		throw new NoSuchSystemEventException(
+			_collectionPersistenceFinderByGroupId.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {groupId}));
 	}
 
 	/**
@@ -297,14 +207,9 @@ public class SystemEventPersistenceImpl
 	public SystemEvent fetchByGroupId_First(
 		long groupId, OrderByComparator<SystemEvent> orderByComparator) {
 
-		List<SystemEvent> list = findByGroupId(
-			groupId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByGroupId.fetchFirst(
+			FinderCacheUtil.getFinderCache(), new Object[] {groupId},
+			orderByComparator);
 	}
 
 	/**
@@ -314,12 +219,8 @@ public class SystemEventPersistenceImpl
 	 */
 	@Override
 	public void removeByGroupId(long groupId) {
-		for (SystemEvent systemEvent :
-				findByGroupId(
-					groupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
-
-			remove(systemEvent);
-		}
+		_collectionPersistenceFinderByGroupId.remove(
+			FinderCacheUtil.getFinderCache(), new Object[] {groupId});
 	}
 
 	/**
@@ -334,55 +235,16 @@ public class SystemEventPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					SystemEvent.class)) {
 
-			FinderPath finderPath = _finderPathCountByGroupId;
-
-			Object[] finderArgs = new Object[] {groupId};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(2);
-
-				sb.append(_SQL_COUNT_SYSTEMEVENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByGroupId.count(
+				FinderCacheUtil.getFinderCache(), new Object[] {groupId});
 		}
 	}
-
-	private static final String _FINDER_COLUMN_GROUPID_GROUPID_2 =
-		"systemEvent.groupId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByG_S;
 	private FinderPath _finderPathWithoutPaginationFindByG_S;
 	private FinderPath _finderPathCountByG_S;
+	private CollectionPersistenceFinder<SystemEvent>
+		_collectionPersistenceFinderByG_S;
 
 	/**
 	 * Returns all the system events where groupId = &#63; and systemEventSetKey = &#63;.
@@ -466,102 +328,10 @@ public class SystemEventPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					SystemEvent.class)) {
 
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath = _finderPathWithoutPaginationFindByG_S;
-					finderArgs = new Object[] {groupId, systemEventSetKey};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath = _finderPathWithPaginationFindByG_S;
-				finderArgs = new Object[] {
-					groupId, systemEventSetKey, start, end, orderByComparator
-				};
-			}
-
-			List<SystemEvent> list = null;
-
-			if (useFinderCache) {
-				list = (List<SystemEvent>)FinderCacheUtil.getResult(
-					finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (SystemEvent systemEvent : list) {
-						if ((groupId != systemEvent.getGroupId()) ||
-							(systemEventSetKey !=
-								systemEvent.getSystemEventSetKey())) {
-
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						4 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(4);
-				}
-
-				sb.append(_SQL_SELECT_SYSTEMEVENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_S_GROUPID_2);
-
-				sb.append(_FINDER_COLUMN_G_S_SYSTEMEVENTSETKEY_2);
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(SystemEventModelImpl.ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					queryPos.add(systemEventSetKey);
-
-					list = (List<SystemEvent>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						FinderCacheUtil.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByG_S.find(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {groupId, systemEventSetKey}, start, end,
+				orderByComparator, useFinderCache);
 		}
 	}
 
@@ -587,19 +357,10 @@ public class SystemEventPersistenceImpl
 			return systemEvent;
 		}
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("groupId=");
-		sb.append(groupId);
-
-		sb.append(", systemEventSetKey=");
-		sb.append(systemEventSetKey);
-
-		sb.append("}");
-
-		throw new NoSuchSystemEventException(sb.toString());
+		throw new NoSuchSystemEventException(
+			_collectionPersistenceFinderByG_S.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY,
+				new Object[] {groupId, systemEventSetKey}));
 	}
 
 	/**
@@ -615,14 +376,9 @@ public class SystemEventPersistenceImpl
 		long groupId, long systemEventSetKey,
 		OrderByComparator<SystemEvent> orderByComparator) {
 
-		List<SystemEvent> list = findByG_S(
-			groupId, systemEventSetKey, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByG_S.fetchFirst(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {groupId, systemEventSetKey}, orderByComparator);
 	}
 
 	/**
@@ -633,13 +389,9 @@ public class SystemEventPersistenceImpl
 	 */
 	@Override
 	public void removeByG_S(long groupId, long systemEventSetKey) {
-		for (SystemEvent systemEvent :
-				findByG_S(
-					groupId, systemEventSetKey, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null)) {
-
-			remove(systemEvent);
-		}
+		_collectionPersistenceFinderByG_S.remove(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {groupId, systemEventSetKey});
 	}
 
 	/**
@@ -655,62 +407,17 @@ public class SystemEventPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					SystemEvent.class)) {
 
-			FinderPath finderPath = _finderPathCountByG_S;
-
-			Object[] finderArgs = new Object[] {groupId, systemEventSetKey};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_SYSTEMEVENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_S_GROUPID_2);
-
-				sb.append(_FINDER_COLUMN_G_S_SYSTEMEVENTSETKEY_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					queryPos.add(systemEventSetKey);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByG_S.count(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {groupId, systemEventSetKey});
 		}
 	}
-
-	private static final String _FINDER_COLUMN_G_S_GROUPID_2 =
-		"systemEvent.groupId = ? AND ";
-
-	private static final String _FINDER_COLUMN_G_S_SYSTEMEVENTSETKEY_2 =
-		"systemEvent.systemEventSetKey = ?";
 
 	private FinderPath _finderPathWithPaginationFindByG_C_C;
 	private FinderPath _finderPathWithoutPaginationFindByG_C_C;
 	private FinderPath _finderPathCountByG_C_C;
+	private CollectionPersistenceFinder<SystemEvent>
+		_collectionPersistenceFinderByG_C_C;
 
 	/**
 	 * Returns all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
@@ -800,106 +507,10 @@ public class SystemEventPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					SystemEvent.class)) {
 
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath = _finderPathWithoutPaginationFindByG_C_C;
-					finderArgs = new Object[] {groupId, classNameId, classPK};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath = _finderPathWithPaginationFindByG_C_C;
-				finderArgs = new Object[] {
-					groupId, classNameId, classPK, start, end, orderByComparator
-				};
-			}
-
-			List<SystemEvent> list = null;
-
-			if (useFinderCache) {
-				list = (List<SystemEvent>)FinderCacheUtil.getResult(
-					finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (SystemEvent systemEvent : list) {
-						if ((groupId != systemEvent.getGroupId()) ||
-							(classNameId != systemEvent.getClassNameId()) ||
-							(classPK != systemEvent.getClassPK())) {
-
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						5 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(5);
-				}
-
-				sb.append(_SQL_SELECT_SYSTEMEVENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_C_C_GROUPID_2);
-
-				sb.append(_FINDER_COLUMN_G_C_C_CLASSNAMEID_2);
-
-				sb.append(_FINDER_COLUMN_G_C_C_CLASSPK_2);
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(SystemEventModelImpl.ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					queryPos.add(classNameId);
-
-					queryPos.add(classPK);
-
-					list = (List<SystemEvent>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						FinderCacheUtil.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByG_C_C.find(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {groupId, classNameId, classPK}, start, end,
+				orderByComparator, useFinderCache);
 		}
 	}
 
@@ -926,22 +537,10 @@ public class SystemEventPersistenceImpl
 			return systemEvent;
 		}
 
-		StringBundler sb = new StringBundler(8);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("groupId=");
-		sb.append(groupId);
-
-		sb.append(", classNameId=");
-		sb.append(classNameId);
-
-		sb.append(", classPK=");
-		sb.append(classPK);
-
-		sb.append("}");
-
-		throw new NoSuchSystemEventException(sb.toString());
+		throw new NoSuchSystemEventException(
+			_collectionPersistenceFinderByG_C_C.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY,
+				new Object[] {groupId, classNameId, classPK}));
 	}
 
 	/**
@@ -958,14 +557,9 @@ public class SystemEventPersistenceImpl
 		long groupId, long classNameId, long classPK,
 		OrderByComparator<SystemEvent> orderByComparator) {
 
-		List<SystemEvent> list = findByG_C_C(
-			groupId, classNameId, classPK, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByG_C_C.fetchFirst(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {groupId, classNameId, classPK}, orderByComparator);
 	}
 
 	/**
@@ -977,13 +571,9 @@ public class SystemEventPersistenceImpl
 	 */
 	@Override
 	public void removeByG_C_C(long groupId, long classNameId, long classPK) {
-		for (SystemEvent systemEvent :
-				findByG_C_C(
-					groupId, classNameId, classPK, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null)) {
-
-			remove(systemEvent);
-		}
+		_collectionPersistenceFinderByG_C_C.remove(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {groupId, classNameId, classPK});
 	}
 
 	/**
@@ -1000,69 +590,17 @@ public class SystemEventPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					SystemEvent.class)) {
 
-			FinderPath finderPath = _finderPathCountByG_C_C;
-
-			Object[] finderArgs = new Object[] {groupId, classNameId, classPK};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(_SQL_COUNT_SYSTEMEVENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_C_C_GROUPID_2);
-
-				sb.append(_FINDER_COLUMN_G_C_C_CLASSNAMEID_2);
-
-				sb.append(_FINDER_COLUMN_G_C_C_CLASSPK_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					queryPos.add(classNameId);
-
-					queryPos.add(classPK);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByG_C_C.count(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {groupId, classNameId, classPK});
 		}
 	}
-
-	private static final String _FINDER_COLUMN_G_C_C_GROUPID_2 =
-		"systemEvent.groupId = ? AND ";
-
-	private static final String _FINDER_COLUMN_G_C_C_CLASSNAMEID_2 =
-		"systemEvent.classNameId = ? AND ";
-
-	private static final String _FINDER_COLUMN_G_C_C_CLASSPK_2 =
-		"systemEvent.classPK = ?";
 
 	private FinderPath _finderPathWithPaginationFindByG_C_C_T;
 	private FinderPath _finderPathWithoutPaginationFindByG_C_C_T;
 	private FinderPath _finderPathCountByG_C_C_T;
+	private CollectionPersistenceFinder<SystemEvent>
+		_collectionPersistenceFinderByG_C_C_T;
 
 	/**
 	 * Returns all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63; and type = &#63;.
@@ -1159,114 +697,10 @@ public class SystemEventPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					SystemEvent.class)) {
 
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath = _finderPathWithoutPaginationFindByG_C_C_T;
-					finderArgs = new Object[] {
-						groupId, classNameId, classPK, type
-					};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath = _finderPathWithPaginationFindByG_C_C_T;
-				finderArgs = new Object[] {
-					groupId, classNameId, classPK, type, start, end,
-					orderByComparator
-				};
-			}
-
-			List<SystemEvent> list = null;
-
-			if (useFinderCache) {
-				list = (List<SystemEvent>)FinderCacheUtil.getResult(
-					finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (SystemEvent systemEvent : list) {
-						if ((groupId != systemEvent.getGroupId()) ||
-							(classNameId != systemEvent.getClassNameId()) ||
-							(classPK != systemEvent.getClassPK()) ||
-							(type != systemEvent.getType())) {
-
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						6 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(6);
-				}
-
-				sb.append(_SQL_SELECT_SYSTEMEVENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_C_C_T_GROUPID_2);
-
-				sb.append(_FINDER_COLUMN_G_C_C_T_CLASSNAMEID_2);
-
-				sb.append(_FINDER_COLUMN_G_C_C_T_CLASSPK_2);
-
-				sb.append(_FINDER_COLUMN_G_C_C_T_TYPE_2);
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(SystemEventModelImpl.ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					queryPos.add(classNameId);
-
-					queryPos.add(classPK);
-
-					queryPos.add(type);
-
-					list = (List<SystemEvent>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						FinderCacheUtil.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByG_C_C_T.find(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {groupId, classNameId, classPK, type}, start, end,
+				orderByComparator, useFinderCache);
 		}
 	}
 
@@ -1294,25 +728,10 @@ public class SystemEventPersistenceImpl
 			return systemEvent;
 		}
 
-		StringBundler sb = new StringBundler(10);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("groupId=");
-		sb.append(groupId);
-
-		sb.append(", classNameId=");
-		sb.append(classNameId);
-
-		sb.append(", classPK=");
-		sb.append(classPK);
-
-		sb.append(", type=");
-		sb.append(type);
-
-		sb.append("}");
-
-		throw new NoSuchSystemEventException(sb.toString());
+		throw new NoSuchSystemEventException(
+			_collectionPersistenceFinderByG_C_C_T.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY,
+				new Object[] {groupId, classNameId, classPK, type}));
 	}
 
 	/**
@@ -1330,14 +749,10 @@ public class SystemEventPersistenceImpl
 		long groupId, long classNameId, long classPK, int type,
 		OrderByComparator<SystemEvent> orderByComparator) {
 
-		List<SystemEvent> list = findByG_C_C_T(
-			groupId, classNameId, classPK, type, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByG_C_C_T.fetchFirst(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {groupId, classNameId, classPK, type},
+			orderByComparator);
 	}
 
 	/**
@@ -1352,13 +767,9 @@ public class SystemEventPersistenceImpl
 	public void removeByG_C_C_T(
 		long groupId, long classNameId, long classPK, int type) {
 
-		for (SystemEvent systemEvent :
-				findByG_C_C_T(
-					groupId, classNameId, classPK, type, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null)) {
-
-			remove(systemEvent);
-		}
+		_collectionPersistenceFinderByG_C_C_T.remove(
+			FinderCacheUtil.getFinderCache(),
+			new Object[] {groupId, classNameId, classPK, type});
 	}
 
 	/**
@@ -1378,74 +789,11 @@ public class SystemEventPersistenceImpl
 				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
 					SystemEvent.class)) {
 
-			FinderPath finderPath = _finderPathCountByG_C_C_T;
-
-			Object[] finderArgs = new Object[] {
-				groupId, classNameId, classPK, type
-			};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(5);
-
-				sb.append(_SQL_COUNT_SYSTEMEVENT_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_C_C_T_GROUPID_2);
-
-				sb.append(_FINDER_COLUMN_G_C_C_T_CLASSNAMEID_2);
-
-				sb.append(_FINDER_COLUMN_G_C_C_T_CLASSPK_2);
-
-				sb.append(_FINDER_COLUMN_G_C_C_T_TYPE_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					queryPos.add(classNameId);
-
-					queryPos.add(classPK);
-
-					queryPos.add(type);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByG_C_C_T.count(
+				FinderCacheUtil.getFinderCache(),
+				new Object[] {groupId, classNameId, classPK, type});
 		}
 	}
-
-	private static final String _FINDER_COLUMN_G_C_C_T_GROUPID_2 =
-		"systemEvent.groupId = ? AND ";
-
-	private static final String _FINDER_COLUMN_G_C_C_T_CLASSNAMEID_2 =
-		"systemEvent.classNameId = ? AND ";
-
-	private static final String _FINDER_COLUMN_G_C_C_T_CLASSPK_2 =
-		"systemEvent.classPK = ? AND ";
-
-	private static final String _FINDER_COLUMN_G_C_C_T_TYPE_2 =
-		"systemEvent.type = ?";
 
 	public SystemEventPersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
@@ -2265,6 +1613,17 @@ public class SystemEventPersistenceImpl
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			false);
 
+		_collectionPersistenceFinderByGroupId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByGroupId,
+				_finderPathWithoutPaginationFindByGroupId,
+				_finderPathCountByGroupId, _SQL_SELECT_SYSTEMEVENT_WHERE,
+				_SQL_COUNT_SYSTEMEVENT_WHERE,
+				SystemEventModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"systemEvent.", "groupId", FinderColumn.Type.LONG, "=",
+					true, true, SystemEvent::getGroupId));
+
 		_finderPathWithPaginationFindByG_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_S",
 			new String[] {
@@ -2283,6 +1642,18 @@ public class SystemEventPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_S",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"groupId", "systemEventSetKey"}, false);
+
+		_collectionPersistenceFinderByG_S = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByG_S,
+			_finderPathWithoutPaginationFindByG_S, _finderPathCountByG_S,
+			_SQL_SELECT_SYSTEMEVENT_WHERE, _SQL_COUNT_SYSTEMEVENT_WHERE,
+			SystemEventModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"systemEvent.", "groupId", FinderColumn.Type.LONG, "=", true,
+				false, SystemEvent::getGroupId),
+			new FinderColumn<>(
+				"systemEvent.", "systemEventSetKey", FinderColumn.Type.LONG,
+				"=", true, true, SystemEvent::getSystemEventSetKey));
 
 		_finderPathWithPaginationFindByG_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_C",
@@ -2306,6 +1677,21 @@ public class SystemEventPersistenceImpl
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"groupId", "classNameId", "classPK"}, false);
+
+		_collectionPersistenceFinderByG_C_C = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByG_C_C,
+			_finderPathWithoutPaginationFindByG_C_C, _finderPathCountByG_C_C,
+			_SQL_SELECT_SYSTEMEVENT_WHERE, _SQL_COUNT_SYSTEMEVENT_WHERE,
+			SystemEventModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"systemEvent.", "groupId", FinderColumn.Type.LONG, "=", true,
+				false, SystemEvent::getGroupId),
+			new FinderColumn<>(
+				"systemEvent.", "classNameId", FinderColumn.Type.LONG, "=",
+				true, false, SystemEvent::getClassNameId),
+			new FinderColumn<>(
+				"systemEvent.", "classPK", FinderColumn.Type.LONG, "=", true,
+				true, SystemEvent::getClassPK));
 
 		_finderPathWithPaginationFindByG_C_C_T = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_C_T",
@@ -2332,6 +1718,26 @@ public class SystemEventPersistenceImpl
 				Long.class.getName(), Integer.class.getName()
 			},
 			new String[] {"groupId", "classNameId", "classPK", "type_"}, false);
+
+		_collectionPersistenceFinderByG_C_C_T =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByG_C_C_T,
+				_finderPathWithoutPaginationFindByG_C_C_T,
+				_finderPathCountByG_C_C_T, _SQL_SELECT_SYSTEMEVENT_WHERE,
+				_SQL_COUNT_SYSTEMEVENT_WHERE,
+				SystemEventModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"systemEvent.", "groupId", FinderColumn.Type.LONG, "=",
+					true, false, SystemEvent::getGroupId),
+				new FinderColumn<>(
+					"systemEvent.", "classNameId", FinderColumn.Type.LONG, "=",
+					true, false, SystemEvent::getClassNameId),
+				new FinderColumn<>(
+					"systemEvent.", "classPK", FinderColumn.Type.LONG, "=",
+					true, false, SystemEvent::getClassPK),
+				new FinderColumn<>(
+					"systemEvent.", "type", FinderColumn.Type.INTEGER, "=",
+					true, true, SystemEvent::getType));
 
 		SystemEventUtil.setPersistence(this);
 	}
@@ -2374,4 +1780,4 @@ public class SystemEventPersistenceImpl
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-995291080
+// LIFERAY-SERVICE-BUILDER-HASH:-1784643704

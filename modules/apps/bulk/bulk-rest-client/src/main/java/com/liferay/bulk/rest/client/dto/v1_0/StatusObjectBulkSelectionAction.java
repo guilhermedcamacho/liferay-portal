@@ -83,3 +83,4 @@ public class StatusObjectBulkSelectionAction
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-703418126

@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
-import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
@@ -27,6 +26,8 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.service.persistence.impl.CollectionPersistenceFinder;
+import com.liferay.portal.kernel.service.persistence.impl.FinderColumn;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -83,6 +84,8 @@ public class PatcherBuildRelPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByChildPatcherBuildId;
 	private FinderPath _finderPathWithoutPaginationFindByChildPatcherBuildId;
 	private FinderPath _finderPathCountByChildPatcherBuildId;
+	private CollectionPersistenceFinder<PatcherBuildRel>
+		_collectionPersistenceFinderByChildPatcherBuildId;
 
 	/**
 	 * Returns all the patcher build rels where childPatcherBuildId = &#63;.
@@ -159,98 +162,9 @@ public class PatcherBuildRelPersistenceImpl
 		OrderByComparator<PatcherBuildRel> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath =
-					_finderPathWithoutPaginationFindByChildPatcherBuildId;
-				finderArgs = new Object[] {childPatcherBuildId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByChildPatcherBuildId;
-			finderArgs = new Object[] {
-				childPatcherBuildId, start, end, orderByComparator
-			};
-		}
-
-		List<PatcherBuildRel> list = null;
-
-		if (useFinderCache) {
-			list = (List<PatcherBuildRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (PatcherBuildRel patcherBuildRel : list) {
-					if (childPatcherBuildId !=
-							patcherBuildRel.getChildPatcherBuildId()) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_PATCHERBUILDREL_WHERE);
-
-			sb.append(_FINDER_COLUMN_CHILDPATCHERBUILDID_CHILDPATCHERBUILDID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(PatcherBuildRelModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(childPatcherBuildId);
-
-				list = (List<PatcherBuildRel>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByChildPatcherBuildId.find(
+			finderCache, new Object[] {childPatcherBuildId}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -274,16 +188,11 @@ public class PatcherBuildRelPersistenceImpl
 			return patcherBuildRel;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("childPatcherBuildId=");
-		sb.append(childPatcherBuildId);
-
-		sb.append("}");
-
-		throw new NoSuchPatcherBuildRelException(sb.toString());
+		throw new NoSuchPatcherBuildRelException(
+			_collectionPersistenceFinderByChildPatcherBuildId.
+				buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY,
+					new Object[] {childPatcherBuildId}));
 	}
 
 	/**
@@ -298,14 +207,8 @@ public class PatcherBuildRelPersistenceImpl
 		long childPatcherBuildId,
 		OrderByComparator<PatcherBuildRel> orderByComparator) {
 
-		List<PatcherBuildRel> list = findByChildPatcherBuildId(
-			childPatcherBuildId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByChildPatcherBuildId.fetchFirst(
+			finderCache, new Object[] {childPatcherBuildId}, orderByComparator);
 	}
 
 	/**
@@ -315,13 +218,8 @@ public class PatcherBuildRelPersistenceImpl
 	 */
 	@Override
 	public void removeByChildPatcherBuildId(long childPatcherBuildId) {
-		for (PatcherBuildRel patcherBuildRel :
-				findByChildPatcherBuildId(
-					childPatcherBuildId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(patcherBuildRel);
-		}
+		_collectionPersistenceFinderByChildPatcherBuildId.remove(
+			finderCache, new Object[] {childPatcherBuildId});
 	}
 
 	/**
@@ -332,54 +230,15 @@ public class PatcherBuildRelPersistenceImpl
 	 */
 	@Override
 	public int countByChildPatcherBuildId(long childPatcherBuildId) {
-		FinderPath finderPath = _finderPathCountByChildPatcherBuildId;
-
-		Object[] finderArgs = new Object[] {childPatcherBuildId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_PATCHERBUILDREL_WHERE);
-
-			sb.append(_FINDER_COLUMN_CHILDPATCHERBUILDID_CHILDPATCHERBUILDID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(childPatcherBuildId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByChildPatcherBuildId.count(
+			finderCache, new Object[] {childPatcherBuildId});
 	}
-
-	private static final String
-		_FINDER_COLUMN_CHILDPATCHERBUILDID_CHILDPATCHERBUILDID_2 =
-			"patcherBuildRel.childPatcherBuildId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByParentPatcherBuildId;
 	private FinderPath _finderPathWithoutPaginationFindByParentPatcherBuildId;
 	private FinderPath _finderPathCountByParentPatcherBuildId;
+	private CollectionPersistenceFinder<PatcherBuildRel>
+		_collectionPersistenceFinderByParentPatcherBuildId;
 
 	/**
 	 * Returns all the patcher build rels where parentPatcherBuildId = &#63;.
@@ -457,99 +316,9 @@ public class PatcherBuildRelPersistenceImpl
 		OrderByComparator<PatcherBuildRel> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath =
-					_finderPathWithoutPaginationFindByParentPatcherBuildId;
-				finderArgs = new Object[] {parentPatcherBuildId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByParentPatcherBuildId;
-			finderArgs = new Object[] {
-				parentPatcherBuildId, start, end, orderByComparator
-			};
-		}
-
-		List<PatcherBuildRel> list = null;
-
-		if (useFinderCache) {
-			list = (List<PatcherBuildRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (PatcherBuildRel patcherBuildRel : list) {
-					if (parentPatcherBuildId !=
-							patcherBuildRel.getParentPatcherBuildId()) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_PATCHERBUILDREL_WHERE);
-
-			sb.append(
-				_FINDER_COLUMN_PARENTPATCHERBUILDID_PARENTPATCHERBUILDID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(PatcherBuildRelModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(parentPatcherBuildId);
-
-				list = (List<PatcherBuildRel>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByParentPatcherBuildId.find(
+			finderCache, new Object[] {parentPatcherBuildId}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -573,16 +342,11 @@ public class PatcherBuildRelPersistenceImpl
 			return patcherBuildRel;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("parentPatcherBuildId=");
-		sb.append(parentPatcherBuildId);
-
-		sb.append("}");
-
-		throw new NoSuchPatcherBuildRelException(sb.toString());
+		throw new NoSuchPatcherBuildRelException(
+			_collectionPersistenceFinderByParentPatcherBuildId.
+				buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY,
+					new Object[] {parentPatcherBuildId}));
 	}
 
 	/**
@@ -597,14 +361,9 @@ public class PatcherBuildRelPersistenceImpl
 		long parentPatcherBuildId,
 		OrderByComparator<PatcherBuildRel> orderByComparator) {
 
-		List<PatcherBuildRel> list = findByParentPatcherBuildId(
-			parentPatcherBuildId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByParentPatcherBuildId.fetchFirst(
+			finderCache, new Object[] {parentPatcherBuildId},
+			orderByComparator);
 	}
 
 	/**
@@ -614,13 +373,8 @@ public class PatcherBuildRelPersistenceImpl
 	 */
 	@Override
 	public void removeByParentPatcherBuildId(long parentPatcherBuildId) {
-		for (PatcherBuildRel patcherBuildRel :
-				findByParentPatcherBuildId(
-					parentPatcherBuildId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(patcherBuildRel);
-		}
+		_collectionPersistenceFinderByParentPatcherBuildId.remove(
+			finderCache, new Object[] {parentPatcherBuildId});
 	}
 
 	/**
@@ -631,51 +385,9 @@ public class PatcherBuildRelPersistenceImpl
 	 */
 	@Override
 	public int countByParentPatcherBuildId(long parentPatcherBuildId) {
-		FinderPath finderPath = _finderPathCountByParentPatcherBuildId;
-
-		Object[] finderArgs = new Object[] {parentPatcherBuildId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_PATCHERBUILDREL_WHERE);
-
-			sb.append(
-				_FINDER_COLUMN_PARENTPATCHERBUILDID_PARENTPATCHERBUILDID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(parentPatcherBuildId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByParentPatcherBuildId.count(
+			finderCache, new Object[] {parentPatcherBuildId});
 	}
-
-	private static final String
-		_FINDER_COLUMN_PARENTPATCHERBUILDID_PARENTPATCHERBUILDID_2 =
-			"patcherBuildRel.parentPatcherBuildId = ?";
 
 	public PatcherBuildRelPersistenceImpl() {
 		setModelClass(PatcherBuildRel.class);
@@ -1217,6 +929,19 @@ public class PatcherBuildRelPersistenceImpl
 			"countByChildPatcherBuildId", new String[] {Long.class.getName()},
 			new String[] {"childPatcherBuildId"}, false);
 
+		_collectionPersistenceFinderByChildPatcherBuildId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByChildPatcherBuildId,
+				_finderPathWithoutPaginationFindByChildPatcherBuildId,
+				_finderPathCountByChildPatcherBuildId,
+				_SQL_SELECT_PATCHERBUILDREL_WHERE,
+				_SQL_COUNT_PATCHERBUILDREL_WHERE,
+				PatcherBuildRelModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"patcherBuildRel.", "childPatcherBuildId",
+					FinderColumn.Type.LONG, "=", true, true,
+					PatcherBuildRel::getChildPatcherBuildId));
+
 		_finderPathWithPaginationFindByParentPatcherBuildId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
 			"findByParentPatcherBuildId",
@@ -1235,6 +960,19 @@ public class PatcherBuildRelPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByParentPatcherBuildId", new String[] {Long.class.getName()},
 			new String[] {"parentPatcherBuildId"}, false);
+
+		_collectionPersistenceFinderByParentPatcherBuildId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByParentPatcherBuildId,
+				_finderPathWithoutPaginationFindByParentPatcherBuildId,
+				_finderPathCountByParentPatcherBuildId,
+				_SQL_SELECT_PATCHERBUILDREL_WHERE,
+				_SQL_COUNT_PATCHERBUILDREL_WHERE,
+				PatcherBuildRelModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"patcherBuildRel.", "parentPatcherBuildId",
+					FinderColumn.Type.LONG, "=", true, true,
+					PatcherBuildRel::getParentPatcherBuildId));
 
 		PatcherBuildRelUtil.setPersistence(this);
 	}
@@ -1307,4 +1045,4 @@ public class PatcherBuildRelPersistenceImpl
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-775141514
+// LIFERAY-SERVICE-BUILDER-HASH:1193392342

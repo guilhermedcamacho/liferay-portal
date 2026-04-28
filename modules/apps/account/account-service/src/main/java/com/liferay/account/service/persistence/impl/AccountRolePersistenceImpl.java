@@ -35,6 +35,9 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.service.persistence.impl.CollectionPersistenceFinder;
+import com.liferay.portal.kernel.service.persistence.impl.FinderColumn;
+import com.liferay.portal.kernel.service.persistence.impl.UniquePersistenceFinder;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -95,6 +98,8 @@ public class AccountRolePersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByCompanyId;
 	private FinderPath _finderPathWithoutPaginationFindByCompanyId;
 	private FinderPath _finderPathCountByCompanyId;
+	private CollectionPersistenceFinder<AccountRole>
+		_collectionPersistenceFinderByCompanyId;
 
 	/**
 	 * Returns all the account roles where companyId = &#63;.
@@ -168,95 +173,9 @@ public class AccountRolePersistenceImpl
 		OrderByComparator<AccountRole> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByCompanyId;
-				finderArgs = new Object[] {companyId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByCompanyId;
-			finderArgs = new Object[] {
-				companyId, start, end, orderByComparator
-			};
-		}
-
-		List<AccountRole> list = null;
-
-		if (useFinderCache) {
-			list = (List<AccountRole>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (AccountRole accountRole : list) {
-					if (companyId != accountRole.getCompanyId()) {
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_ACCOUNTROLE_WHERE);
-
-			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(AccountRoleModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				list = (List<AccountRole>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByCompanyId.find(
+			finderCache, new Object[] {companyId}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -279,16 +198,9 @@ public class AccountRolePersistenceImpl
 			return accountRole;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append("}");
-
-		throw new NoSuchRoleException(sb.toString());
+		throw new NoSuchRoleException(
+			_collectionPersistenceFinderByCompanyId.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {companyId}));
 	}
 
 	/**
@@ -302,14 +214,8 @@ public class AccountRolePersistenceImpl
 	public AccountRole fetchByCompanyId_First(
 		long companyId, OrderByComparator<AccountRole> orderByComparator) {
 
-		List<AccountRole> list = findByCompanyId(
-			companyId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByCompanyId.fetchFirst(
+			finderCache, new Object[] {companyId}, orderByComparator);
 	}
 
 	/**
@@ -458,12 +364,8 @@ public class AccountRolePersistenceImpl
 	 */
 	@Override
 	public void removeByCompanyId(long companyId) {
-		for (AccountRole accountRole :
-				findByCompanyId(
-					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
-
-			remove(accountRole);
-		}
+		_collectionPersistenceFinderByCompanyId.remove(
+			finderCache, new Object[] {companyId});
 	}
 
 	/**
@@ -474,45 +376,8 @@ public class AccountRolePersistenceImpl
 	 */
 	@Override
 	public int countByCompanyId(long companyId) {
-		FinderPath finderPath = _finderPathCountByCompanyId;
-
-		Object[] finderArgs = new Object[] {companyId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_ACCOUNTROLE_WHERE);
-
-			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByCompanyId.count(
+			finderCache, new Object[] {companyId});
 	}
 
 	/**
@@ -1536,6 +1401,8 @@ public class AccountRolePersistenceImpl
 		"accountRole.accountEntryId IN (";
 
 	private FinderPath _finderPathFetchByRoleId;
+	private UniquePersistenceFinder<AccountRole>
+		_uniquePersistenceFinderByRoleId;
 
 	/**
 	 * Returns the account role where roleId = &#63; or throws a <code>NoSuchRoleException</code> if it could not be found.
@@ -1549,20 +1416,15 @@ public class AccountRolePersistenceImpl
 		AccountRole accountRole = fetchByRoleId(roleId);
 
 		if (accountRole == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("roleId=");
-			sb.append(roleId);
-
-			sb.append("}");
+			String message =
+				_uniquePersistenceFinderByRoleId.buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY, new Object[] {roleId});
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
+				_log.debug(message);
 			}
 
-			throw new NoSuchRoleException(sb.toString());
+			throw new NoSuchRoleException(message);
 		}
 
 		return accountRole;
@@ -1588,77 +1450,8 @@ public class AccountRolePersistenceImpl
 	 */
 	@Override
 	public AccountRole fetchByRoleId(long roleId, boolean useFinderCache) {
-		Object[] finderArgs = null;
-
-		if (useFinderCache) {
-			finderArgs = new Object[] {roleId};
-		}
-
-		Object result = null;
-
-		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByRoleId, finderArgs, this);
-		}
-
-		if (result instanceof AccountRole) {
-			AccountRole accountRole = (AccountRole)result;
-
-			if (roleId != accountRole.getRoleId()) {
-				result = null;
-			}
-		}
-
-		if (result == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_SELECT_ACCOUNTROLE_WHERE);
-
-			sb.append(_FINDER_COLUMN_ROLEID_ROLEID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(roleId);
-
-				List<AccountRole> list = query.list();
-
-				if (list.isEmpty()) {
-					if (useFinderCache) {
-						finderCache.putResult(
-							_finderPathFetchByRoleId, finderArgs, list);
-					}
-				}
-				else {
-					AccountRole accountRole = list.get(0);
-
-					result = accountRole;
-
-					cacheResult(accountRole);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		if (result instanceof List<?>) {
-			return null;
-		}
-		else {
-			return (AccountRole)result;
-		}
+		return _uniquePersistenceFinderByRoleId.fetch(
+			finderCache, new Object[] {roleId}, useFinderCache);
 	}
 
 	/**
@@ -1682,17 +1475,9 @@ public class AccountRolePersistenceImpl
 	 */
 	@Override
 	public int countByRoleId(long roleId) {
-		AccountRole accountRole = fetchByRoleId(roleId);
-
-		if (accountRole == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByRoleId.count(
+			finderCache, new Object[] {roleId});
 	}
-
-	private static final String _FINDER_COLUMN_ROLEID_ROLEID_2 =
-		"accountRole.roleId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByC_A;
 	private FinderPath _finderPathWithoutPaginationFindByC_A;
@@ -2735,6 +2520,8 @@ public class AccountRolePersistenceImpl
 		"accountRole.accountEntryId IN (";
 
 	private FinderPath _finderPathFetchByERC_C;
+	private UniquePersistenceFinder<AccountRole>
+		_uniquePersistenceFinderByERC_C;
 
 	/**
 	 * Returns the account role where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchRoleException</code> if it could not be found.
@@ -2752,23 +2539,16 @@ public class AccountRolePersistenceImpl
 			externalReferenceCode, companyId);
 
 		if (accountRole == null) {
-			StringBundler sb = new StringBundler(6);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("externalReferenceCode=");
-			sb.append(externalReferenceCode);
-
-			sb.append(", companyId=");
-			sb.append(companyId);
-
-			sb.append("}");
+			String message =
+				_uniquePersistenceFinderByERC_C.buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY,
+					new Object[] {externalReferenceCode, companyId});
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
+				_log.debug(message);
 			}
 
-			throw new NoSuchRoleException(sb.toString());
+			throw new NoSuchRoleException(message);
 		}
 
 		return accountRole;
@@ -2800,98 +2580,9 @@ public class AccountRolePersistenceImpl
 	public AccountRole fetchByERC_C(
 		String externalReferenceCode, long companyId, boolean useFinderCache) {
 
-		externalReferenceCode = Objects.toString(externalReferenceCode, "");
-
-		Object[] finderArgs = null;
-
-		if (useFinderCache) {
-			finderArgs = new Object[] {externalReferenceCode, companyId};
-		}
-
-		Object result = null;
-
-		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByERC_C, finderArgs, this);
-		}
-
-		if (result instanceof AccountRole) {
-			AccountRole accountRole = (AccountRole)result;
-
-			if (!Objects.equals(
-					externalReferenceCode,
-					accountRole.getExternalReferenceCode()) ||
-				(companyId != accountRole.getCompanyId())) {
-
-				result = null;
-			}
-		}
-
-		if (result == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_SQL_SELECT_ACCOUNTROLE_WHERE);
-
-			boolean bindExternalReferenceCode = false;
-
-			if (externalReferenceCode.isEmpty()) {
-				sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3);
-			}
-			else {
-				bindExternalReferenceCode = true;
-
-				sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2);
-			}
-
-			sb.append(_FINDER_COLUMN_ERC_C_COMPANYID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindExternalReferenceCode) {
-					queryPos.add(externalReferenceCode);
-				}
-
-				queryPos.add(companyId);
-
-				List<AccountRole> list = query.list();
-
-				if (list.isEmpty()) {
-					if (useFinderCache) {
-						finderCache.putResult(
-							_finderPathFetchByERC_C, finderArgs, list);
-					}
-				}
-				else {
-					AccountRole accountRole = list.get(0);
-
-					result = accountRole;
-
-					cacheResult(accountRole);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		if (result instanceof List<?>) {
-			return null;
-		}
-		else {
-			return (AccountRole)result;
-		}
+		return _uniquePersistenceFinderByERC_C.fetch(
+			finderCache, new Object[] {externalReferenceCode, companyId},
+			useFinderCache);
 	}
 
 	/**
@@ -2920,24 +2611,9 @@ public class AccountRolePersistenceImpl
 	 */
 	@Override
 	public int countByERC_C(String externalReferenceCode, long companyId) {
-		AccountRole accountRole = fetchByERC_C(
-			externalReferenceCode, companyId);
-
-		if (accountRole == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByERC_C.count(
+			finderCache, new Object[] {externalReferenceCode, companyId});
 	}
-
-	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2 =
-		"accountRole.externalReferenceCode = ? AND ";
-
-	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3 =
-		"(accountRole.externalReferenceCode IS NULL OR accountRole.externalReferenceCode = '') AND ";
-
-	private static final String _FINDER_COLUMN_ERC_C_COMPANYID_2 =
-		"accountRole.companyId = ?";
 
 	public AccountRolePersistenceImpl() {
 		setModelClass(AccountRole.class);
@@ -3563,6 +3239,17 @@ public class AccountRolePersistenceImpl
 			new String[] {Long.class.getName()}, new String[] {"companyId"},
 			false);
 
+		_collectionPersistenceFinderByCompanyId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByCompanyId,
+				_finderPathWithoutPaginationFindByCompanyId,
+				_finderPathCountByCompanyId, _SQL_SELECT_ACCOUNTROLE_WHERE,
+				_SQL_COUNT_ACCOUNTROLE_WHERE,
+				AccountRoleModelImpl.ORDER_BY_JPQL, _ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"accountRole.", "companyId", FinderColumn.Type.LONG, "=",
+					true, true, AccountRole::getCompanyId));
+
 		_finderPathWithPaginationFindByAccountEntryId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByAccountEntryId",
 			new String[] {
@@ -3589,6 +3276,12 @@ public class AccountRolePersistenceImpl
 		_finderPathFetchByRoleId = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByRoleId",
 			new String[] {Long.class.getName()}, new String[] {"roleId"}, true);
+
+		_uniquePersistenceFinderByRoleId = new UniquePersistenceFinder<>(
+			this, _finderPathFetchByRoleId, _SQL_SELECT_ACCOUNTROLE_WHERE,
+			new FinderColumn<>(
+				"accountRole.", "roleId", FinderColumn.Type.LONG, "=", true,
+				true, AccountRole::getRoleId));
 
 		_finderPathWithPaginationFindByC_A = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_A",
@@ -3618,6 +3311,16 @@ public class AccountRolePersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "companyId"}, true);
+
+		_uniquePersistenceFinderByERC_C = new UniquePersistenceFinder<>(
+			this, _finderPathFetchByERC_C, _SQL_SELECT_ACCOUNTROLE_WHERE,
+			new FinderColumn<>(
+				"accountRole.", "externalReferenceCode",
+				FinderColumn.Type.STRING, "=", true, false,
+				AccountRole::getExternalReferenceCode),
+			new FinderColumn<>(
+				"accountRole.", "companyId", FinderColumn.Type.LONG, "=", true,
+				true, AccountRole::getCompanyId));
 
 		AccountRoleUtil.setPersistence(this);
 	}
@@ -3713,4 +3416,4 @@ public class AccountRolePersistenceImpl
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-101863238
+// LIFERAY-SERVICE-BUILDER-HASH:-1449566502

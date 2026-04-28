@@ -71,6 +71,8 @@ public class ObjectEntryModelIndexerWriterContributor
 				dynamicQuery.add(
 					objectDefinitionIdProperty.eq(_objectDefinitionId));
 			});
+		indexableActionableDynamicQuery.setCacheKeySuffix(
+			String.valueOf(_objectDefinitionId));
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.fetchObjectDefinition(
@@ -88,6 +90,10 @@ public class ObjectEntryModelIndexerWriterContributor
 
 	@Override
 	public boolean shouldRun(long companyId) {
+		if (ReindexCacheThreadLocal.isFullMode()) {
+			return false;
+		}
+
 		if (_companyId == companyId) {
 			return true;
 		}

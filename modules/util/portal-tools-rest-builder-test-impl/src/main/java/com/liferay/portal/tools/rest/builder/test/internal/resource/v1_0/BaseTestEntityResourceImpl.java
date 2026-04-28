@@ -1417,3 +1417,4 @@ public abstract class BaseTestEntityResourceImpl
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1078977656

@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
-import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
@@ -33,6 +32,9 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.service.persistence.impl.CollectionPersistenceFinder;
+import com.liferay.portal.kernel.service.persistence.impl.FinderColumn;
+import com.liferay.portal.kernel.service.persistence.impl.UniquePersistenceFinder;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -97,6 +99,8 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByCommercePricingClassId;
 	private FinderPath _finderPathWithoutPaginationFindByCommercePricingClassId;
 	private FinderPath _finderPathCountByCommercePricingClassId;
+	private CollectionPersistenceFinder<CommercePricingClassCPDefinitionRel>
+		_collectionPersistenceFinderByCommercePricingClassId;
 
 	/**
 	 * Returns all the commerce pricing class cp definition rels where commercePricingClassId = &#63;.
@@ -183,108 +187,9 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
 					CommercePricingClassCPDefinitionRel.class)) {
 
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath =
-						_finderPathWithoutPaginationFindByCommercePricingClassId;
-					finderArgs = new Object[] {commercePricingClassId};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath =
-					_finderPathWithPaginationFindByCommercePricingClassId;
-				finderArgs = new Object[] {
-					commercePricingClassId, start, end, orderByComparator
-				};
-			}
-
-			List<CommercePricingClassCPDefinitionRel> list = null;
-
-			if (useFinderCache) {
-				list =
-					(List<CommercePricingClassCPDefinitionRel>)
-						finderCache.getResult(finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (CommercePricingClassCPDefinitionRel
-							commercePricingClassCPDefinitionRel : list) {
-
-						if (commercePricingClassId !=
-								commercePricingClassCPDefinitionRel.
-									getCommercePricingClassId()) {
-
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						3 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(3);
-				}
-
-				sb.append(
-					_SQL_SELECT_COMMERCEPRICINGCLASSCPDEFINITIONREL_WHERE);
-
-				sb.append(
-					_FINDER_COLUMN_COMMERCEPRICINGCLASSID_COMMERCEPRICINGCLASSID_2);
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(
-						CommercePricingClassCPDefinitionRelModelImpl.
-							ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(commercePricingClassId);
-
-					list =
-						(List<CommercePricingClassCPDefinitionRel>)
-							QueryUtil.list(query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						finderCache.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByCommercePricingClassId.find(
+				finderCache, new Object[] {commercePricingClassId}, start, end,
+				orderByComparator, useFinderCache);
 		}
 	}
 
@@ -313,16 +218,11 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 			return commercePricingClassCPDefinitionRel;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("commercePricingClassId=");
-		sb.append(commercePricingClassId);
-
-		sb.append("}");
-
-		throw new NoSuchPricingClassCPDefinitionRelException(sb.toString());
+		throw new NoSuchPricingClassCPDefinitionRelException(
+			_collectionPersistenceFinderByCommercePricingClassId.
+				buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY,
+					new Object[] {commercePricingClassId}));
 	}
 
 	/**
@@ -339,15 +239,9 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 			OrderByComparator<CommercePricingClassCPDefinitionRel>
 				orderByComparator) {
 
-		List<CommercePricingClassCPDefinitionRel> list =
-			findByCommercePricingClassId(
-				commercePricingClassId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByCommercePricingClassId.fetchFirst(
+			finderCache, new Object[] {commercePricingClassId},
+			orderByComparator);
 	}
 
 	/**
@@ -357,14 +251,8 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 	 */
 	@Override
 	public void removeByCommercePricingClassId(long commercePricingClassId) {
-		for (CommercePricingClassCPDefinitionRel
-				commercePricingClassCPDefinitionRel :
-					findByCommercePricingClassId(
-						commercePricingClassId, QueryUtil.ALL_POS,
-						QueryUtil.ALL_POS, null)) {
-
-			remove(commercePricingClassCPDefinitionRel);
-		}
+		_collectionPersistenceFinderByCommercePricingClassId.remove(
+			finderCache, new Object[] {commercePricingClassId});
 	}
 
 	/**
@@ -379,57 +267,16 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
 					CommercePricingClassCPDefinitionRel.class)) {
 
-			FinderPath finderPath = _finderPathCountByCommercePricingClassId;
-
-			Object[] finderArgs = new Object[] {commercePricingClassId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(2);
-
-				sb.append(_SQL_COUNT_COMMERCEPRICINGCLASSCPDEFINITIONREL_WHERE);
-
-				sb.append(
-					_FINDER_COLUMN_COMMERCEPRICINGCLASSID_COMMERCEPRICINGCLASSID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(commercePricingClassId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByCommercePricingClassId.count(
+				finderCache, new Object[] {commercePricingClassId});
 		}
 	}
-
-	private static final String
-		_FINDER_COLUMN_COMMERCEPRICINGCLASSID_COMMERCEPRICINGCLASSID_2 =
-			"commercePricingClassCPDefinitionRel.commercePricingClassId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByCPDefinitionId;
 	private FinderPath _finderPathWithoutPaginationFindByCPDefinitionId;
 	private FinderPath _finderPathCountByCPDefinitionId;
+	private CollectionPersistenceFinder<CommercePricingClassCPDefinitionRel>
+		_collectionPersistenceFinderByCPDefinitionId;
 
 	/**
 	 * Returns all the commerce pricing class cp definition rels where CPDefinitionId = &#63;.
@@ -512,106 +359,9 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
 					CommercePricingClassCPDefinitionRel.class)) {
 
-			FinderPath finderPath = null;
-			Object[] finderArgs = null;
-
-			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-
-				if (useFinderCache) {
-					finderPath =
-						_finderPathWithoutPaginationFindByCPDefinitionId;
-					finderArgs = new Object[] {CPDefinitionId};
-				}
-			}
-			else if (useFinderCache) {
-				finderPath = _finderPathWithPaginationFindByCPDefinitionId;
-				finderArgs = new Object[] {
-					CPDefinitionId, start, end, orderByComparator
-				};
-			}
-
-			List<CommercePricingClassCPDefinitionRel> list = null;
-
-			if (useFinderCache) {
-				list =
-					(List<CommercePricingClassCPDefinitionRel>)
-						finderCache.getResult(finderPath, finderArgs, this);
-
-				if ((list != null) && !list.isEmpty()) {
-					for (CommercePricingClassCPDefinitionRel
-							commercePricingClassCPDefinitionRel : list) {
-
-						if (CPDefinitionId !=
-								commercePricingClassCPDefinitionRel.
-									getCPDefinitionId()) {
-
-							list = null;
-
-							break;
-						}
-					}
-				}
-			}
-
-			if (list == null) {
-				StringBundler sb = null;
-
-				if (orderByComparator != null) {
-					sb = new StringBundler(
-						3 + (orderByComparator.getOrderByFields().length * 2));
-				}
-				else {
-					sb = new StringBundler(3);
-				}
-
-				sb.append(
-					_SQL_SELECT_COMMERCEPRICINGCLASSCPDEFINITIONREL_WHERE);
-
-				sb.append(_FINDER_COLUMN_CPDEFINITIONID_CPDEFINITIONID_2);
-
-				if (orderByComparator != null) {
-					appendOrderByComparator(
-						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-				}
-				else {
-					sb.append(
-						CommercePricingClassCPDefinitionRelModelImpl.
-							ORDER_BY_JPQL);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(CPDefinitionId);
-
-					list =
-						(List<CommercePricingClassCPDefinitionRel>)
-							QueryUtil.list(query, getDialect(), start, end);
-
-					cacheResult(list);
-
-					if (useFinderCache) {
-						finderCache.putResult(finderPath, finderArgs, list);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return list;
+			return _collectionPersistenceFinderByCPDefinitionId.find(
+				finderCache, new Object[] {CPDefinitionId}, start, end,
+				orderByComparator, useFinderCache);
 		}
 	}
 
@@ -638,16 +388,9 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 			return commercePricingClassCPDefinitionRel;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("CPDefinitionId=");
-		sb.append(CPDefinitionId);
-
-		sb.append("}");
-
-		throw new NoSuchPricingClassCPDefinitionRelException(sb.toString());
+		throw new NoSuchPricingClassCPDefinitionRelException(
+			_collectionPersistenceFinderByCPDefinitionId.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {CPDefinitionId}));
 	}
 
 	/**
@@ -663,14 +406,8 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 		OrderByComparator<CommercePricingClassCPDefinitionRel>
 			orderByComparator) {
 
-		List<CommercePricingClassCPDefinitionRel> list = findByCPDefinitionId(
-			CPDefinitionId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByCPDefinitionId.fetchFirst(
+			finderCache, new Object[] {CPDefinitionId}, orderByComparator);
 	}
 
 	/**
@@ -680,14 +417,8 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 	 */
 	@Override
 	public void removeByCPDefinitionId(long CPDefinitionId) {
-		for (CommercePricingClassCPDefinitionRel
-				commercePricingClassCPDefinitionRel :
-					findByCPDefinitionId(
-						CPDefinitionId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-						null)) {
-
-			remove(commercePricingClassCPDefinitionRel);
-		}
+		_collectionPersistenceFinderByCPDefinitionId.remove(
+			finderCache, new Object[] {CPDefinitionId});
 	}
 
 	/**
@@ -702,53 +433,14 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
 					CommercePricingClassCPDefinitionRel.class)) {
 
-			FinderPath finderPath = _finderPathCountByCPDefinitionId;
-
-			Object[] finderArgs = new Object[] {CPDefinitionId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(2);
-
-				sb.append(_SQL_COUNT_COMMERCEPRICINGCLASSCPDEFINITIONREL_WHERE);
-
-				sb.append(_FINDER_COLUMN_CPDEFINITIONID_CPDEFINITIONID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(CPDefinitionId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+			return _collectionPersistenceFinderByCPDefinitionId.count(
+				finderCache, new Object[] {CPDefinitionId});
 		}
 	}
 
-	private static final String _FINDER_COLUMN_CPDEFINITIONID_CPDEFINITIONID_2 =
-		"commercePricingClassCPDefinitionRel.CPDefinitionId = ?";
-
 	private FinderPath _finderPathFetchByC_C;
+	private UniquePersistenceFinder<CommercePricingClassCPDefinitionRel>
+		_uniquePersistenceFinderByC_C;
 
 	/**
 	 * Returns the commerce pricing class cp definition rel where commercePricingClassId = &#63; and CPDefinitionId = &#63; or throws a <code>NoSuchPricingClassCPDefinitionRelException</code> if it could not be found.
@@ -768,23 +460,16 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 				commercePricingClassId, CPDefinitionId);
 
 		if (commercePricingClassCPDefinitionRel == null) {
-			StringBundler sb = new StringBundler(6);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("commercePricingClassId=");
-			sb.append(commercePricingClassId);
-
-			sb.append(", CPDefinitionId=");
-			sb.append(CPDefinitionId);
-
-			sb.append("}");
+			String message =
+				_uniquePersistenceFinderByC_C.buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY,
+					new Object[] {commercePricingClassId, CPDefinitionId});
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
+				_log.debug(message);
 			}
 
-			throw new NoSuchPricingClassCPDefinitionRelException(sb.toString());
+			throw new NoSuchPricingClassCPDefinitionRelException(message);
 		}
 
 		return commercePricingClassCPDefinitionRel;
@@ -821,94 +506,10 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
 					CommercePricingClassCPDefinitionRel.class)) {
 
-			Object[] finderArgs = null;
-
-			if (useFinderCache) {
-				finderArgs = new Object[] {
-					commercePricingClassId, CPDefinitionId
-				};
-			}
-
-			Object result = null;
-
-			if (useFinderCache) {
-				result = finderCache.getResult(
-					_finderPathFetchByC_C, finderArgs, this);
-			}
-
-			if (result instanceof CommercePricingClassCPDefinitionRel) {
-				CommercePricingClassCPDefinitionRel
-					commercePricingClassCPDefinitionRel =
-						(CommercePricingClassCPDefinitionRel)result;
-
-				if ((commercePricingClassId !=
-						commercePricingClassCPDefinitionRel.
-							getCommercePricingClassId()) ||
-					(CPDefinitionId !=
-						commercePricingClassCPDefinitionRel.
-							getCPDefinitionId())) {
-
-					result = null;
-				}
-			}
-
-			if (result == null) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(
-					_SQL_SELECT_COMMERCEPRICINGCLASSCPDEFINITIONREL_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_C_COMMERCEPRICINGCLASSID_2);
-
-				sb.append(_FINDER_COLUMN_C_C_CPDEFINITIONID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(commercePricingClassId);
-
-					queryPos.add(CPDefinitionId);
-
-					List<CommercePricingClassCPDefinitionRel> list =
-						query.list();
-
-					if (list.isEmpty()) {
-						if (useFinderCache) {
-							finderCache.putResult(
-								_finderPathFetchByC_C, finderArgs, list);
-						}
-					}
-					else {
-						CommercePricingClassCPDefinitionRel
-							commercePricingClassCPDefinitionRel = list.get(0);
-
-						result = commercePricingClassCPDefinitionRel;
-
-						cacheResult(commercePricingClassCPDefinitionRel);
-					}
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			if (result instanceof List<?>) {
-				return null;
-			}
-			else {
-				return (CommercePricingClassCPDefinitionRel)result;
-			}
+			return _uniquePersistenceFinderByC_C.fetch(
+				finderCache,
+				new Object[] {commercePricingClassId, CPDefinitionId},
+				useFinderCache);
 		}
 	}
 
@@ -940,22 +541,9 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 	 */
 	@Override
 	public int countByC_C(long commercePricingClassId, long CPDefinitionId) {
-		CommercePricingClassCPDefinitionRel
-			commercePricingClassCPDefinitionRel = fetchByC_C(
-				commercePricingClassId, CPDefinitionId);
-
-		if (commercePricingClassCPDefinitionRel == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByC_C.count(
+			finderCache, new Object[] {commercePricingClassId, CPDefinitionId});
 	}
-
-	private static final String _FINDER_COLUMN_C_C_COMMERCEPRICINGCLASSID_2 =
-		"commercePricingClassCPDefinitionRel.commercePricingClassId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_C_CPDEFINITIONID_2 =
-		"commercePricingClassCPDefinitionRel.CPDefinitionId = ?";
 
 	public CommercePricingClassCPDefinitionRelPersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
@@ -1929,6 +1517,22 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 			new String[] {Long.class.getName()},
 			new String[] {"commercePricingClassId"}, false);
 
+		_collectionPersistenceFinderByCommercePricingClassId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByCommercePricingClassId,
+				_finderPathWithoutPaginationFindByCommercePricingClassId,
+				_finderPathCountByCommercePricingClassId,
+				_SQL_SELECT_COMMERCEPRICINGCLASSCPDEFINITIONREL_WHERE,
+				_SQL_COUNT_COMMERCEPRICINGCLASSCPDEFINITIONREL_WHERE,
+				CommercePricingClassCPDefinitionRelModelImpl.ORDER_BY_JPQL,
+				_ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"commercePricingClassCPDefinitionRel.",
+					"commercePricingClassId", FinderColumn.Type.LONG, "=", true,
+					true,
+					CommercePricingClassCPDefinitionRel::
+						getCommercePricingClassId));
+
 		_finderPathWithPaginationFindByCPDefinitionId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCPDefinitionId",
 			new String[] {
@@ -1947,10 +1551,37 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 			new String[] {Long.class.getName()},
 			new String[] {"CPDefinitionId"}, false);
 
+		_collectionPersistenceFinderByCPDefinitionId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByCPDefinitionId,
+				_finderPathWithoutPaginationFindByCPDefinitionId,
+				_finderPathCountByCPDefinitionId,
+				_SQL_SELECT_COMMERCEPRICINGCLASSCPDEFINITIONREL_WHERE,
+				_SQL_COUNT_COMMERCEPRICINGCLASSCPDEFINITIONREL_WHERE,
+				CommercePricingClassCPDefinitionRelModelImpl.ORDER_BY_JPQL,
+				_ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"commercePricingClassCPDefinitionRel.", "CPDefinitionId",
+					FinderColumn.Type.LONG, "=", true, true,
+					CommercePricingClassCPDefinitionRel::getCPDefinitionId));
+
 		_finderPathFetchByC_C = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"commercePricingClassId", "CPDefinitionId"}, true);
+
+		_uniquePersistenceFinderByC_C = new UniquePersistenceFinder<>(
+			this, _finderPathFetchByC_C,
+			_SQL_SELECT_COMMERCEPRICINGCLASSCPDEFINITIONREL_WHERE,
+			new FinderColumn<>(
+				"commercePricingClassCPDefinitionRel.",
+				"commercePricingClassId", FinderColumn.Type.LONG, "=", true,
+				false,
+				CommercePricingClassCPDefinitionRel::getCommercePricingClassId),
+			new FinderColumn<>(
+				"commercePricingClassCPDefinitionRel.", "CPDefinitionId",
+				FinderColumn.Type.LONG, "=", true, true,
+				CommercePricingClassCPDefinitionRel::getCPDefinitionId));
 
 		CommercePricingClassCPDefinitionRelUtil.setPersistence(this);
 	}
@@ -2034,4 +1665,4 @@ public class CommercePricingClassCPDefinitionRelPersistenceImpl
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-151125238
+// LIFERAY-SERVICE-BUILDER-HASH:-832494934

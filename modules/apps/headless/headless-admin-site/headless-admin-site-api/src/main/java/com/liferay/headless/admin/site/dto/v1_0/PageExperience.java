@@ -666,3 +666,4 @@ public class PageExperience implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
+// LIFERAY-REST-BUILDER-HASH:207145047

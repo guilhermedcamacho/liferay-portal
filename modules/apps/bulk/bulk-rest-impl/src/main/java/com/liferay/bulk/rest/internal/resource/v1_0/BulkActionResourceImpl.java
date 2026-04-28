@@ -17,6 +17,7 @@ import com.liferay.bulk.rest.dto.v1_0.DeleteObjectBulkSelectionAction;
 import com.liferay.bulk.rest.dto.v1_0.DueDateObjectBulkSelectionAction;
 import com.liferay.bulk.rest.dto.v1_0.EditObjectCategoriesBulkSelectionAction;
 import com.liferay.bulk.rest.dto.v1_0.EditObjectTagsBulkSelectionAction;
+import com.liferay.bulk.rest.dto.v1_0.MoveObjectBulkSelectionAction;
 import com.liferay.bulk.rest.dto.v1_0.PermissionObjectBulkSelectionAction;
 import com.liferay.bulk.rest.dto.v1_0.SelectionScope;
 import com.liferay.bulk.rest.dto.v1_0.StatusObjectBulkSelectionAction;
@@ -60,11 +61,11 @@ import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.QueryTerm;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.TermQuery;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.QueryFilter;
-import com.liferay.portal.kernel.search.generic.QueryTermImpl;
-import com.liferay.portal.kernel.search.generic.TermQueryImpl;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -471,15 +472,25 @@ public class BulkActionResourceImpl extends BaseBulkActionResourceImpl {
 
 			return _dueDateObjectBulkSelectionAction;
 		}
-		else if (BulkAction.Type.EXPIRE_OBJECT_BULK_SELECTION_ACTION.equals(
-					type)) {
+		else if (BulkAction.Type.EDIT_OBJECT_CATEGORIES_BULK_SELECTION_ACTION.
+					equals(type)) {
 
-			return _expireObjectBulkSelectionAction;
+			return _editObjectCategoriesBulkSelectionAction;
 		}
 		else if (BulkAction.Type.EDIT_OBJECT_TAGS_BULK_SELECTION_ACTION.equals(
 					type)) {
 
 			return _editObjectTagsBulkSelectionAction;
+		}
+		else if (BulkAction.Type.EXPIRE_OBJECT_BULK_SELECTION_ACTION.equals(
+					type)) {
+
+			return _expireObjectBulkSelectionAction;
+		}
+		else if (BulkAction.Type.MOVE_OBJECT_BULK_SELECTION_ACTION.equals(
+					type)) {
+
+			return _moveObjectBulkSelectionAction;
 		}
 		else if (BulkAction.Type.PERMISSION_OBJECT_BULK_SELECTION_ACTION.equals(
 					type)) {
@@ -495,11 +506,6 @@ public class BulkActionResourceImpl extends BaseBulkActionResourceImpl {
 					type)) {
 
 			return _statusObjectBulkSelectionAction;
-		}
-		else if (BulkAction.Type.EDIT_OBJECT_CATEGORIES_BULK_SELECTION_ACTION.
-					equals(type)) {
-
-			return _editObjectCategoriesBulkSelectionAction;
 		}
 		else if (BulkAction.Type.UPDATE_OBJECT_VALUES_BULK_SELECTION_ACTION.
 					equals(type)) {
@@ -617,10 +623,22 @@ public class BulkActionResourceImpl extends BaseBulkActionResourceImpl {
 				"dueDate", dueDateBulkAction.getDueDate()
 			).build();
 		}
-		else if (BulkAction.Type.EXPIRE_OBJECT_BULK_SELECTION_ACTION.equals(
-					type)) {
+		else if (BulkAction.Type.EDIT_OBJECT_CATEGORIES_BULK_SELECTION_ACTION.
+					equals(type)) {
 
-			return hashMapWrapper.build();
+			EditObjectCategoriesBulkSelectionAction taxonomyCategoryBulkAction =
+				(EditObjectCategoriesBulkSelectionAction)bulkAction;
+
+			return hashMapWrapper.put(
+				"append",
+				GetterUtil.getBoolean(taxonomyCategoryBulkAction.getAppend())
+			).put(
+				"toAddCategoryIds",
+				taxonomyCategoryBulkAction.getTaxonomyCategoryIdsToAdd()
+			).put(
+				"toRemoveCategoryIds",
+				taxonomyCategoryBulkAction.getTaxonomyCategoryIdsToRemove()
+			).build();
 		}
 		else if (BulkAction.Type.EDIT_OBJECT_TAGS_BULK_SELECTION_ACTION.equals(
 					type)) {
@@ -634,6 +652,21 @@ public class BulkActionResourceImpl extends BaseBulkActionResourceImpl {
 				"toAddTagNames", keywordBulkAction.getKeywordsToAdd()
 			).put(
 				"toRemoveTagNames", keywordBulkAction.getKeywordsToRemove()
+			).build();
+		}
+		else if (BulkAction.Type.EXPIRE_OBJECT_BULK_SELECTION_ACTION.equals(
+					type)) {
+
+			return hashMapWrapper.build();
+		}
+		else if (BulkAction.Type.MOVE_OBJECT_BULK_SELECTION_ACTION.equals(
+					type)) {
+
+			MoveObjectBulkSelectionAction moveBulkAction =
+				(MoveObjectBulkSelectionAction)bulkAction;
+
+			return hashMapWrapper.put(
+				"objectEntryFolderId", moveBulkAction.getObjectEntryFolderId()
 			).build();
 		}
 		else if (BulkAction.Type.PERMISSION_OBJECT_BULK_SELECTION_ACTION.equals(
@@ -666,23 +699,6 @@ public class BulkActionResourceImpl extends BaseBulkActionResourceImpl {
 
 			return hashMapWrapper.put(
 				"status", statusBulkAction.getStatus()
-			).build();
-		}
-		else if (BulkAction.Type.EDIT_OBJECT_CATEGORIES_BULK_SELECTION_ACTION.
-					equals(type)) {
-
-			EditObjectCategoriesBulkSelectionAction taxonomyCategoryBulkAction =
-				(EditObjectCategoriesBulkSelectionAction)bulkAction;
-
-			return hashMapWrapper.put(
-				"append",
-				GetterUtil.getBoolean(taxonomyCategoryBulkAction.getAppend())
-			).put(
-				"toAddCategoryIds",
-				taxonomyCategoryBulkAction.getTaxonomyCategoryIdsToAdd()
-			).put(
-				"toRemoveCategoryIds",
-				taxonomyCategoryBulkAction.getTaxonomyCategoryIdsToRemove()
 			).build();
 		}
 		else if (BulkAction.Type.UPDATE_OBJECT_VALUES_BULK_SELECTION_ACTION.
@@ -744,12 +760,11 @@ public class BulkActionResourceImpl extends BaseBulkActionResourceImpl {
 		if (selectionScope.getSelectAll()) {
 			QueryFilter queryFilter = (QueryFilter)filter;
 
-			TermQueryImpl termQueryImpl = (TermQueryImpl)queryFilter.getQuery();
+			TermQuery termQuery = (TermQuery)queryFilter.getQuery();
 
-			QueryTermImpl queryTermImpl =
-				(QueryTermImpl)termQueryImpl.getQueryTerm();
+			QueryTerm queryTerm = termQuery.getQueryTerm();
 
-			return Long.valueOf(queryTermImpl.getValue());
+			return Long.valueOf(queryTerm.getValue());
 		}
 
 		BulkActionItem[] bulkActionItems = bulkAction.getBulkActionItems();
@@ -1138,6 +1153,9 @@ public class BulkActionResourceImpl extends BaseBulkActionResourceImpl {
 
 	@Reference
 	private Localization _localization;
+
+	@Reference(target = "(bulk.selection.action.key=move.object)")
+	private BulkSelectionAction<Object> _moveObjectBulkSelectionAction;
 
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;

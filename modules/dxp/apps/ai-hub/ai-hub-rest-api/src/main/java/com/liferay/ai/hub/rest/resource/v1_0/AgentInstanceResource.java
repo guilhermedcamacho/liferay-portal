@@ -150,3 +150,4 @@ public interface AgentInstanceResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2046419398

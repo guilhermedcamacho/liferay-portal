@@ -1180,3 +1180,4 @@ public abstract class BaseProductSubscriptionConfigurationResourceTestCase {
 			_productSubscriptionConfigurationResource;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-27419000

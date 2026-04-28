@@ -83,3 +83,4 @@ public class CopyObjectBulkSelectionAction
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1689209709

@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
-import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
@@ -27,6 +26,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.service.persistence.impl.CollectionPersistenceFinder;
+import com.liferay.portal.kernel.service.persistence.impl.FinderColumn;
+import com.liferay.portal.kernel.service.persistence.impl.UniquePersistenceFinder;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -37,12 +39,9 @@ import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.sql.Timestamp;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import javax.sql.DataSource;
@@ -87,6 +86,8 @@ public class CookiesConsentPreferencePersistenceImpl
 	private FinderPath _finderPathWithPaginationFindByUserId;
 	private FinderPath _finderPathWithoutPaginationFindByUserId;
 	private FinderPath _finderPathCountByUserId;
+	private CollectionPersistenceFinder<CookiesConsentPreference>
+		_collectionPersistenceFinderByUserId;
 
 	/**
 	 * Returns all the cookies consent preferences where userId = &#63;.
@@ -159,93 +160,9 @@ public class CookiesConsentPreferencePersistenceImpl
 		OrderByComparator<CookiesConsentPreference> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByUserId;
-				finderArgs = new Object[] {userId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByUserId;
-			finderArgs = new Object[] {userId, start, end, orderByComparator};
-		}
-
-		List<CookiesConsentPreference> list = null;
-
-		if (useFinderCache) {
-			list = (List<CookiesConsentPreference>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (CookiesConsentPreference cookiesConsentPreference : list) {
-					if (userId != cookiesConsentPreference.getUserId()) {
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_COOKIESCONSENTPREFERENCE_WHERE);
-
-			sb.append(_FINDER_COLUMN_USERID_USERID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(CookiesConsentPreferenceModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(userId);
-
-				list = (List<CookiesConsentPreference>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByUserId.find(
+			finderCache, new Object[] {userId}, start, end, orderByComparator,
+			useFinderCache);
 	}
 
 	/**
@@ -269,16 +186,9 @@ public class CookiesConsentPreferencePersistenceImpl
 			return cookiesConsentPreference;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("userId=");
-		sb.append(userId);
-
-		sb.append("}");
-
-		throw new NoSuchCookiesConsentPreferenceException(sb.toString());
+		throw new NoSuchCookiesConsentPreferenceException(
+			_collectionPersistenceFinderByUserId.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {userId}));
 	}
 
 	/**
@@ -293,14 +203,8 @@ public class CookiesConsentPreferencePersistenceImpl
 		long userId,
 		OrderByComparator<CookiesConsentPreference> orderByComparator) {
 
-		List<CookiesConsentPreference> list = findByUserId(
-			userId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByUserId.fetchFirst(
+			finderCache, new Object[] {userId}, orderByComparator);
 	}
 
 	/**
@@ -310,12 +214,8 @@ public class CookiesConsentPreferencePersistenceImpl
 	 */
 	@Override
 	public void removeByUserId(long userId) {
-		for (CookiesConsentPreference cookiesConsentPreference :
-				findByUserId(
-					userId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
-
-			remove(cookiesConsentPreference);
-		}
+		_collectionPersistenceFinderByUserId.remove(
+			finderCache, new Object[] {userId});
 	}
 
 	/**
@@ -326,53 +226,15 @@ public class CookiesConsentPreferencePersistenceImpl
 	 */
 	@Override
 	public int countByUserId(long userId) {
-		FinderPath finderPath = _finderPathCountByUserId;
-
-		Object[] finderArgs = new Object[] {userId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_COOKIESCONSENTPREFERENCE_WHERE);
-
-			sb.append(_FINDER_COLUMN_USERID_USERID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(userId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByUserId.count(
+			finderCache, new Object[] {userId});
 	}
-
-	private static final String _FINDER_COLUMN_USERID_USERID_2 =
-		"cookiesConsentPreference.userId = ?";
 
 	private FinderPath _finderPathWithPaginationFindByExpirationDate;
 	private FinderPath _finderPathWithoutPaginationFindByExpirationDate;
 	private FinderPath _finderPathCountByExpirationDate;
+	private CollectionPersistenceFinder<CookiesConsentPreference>
+		_collectionPersistenceFinderByExpirationDate;
 
 	/**
 	 * Returns all the cookies consent preferences where expirationDate = &#63;.
@@ -449,109 +311,9 @@ public class CookiesConsentPreferencePersistenceImpl
 		OrderByComparator<CookiesConsentPreference> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByExpirationDate;
-				finderArgs = new Object[] {_getTime(expirationDate)};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByExpirationDate;
-			finderArgs = new Object[] {
-				_getTime(expirationDate), start, end, orderByComparator
-			};
-		}
-
-		List<CookiesConsentPreference> list = null;
-
-		if (useFinderCache) {
-			list = (List<CookiesConsentPreference>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (CookiesConsentPreference cookiesConsentPreference : list) {
-					if (!Objects.equals(
-							expirationDate,
-							cookiesConsentPreference.getExpirationDate())) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_COOKIESCONSENTPREFERENCE_WHERE);
-
-			boolean bindExpirationDate = false;
-
-			if (expirationDate == null) {
-				sb.append(_FINDER_COLUMN_EXPIRATIONDATE_EXPIRATIONDATE_1);
-			}
-			else {
-				bindExpirationDate = true;
-
-				sb.append(_FINDER_COLUMN_EXPIRATIONDATE_EXPIRATIONDATE_2);
-			}
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(CookiesConsentPreferenceModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindExpirationDate) {
-					queryPos.add(new Timestamp(expirationDate.getTime()));
-				}
-
-				list = (List<CookiesConsentPreference>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByExpirationDate.find(
+			finderCache, new Object[] {expirationDate}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -575,16 +337,9 @@ public class CookiesConsentPreferencePersistenceImpl
 			return cookiesConsentPreference;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("expirationDate=");
-		sb.append(expirationDate);
-
-		sb.append("}");
-
-		throw new NoSuchCookiesConsentPreferenceException(sb.toString());
+		throw new NoSuchCookiesConsentPreferenceException(
+			_collectionPersistenceFinderByExpirationDate.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {expirationDate}));
 	}
 
 	/**
@@ -599,14 +354,8 @@ public class CookiesConsentPreferencePersistenceImpl
 		Date expirationDate,
 		OrderByComparator<CookiesConsentPreference> orderByComparator) {
 
-		List<CookiesConsentPreference> list = findByExpirationDate(
-			expirationDate, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByExpirationDate.fetchFirst(
+			finderCache, new Object[] {expirationDate}, orderByComparator);
 	}
 
 	/**
@@ -616,13 +365,8 @@ public class CookiesConsentPreferencePersistenceImpl
 	 */
 	@Override
 	public void removeByExpirationDate(Date expirationDate) {
-		for (CookiesConsentPreference cookiesConsentPreference :
-				findByExpirationDate(
-					expirationDate, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(cookiesConsentPreference);
-		}
+		_collectionPersistenceFinderByExpirationDate.remove(
+			finderCache, new Object[] {expirationDate});
 	}
 
 	/**
@@ -633,67 +377,15 @@ public class CookiesConsentPreferencePersistenceImpl
 	 */
 	@Override
 	public int countByExpirationDate(Date expirationDate) {
-		FinderPath finderPath = _finderPathCountByExpirationDate;
-
-		Object[] finderArgs = new Object[] {_getTime(expirationDate)};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_COOKIESCONSENTPREFERENCE_WHERE);
-
-			boolean bindExpirationDate = false;
-
-			if (expirationDate == null) {
-				sb.append(_FINDER_COLUMN_EXPIRATIONDATE_EXPIRATIONDATE_1);
-			}
-			else {
-				bindExpirationDate = true;
-
-				sb.append(_FINDER_COLUMN_EXPIRATIONDATE_EXPIRATIONDATE_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindExpirationDate) {
-					queryPos.add(new Timestamp(expirationDate.getTime()));
-				}
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByExpirationDate.count(
+			finderCache, new Object[] {expirationDate});
 	}
-
-	private static final String _FINDER_COLUMN_EXPIRATIONDATE_EXPIRATIONDATE_1 =
-		"cookiesConsentPreference.expirationDate IS NULL";
-
-	private static final String _FINDER_COLUMN_EXPIRATIONDATE_EXPIRATIONDATE_2 =
-		"cookiesConsentPreference.expirationDate = ?";
 
 	private FinderPath _finderPathWithPaginationFindByU_D;
 	private FinderPath _finderPathWithoutPaginationFindByU_D;
 	private FinderPath _finderPathCountByU_D;
+	private CollectionPersistenceFinder<CookiesConsentPreference>
+		_collectionPersistenceFinderByU_D;
 
 	/**
 	 * Returns all the cookies consent preferences where userId = &#63; and domain = &#63;.
@@ -773,114 +465,9 @@ public class CookiesConsentPreferencePersistenceImpl
 		OrderByComparator<CookiesConsentPreference> orderByComparator,
 		boolean useFinderCache) {
 
-		domain = Objects.toString(domain, "");
-
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByU_D;
-				finderArgs = new Object[] {userId, domain};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByU_D;
-			finderArgs = new Object[] {
-				userId, domain, start, end, orderByComparator
-			};
-		}
-
-		List<CookiesConsentPreference> list = null;
-
-		if (useFinderCache) {
-			list = (List<CookiesConsentPreference>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (CookiesConsentPreference cookiesConsentPreference : list) {
-					if ((userId != cookiesConsentPreference.getUserId()) ||
-						!domain.equals(cookiesConsentPreference.getDomain())) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					4 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(4);
-			}
-
-			sb.append(_SQL_SELECT_COOKIESCONSENTPREFERENCE_WHERE);
-
-			sb.append(_FINDER_COLUMN_U_D_USERID_2);
-
-			boolean bindDomain = false;
-
-			if (domain.isEmpty()) {
-				sb.append(_FINDER_COLUMN_U_D_DOMAIN_3);
-			}
-			else {
-				bindDomain = true;
-
-				sb.append(_FINDER_COLUMN_U_D_DOMAIN_2);
-			}
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(CookiesConsentPreferenceModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(userId);
-
-				if (bindDomain) {
-					queryPos.add(domain);
-				}
-
-				list = (List<CookiesConsentPreference>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByU_D.find(
+			finderCache, new Object[] {userId, domain}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -905,19 +492,9 @@ public class CookiesConsentPreferencePersistenceImpl
 			return cookiesConsentPreference;
 		}
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("userId=");
-		sb.append(userId);
-
-		sb.append(", domain=");
-		sb.append(domain);
-
-		sb.append("}");
-
-		throw new NoSuchCookiesConsentPreferenceException(sb.toString());
+		throw new NoSuchCookiesConsentPreferenceException(
+			_collectionPersistenceFinderByU_D.buildNoSuchKeyMessage(
+				_NO_SUCH_ENTITY_WITH_KEY, new Object[] {userId, domain}));
 	}
 
 	/**
@@ -933,14 +510,8 @@ public class CookiesConsentPreferencePersistenceImpl
 		long userId, String domain,
 		OrderByComparator<CookiesConsentPreference> orderByComparator) {
 
-		List<CookiesConsentPreference> list = findByU_D(
-			userId, domain, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
+		return _collectionPersistenceFinderByU_D.fetchFirst(
+			finderCache, new Object[] {userId, domain}, orderByComparator);
 	}
 
 	/**
@@ -951,13 +522,8 @@ public class CookiesConsentPreferencePersistenceImpl
 	 */
 	@Override
 	public void removeByU_D(long userId, String domain) {
-		for (CookiesConsentPreference cookiesConsentPreference :
-				findByU_D(
-					userId, domain, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null)) {
-
-			remove(cookiesConsentPreference);
-		}
+		_collectionPersistenceFinderByU_D.remove(
+			finderCache, new Object[] {userId, domain});
 	}
 
 	/**
@@ -969,74 +535,13 @@ public class CookiesConsentPreferencePersistenceImpl
 	 */
 	@Override
 	public int countByU_D(long userId, String domain) {
-		domain = Objects.toString(domain, "");
-
-		FinderPath finderPath = _finderPathCountByU_D;
-
-		Object[] finderArgs = new Object[] {userId, domain};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_COOKIESCONSENTPREFERENCE_WHERE);
-
-			sb.append(_FINDER_COLUMN_U_D_USERID_2);
-
-			boolean bindDomain = false;
-
-			if (domain.isEmpty()) {
-				sb.append(_FINDER_COLUMN_U_D_DOMAIN_3);
-			}
-			else {
-				bindDomain = true;
-
-				sb.append(_FINDER_COLUMN_U_D_DOMAIN_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(userId);
-
-				if (bindDomain) {
-					queryPos.add(domain);
-				}
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByU_D.count(
+			finderCache, new Object[] {userId, domain});
 	}
 
-	private static final String _FINDER_COLUMN_U_D_USERID_2 =
-		"cookiesConsentPreference.userId = ? AND ";
-
-	private static final String _FINDER_COLUMN_U_D_DOMAIN_2 =
-		"cookiesConsentPreference.domain = ?";
-
-	private static final String _FINDER_COLUMN_U_D_DOMAIN_3 =
-		"(cookiesConsentPreference.domain IS NULL OR cookiesConsentPreference.domain = '')";
-
 	private FinderPath _finderPathFetchByU_D_N;
+	private UniquePersistenceFinder<CookiesConsentPreference>
+		_uniquePersistenceFinderByU_D_N;
 
 	/**
 	 * Returns the cookies consent preference where userId = &#63; and domain = &#63; and name = &#63; or throws a <code>NoSuchCookiesConsentPreferenceException</code> if it could not be found.
@@ -1056,26 +561,16 @@ public class CookiesConsentPreferencePersistenceImpl
 			userId, domain, name);
 
 		if (cookiesConsentPreference == null) {
-			StringBundler sb = new StringBundler(8);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("userId=");
-			sb.append(userId);
-
-			sb.append(", domain=");
-			sb.append(domain);
-
-			sb.append(", name=");
-			sb.append(name);
-
-			sb.append("}");
+			String message =
+				_uniquePersistenceFinderByU_D_N.buildNoSuchKeyMessage(
+					_NO_SUCH_ENTITY_WITH_KEY,
+					new Object[] {userId, domain, name});
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
+				_log.debug(message);
 			}
 
-			throw new NoSuchCookiesConsentPreferenceException(sb.toString());
+			throw new NoSuchCookiesConsentPreferenceException(message);
 		}
 
 		return cookiesConsentPreference;
@@ -1109,115 +604,8 @@ public class CookiesConsentPreferencePersistenceImpl
 	public CookiesConsentPreference fetchByU_D_N(
 		long userId, String domain, String name, boolean useFinderCache) {
 
-		domain = Objects.toString(domain, "");
-		name = Objects.toString(name, "");
-
-		Object[] finderArgs = null;
-
-		if (useFinderCache) {
-			finderArgs = new Object[] {userId, domain, name};
-		}
-
-		Object result = null;
-
-		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByU_D_N, finderArgs, this);
-		}
-
-		if (result instanceof CookiesConsentPreference) {
-			CookiesConsentPreference cookiesConsentPreference =
-				(CookiesConsentPreference)result;
-
-			if ((userId != cookiesConsentPreference.getUserId()) ||
-				!Objects.equals(domain, cookiesConsentPreference.getDomain()) ||
-				!Objects.equals(name, cookiesConsentPreference.getName())) {
-
-				result = null;
-			}
-		}
-
-		if (result == null) {
-			StringBundler sb = new StringBundler(5);
-
-			sb.append(_SQL_SELECT_COOKIESCONSENTPREFERENCE_WHERE);
-
-			sb.append(_FINDER_COLUMN_U_D_N_USERID_2);
-
-			boolean bindDomain = false;
-
-			if (domain.isEmpty()) {
-				sb.append(_FINDER_COLUMN_U_D_N_DOMAIN_3);
-			}
-			else {
-				bindDomain = true;
-
-				sb.append(_FINDER_COLUMN_U_D_N_DOMAIN_2);
-			}
-
-			boolean bindName = false;
-
-			if (name.isEmpty()) {
-				sb.append(_FINDER_COLUMN_U_D_N_NAME_3);
-			}
-			else {
-				bindName = true;
-
-				sb.append(_FINDER_COLUMN_U_D_N_NAME_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(userId);
-
-				if (bindDomain) {
-					queryPos.add(domain);
-				}
-
-				if (bindName) {
-					queryPos.add(name);
-				}
-
-				List<CookiesConsentPreference> list = query.list();
-
-				if (list.isEmpty()) {
-					if (useFinderCache) {
-						finderCache.putResult(
-							_finderPathFetchByU_D_N, finderArgs, list);
-					}
-				}
-				else {
-					CookiesConsentPreference cookiesConsentPreference =
-						list.get(0);
-
-					result = cookiesConsentPreference;
-
-					cacheResult(cookiesConsentPreference);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		if (result instanceof List<?>) {
-			return null;
-		}
-		else {
-			return (CookiesConsentPreference)result;
-		}
+		return _uniquePersistenceFinderByU_D_N.fetch(
+			finderCache, new Object[] {userId, domain, name}, useFinderCache);
 	}
 
 	/**
@@ -1249,30 +637,9 @@ public class CookiesConsentPreferencePersistenceImpl
 	 */
 	@Override
 	public int countByU_D_N(long userId, String domain, String name) {
-		CookiesConsentPreference cookiesConsentPreference = fetchByU_D_N(
-			userId, domain, name);
-
-		if (cookiesConsentPreference == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByU_D_N.count(
+			finderCache, new Object[] {userId, domain, name});
 	}
-
-	private static final String _FINDER_COLUMN_U_D_N_USERID_2 =
-		"cookiesConsentPreference.userId = ? AND ";
-
-	private static final String _FINDER_COLUMN_U_D_N_DOMAIN_2 =
-		"cookiesConsentPreference.domain = ? AND ";
-
-	private static final String _FINDER_COLUMN_U_D_N_DOMAIN_3 =
-		"(cookiesConsentPreference.domain IS NULL OR cookiesConsentPreference.domain = '') AND ";
-
-	private static final String _FINDER_COLUMN_U_D_N_NAME_2 =
-		"cookiesConsentPreference.name = ?";
-
-	private static final String _FINDER_COLUMN_U_D_N_NAME_3 =
-		"(cookiesConsentPreference.name IS NULL OR cookiesConsentPreference.name = '')";
 
 	public CookiesConsentPreferencePersistenceImpl() {
 		setModelClass(CookiesConsentPreference.class);
@@ -1865,6 +1232,20 @@ public class CookiesConsentPreferencePersistenceImpl
 			new String[] {Long.class.getName()}, new String[] {"userId"},
 			false);
 
+		_collectionPersistenceFinderByUserId =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByUserId,
+				_finderPathWithoutPaginationFindByUserId,
+				_finderPathCountByUserId,
+				_SQL_SELECT_COOKIESCONSENTPREFERENCE_WHERE,
+				_SQL_COUNT_COOKIESCONSENTPREFERENCE_WHERE,
+				CookiesConsentPreferenceModelImpl.ORDER_BY_JPQL,
+				_ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"cookiesConsentPreference.", "userId",
+					FinderColumn.Type.LONG, "=", true, true,
+					CookiesConsentPreference::getUserId));
+
 		_finderPathWithPaginationFindByExpirationDate = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByExpirationDate",
 			new String[] {
@@ -1882,6 +1263,20 @@ public class CookiesConsentPreferencePersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByExpirationDate",
 			new String[] {Date.class.getName()},
 			new String[] {"expirationDate"}, false);
+
+		_collectionPersistenceFinderByExpirationDate =
+			new CollectionPersistenceFinder<>(
+				this, _finderPathWithPaginationFindByExpirationDate,
+				_finderPathWithoutPaginationFindByExpirationDate,
+				_finderPathCountByExpirationDate,
+				_SQL_SELECT_COOKIESCONSENTPREFERENCE_WHERE,
+				_SQL_COUNT_COOKIESCONSENTPREFERENCE_WHERE,
+				CookiesConsentPreferenceModelImpl.ORDER_BY_JPQL,
+				_ORDER_BY_ENTITY_ALIAS,
+				new FinderColumn<>(
+					"cookiesConsentPreference.", "expirationDate",
+					FinderColumn.Type.DATE, "=", true, true,
+					CookiesConsentPreference::getExpirationDate));
 
 		_finderPathWithPaginationFindByU_D = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByU_D",
@@ -1902,6 +1297,20 @@ public class CookiesConsentPreferencePersistenceImpl
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"userId", "domain"}, false);
 
+		_collectionPersistenceFinderByU_D = new CollectionPersistenceFinder<>(
+			this, _finderPathWithPaginationFindByU_D,
+			_finderPathWithoutPaginationFindByU_D, _finderPathCountByU_D,
+			_SQL_SELECT_COOKIESCONSENTPREFERENCE_WHERE,
+			_SQL_COUNT_COOKIESCONSENTPREFERENCE_WHERE,
+			CookiesConsentPreferenceModelImpl.ORDER_BY_JPQL,
+			_ORDER_BY_ENTITY_ALIAS,
+			new FinderColumn<>(
+				"cookiesConsentPreference.", "userId", FinderColumn.Type.LONG,
+				"=", true, false, CookiesConsentPreference::getUserId),
+			new FinderColumn<>(
+				"cookiesConsentPreference.", "domain", FinderColumn.Type.STRING,
+				"=", true, true, CookiesConsentPreference::getDomain));
+
 		_finderPathFetchByU_D_N = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByU_D_N",
 			new String[] {
@@ -1909,6 +1318,19 @@ public class CookiesConsentPreferencePersistenceImpl
 				String.class.getName()
 			},
 			new String[] {"userId", "domain", "name"}, true);
+
+		_uniquePersistenceFinderByU_D_N = new UniquePersistenceFinder<>(
+			this, _finderPathFetchByU_D_N,
+			_SQL_SELECT_COOKIESCONSENTPREFERENCE_WHERE,
+			new FinderColumn<>(
+				"cookiesConsentPreference.", "userId", FinderColumn.Type.LONG,
+				"=", true, false, CookiesConsentPreference::getUserId),
+			new FinderColumn<>(
+				"cookiesConsentPreference.", "domain", FinderColumn.Type.STRING,
+				"=", true, false, CookiesConsentPreference::getDomain),
+			new FinderColumn<>(
+				"cookiesConsentPreference.", "name", FinderColumn.Type.STRING,
+				"=", true, true, CookiesConsentPreference::getName));
 
 		CookiesConsentPreferenceUtil.setPersistence(this);
 	}
@@ -1952,14 +1374,6 @@ public class CookiesConsentPreferencePersistenceImpl
 	@Reference
 	protected FinderCache finderCache;
 
-	private static Long _getTime(Date date) {
-		if (date == null) {
-			return null;
-		}
-
-		return date.getTime();
-	}
-
 	private static final String _SQL_SELECT_COOKIESCONSENTPREFERENCE =
 		"SELECT cookiesConsentPreference FROM CookiesConsentPreference cookiesConsentPreference";
 
@@ -1990,4 +1404,4 @@ public class CookiesConsentPreferencePersistenceImpl
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1548955799
+// LIFERAY-SERVICE-BUILDER-HASH:-456057479

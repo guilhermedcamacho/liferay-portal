@@ -2439,7 +2439,7 @@ war.path=${app.server.portal.dir}/</echo>
 						<then>
 							<mirrors-get
 								dest="@{patching.tool.dir}/patches"
-								src="http://files.liferay.com/private/ee/fix-packs/${patch.portal.version}/dxp/liferay-fix-pack-${fixpack.build.name}.zip"
+								src="https://releases.liferay.com/fix-packs/${patch.portal.version}/dxp/liferay-fix-pack-${fixpack.build.name}.zip"
 							/>
 						</then>
 					</if>
@@ -6990,6 +6990,85 @@ ${custom.upgrade.properties}</echo>
 		</sequential>
 	</macrodef>
 
+	<macrodef name="set-playwright-object-storage-salesforce-properties">
+		<sequential>
+			<var name="env.object.storage.salesforce.consumer.key" value="" />
+
+			<if>
+				<isset property="env.OBJECT_STORAGE_SALESFORCE_CONSUMER_KEY" />
+				<then>
+					<var name="env.object.storage.salesforce.consumer.key" value="--env=OBJECT_STORAGE_SALESFORCE_CONSUMER_KEY=${env.OBJECT_STORAGE_SALESFORCE_CONSUMER_KEY}" />
+				</then>
+				<elseif>
+					<isset property="object.storage.salesforce.consumer.key" />
+					<then>
+						<var name="env.object.storage.salesforce.consumer.key" value="--env=OBJECT_STORAGE_SALESFORCE_CONSUMER_KEY=${object.storage.salesforce.consumer.key}" />
+					</then>
+				</elseif>
+			</if>
+
+			<var name="env.object.storage.salesforce.consumer.secret" value="" />
+
+			<if>
+				<isset property="env.OBJECT_STORAGE_SALESFORCE_CONSUMER_SECRET" />
+				<then>
+					<var name="env.object.storage.salesforce.consumer.secret" value="--env=OBJECT_STORAGE_SALESFORCE_CONSUMER_SECRET=${env.OBJECT_STORAGE_SALESFORCE_CONSUMER_SECRET}" />
+				</then>
+				<elseif>
+					<isset property="object.storage.salesforce.consumer.secret" />
+					<then>
+						<var name="env.object.storage.salesforce.consumer.secret" value="--env=OBJECT_STORAGE_SALESFORCE_CONSUMER_SECRET=${object.storage.salesforce.consumer.secret}" />
+					</then>
+				</elseif>
+			</if>
+
+			<var name="env.object.storage.salesforce.login.url" value="" />
+
+			<if>
+				<isset property="env.OBJECT_STORAGE_SALESFORCE_LOGIN_URL" />
+				<then>
+					<var name="env.object.storage.salesforce.login.url" value="--env=OBJECT_STORAGE_SALESFORCE_LOGIN_URL=${env.OBJECT_STORAGE_SALESFORCE_LOGIN_URL}" />
+				</then>
+				<elseif>
+					<isset property="object.storage.salesforce.login.url" />
+					<then>
+						<var name="env.object.storage.salesforce.login.url" value="--env=OBJECT_STORAGE_SALESFORCE_LOGIN_URL=${object.storage.salesforce.login.url}" />
+					</then>
+				</elseif>
+			</if>
+
+			<var name="env.object.storage.salesforce.password" value="" />
+
+			<if>
+				<isset property="env.OBJECT_STORAGE_SALESFORCE_PASSWORD" />
+				<then>
+					<var name="env.object.storage.salesforce.password" value="--env=OBJECT_STORAGE_SALESFORCE_PASSWORD=${env.OBJECT_STORAGE_SALESFORCE_PASSWORD}" />
+				</then>
+				<elseif>
+					<isset property="object.storage.salesforce.password" />
+					<then>
+						<var name="env.object.storage.salesforce.password" value="--env=OBJECT_STORAGE_SALESFORCE_PASSWORD=${object.storage.salesforce.password}" />
+					</then>
+				</elseif>
+			</if>
+
+			<var name="env.object.storage.salesforce.username" value="" />
+
+			<if>
+				<isset property="env.OBJECT_STORAGE_SALESFORCE_USERNAME" />
+				<then>
+					<var name="env.object.storage.salesforce.username" value="--env=OBJECT_STORAGE_SALESFORCE_USERNAME=${env.OBJECT_STORAGE_SALESFORCE_USERNAME}" />
+				</then>
+				<elseif>
+					<isset property="object.storage.salesforce.username" />
+					<then>
+						<var name="env.object.storage.salesforce.username" value="--env=OBJECT_STORAGE_SALESFORCE_USERNAME=${object.storage.salesforce.username}" />
+					</then>
+				</elseif>
+			</if>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="set-portal-impl-portal-test-ext-properties">
 		<sequential>
 			<generate-jdbc-properties properties.file="portal-impl/test/portal-test-ext.properties">
@@ -7366,7 +7445,7 @@ log.sanitizer.enabled=false</echo>
 					</then>
 				</elseif>
 				<else>
-					<var name="app.server.tomcat.version" value="10.1.52" />
+					<var name="app.server.tomcat.version" value="10.1.54" />
 				</else>
 			</if>
 
@@ -8565,6 +8644,8 @@ ${docker.start.error}</fail>
 
 			<set-playwright-click-to-chat-properties />
 
+			<set-playwright-object-storage-salesforce-properties />
+
 			<local name="env.portal.url.arg" />
 
 			<condition else="" property="env.portal.url.arg" value="--env=PORTAL_URL=http://${env.NODE_NAME}:8080">
@@ -8599,6 +8680,11 @@ ${docker.start.error}</fail>
 				${env.click.to.chat.tawkto.password} \
 				${env.click.to.chat.tidio.password} \
 				${env.click.to.chat.zendesk.password} \
+				${env.object.storage.salesforce.consumer.key} \
+				${env.object.storage.salesforce.consumer.secret} \
+				${env.object.storage.salesforce.login.url} \
+				${env.object.storage.salesforce.password} \
+				${env.object.storage.salesforce.username} \
 				${env.osb.asah.api.token} \
 				${env.osb.asah.backend.url} \
 				${env.osb.asah.batch.curator.url} \
@@ -12323,7 +12409,17 @@ send_user $expect_out(buffer)]]></echo>
 				<basedir file="${liferay.faces.bridge.impl.dir}/test/integration" />
 				<basedir file="${liferay.faces.portal.dir}/test/integration" />
 				<basedir file="${test.workspace.dir}" />
-				<exclude name="**/node_modules/**/TEST-*.xml" />
+				<exclude name="**/.git/**" />
+				<exclude name="**/.gradle/**" />
+				<exclude name="**/bin/**" />
+				<exclude name="**/build/**" />
+				<exclude name="**/classes/**" />
+				<exclude name="**/dist/**" />
+				<exclude name="**/node_modules/**" />
+				<exclude name="**/src/**" />
+				<exclude name="**/test-classes/**" />
+				<exclude name="**/test-coverage/**" />
+				<exclude name="**/tmp/**" />
 				<include name="**/TEST-*.xml" />
 			</multirootfileset>
 		</path>
@@ -12429,7 +12525,7 @@ send_user $expect_out(buffer)]]></echo>
 			replace="&lt;system-err&gt;&lt;\/system-err&gt;"
 		/>
 
-		<echo>A report with all the test results can be found at test-results/html/index.html.</echo>
+		<echo>A report with all the test results can be found at ${project.dir}/test-results/html/index.html.</echo>
 	</target>
 
 	<target name="move-file">
@@ -13141,7 +13237,7 @@ company.default.web.id=www.able.com</echo>
 						<pull-clamd-docker-container image="${clamd.docker.image}" />
 						<start-docker-container image="${clamd.docker.image}" name="clamd">\
 							--expose=3310 \
-Comment view						</start-docker-container>
+						</start-docker-container>
 					</then>
 				</if>
 
@@ -13487,14 +13583,6 @@ feature.flag.LPD-11342=true</echo>
 
 		<echo append="true" file="portal-impl/src/portal-ext.properties">
 analytics.cloud.domain.allowed=*</echo>
-
-		<if>
-			<equals arg1="${functional.test.type}" arg2="poshi" />
-			<then>
-				<echo append="true" file="portal-impl/src/portal-ext.properties">
-feature.flag.LPD-36105=true</echo>
-			</then>
-		</if>
 
 		<apply-portal-ext-properties />
 	</target>

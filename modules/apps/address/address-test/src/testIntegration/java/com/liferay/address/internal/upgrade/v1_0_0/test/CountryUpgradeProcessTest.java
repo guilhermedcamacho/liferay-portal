@@ -63,10 +63,10 @@ public class CountryUpgradeProcessTest {
 				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
 					_company.getCompanyId())) {
 
-			int countryCount = _getCount("Country");
-			int countryLocalizationCount = _getCount("CountryLocalization");
-			int regionCount = _getCount("Region");
-			int regionLocalizationCount = _getCount("RegionLocalization");
+			long countryCount = _getCount("Country");
+			long countryLocalizationCount = _getCount("CountryLocalization");
+			long regionCount = _getCount("Region");
+			long regionLocalizationCount = _getCount("RegionLocalization");
 
 			_delete("Country");
 			_delete("CountryLocalization");
@@ -127,7 +127,7 @@ public class CountryUpgradeProcessTest {
 		}
 	}
 
-	private int _getCount(String tableName) throws Exception {
+	private long _getCount(String tableName) throws Exception {
 		try (Connection connection = DataAccess.getConnection();
 
 			PreparedStatement preparedStatement = connection.prepareStatement(
@@ -139,7 +139,7 @@ public class CountryUpgradeProcessTest {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				resultSet.next();
 
-				return resultSet.getInt("count");
+				return resultSet.getLong("count");
 			}
 		}
 	}
@@ -154,21 +154,21 @@ public class CountryUpgradeProcessTest {
 	private static final String _CLASS_NAME =
 		"com.liferay.address.internal.upgrade.v1_0_0.CountryUpgradeProcess";
 
-	@Inject
-	private static CounterLocalService _counterLocalService;
+	@DeleteAfterTestRun
+	private Company _company;
 
 	@Inject
-	private static CountryLocalService _countryLocalService;
+	private CounterLocalService _counterLocalService;
 
 	@Inject
-	private static RegionLocalService _regionLocalService;
+	private CountryLocalService _countryLocalService;
+
+	@Inject
+	private RegionLocalService _regionLocalService;
 
 	@Inject(
 		filter = "(&(component.name=com.liferay.address.internal.upgrade.registry.AddressUpgradeStepRegistrator))"
 	)
-	private static UpgradeStepRegistrator _upgradeStepRegistrator;
-
-	@DeleteAfterTestRun
-	private Company _company;
+	private UpgradeStepRegistrator _upgradeStepRegistrator;
 
 }

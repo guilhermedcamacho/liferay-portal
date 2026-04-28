@@ -132,3 +132,4 @@ public class PermissionObjectBulkSelectionAction
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:327958952

@@ -6881,3 +6881,4 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 			TaxonomyCategoryResource _taxonomyCategoryResource;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2112544521

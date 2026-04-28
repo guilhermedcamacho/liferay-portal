@@ -797,3 +797,4 @@ public abstract class BaseSortResourceImpl
 		LogFactoryUtil.getLog(BaseSortResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:573914602

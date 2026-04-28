@@ -348,3 +348,4 @@ public class DueDateObjectBulkSelectionActionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1212378669

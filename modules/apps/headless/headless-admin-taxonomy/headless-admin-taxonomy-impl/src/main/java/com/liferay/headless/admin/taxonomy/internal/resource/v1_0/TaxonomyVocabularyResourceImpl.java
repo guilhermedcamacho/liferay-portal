@@ -32,20 +32,21 @@ import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BooleanClause;
-import com.liferay.portal.kernel.search.BooleanClauseFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
+import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -71,13 +72,11 @@ import com.liferay.portlet.asset.service.permission.AssetCategoriesPermission;
 import com.liferay.portlet.asset.util.AssetVocabularySettingsHelper;
 
 import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.core.MultivaluedMap;
 
 import java.io.Serializable;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -645,7 +644,12 @@ public class TaxonomyVocabularyResourceImpl
 							}
 						}
 
-						throw new InternalServerErrorException();
+						if (_log.isDebugEnabled()) {
+							_log.debug(
+								"Unable to get class type for " + classTypePK);
+						}
+
+						return null;
 					});
 				setType(
 					() -> {
@@ -712,28 +716,7 @@ public class TaxonomyVocabularyResourceImpl
 		return assetTypes;
 	}
 
-	private String _getAvailableAssetTypes(
-		List<AssetRendererFactory<?>> categorizableAssetRenderFactories) {
-
-		List<String> assetTypes = ListUtil.concat(
-			transform(
-				categorizableAssetRenderFactories,
-				assetRenderedFactory -> {
-					String assetTypeType = _classNameToAssetTypeTypes.get(
-						assetRenderedFactory.getClassName());
-
-					if (assetTypeType != null) {
-						return assetTypeType;
-					}
-
-					return _getModelResource(assetRenderedFactory);
-				}),
-			Collections.singletonList("AllAssetTypes"));
-
-		return Arrays.toString(assetTypes.toArray());
-	}
-
-	private long _getClassNameId(String assetTypeType) {
+	private Long _getClassNameId(String assetTypeType) {
 		if (Objects.equals(assetTypeType, "AllAssetTypes")) {
 			return AssetCategoryConstants.ALL_CLASS_NAME_ID;
 		}
@@ -749,7 +732,9 @@ public class TaxonomyVocabularyResourceImpl
 		for (AssetRendererFactory<?> assetRendererFactory :
 				categorizableAssetRenderFactories) {
 
-			if (assetTypeType.equals(_getModelResource(assetRendererFactory))) {
+			if (Objects.equals(
+					assetTypeType, _getModelResource(assetRendererFactory))) {
+
 				className = assetRendererFactory.getClassName();
 
 				break;
@@ -761,18 +746,17 @@ public class TaxonomyVocabularyResourceImpl
 		}
 
 		if (className == null) {
-			throw new BadRequestException(
-				StringBundler.concat(
-					"Asset type ", assetTypeType,
-					" not available, the supported asset types are: ",
-					_getAvailableAssetTypes(
-						categorizableAssetRenderFactories)));
+			if (_log.isDebugEnabled()) {
+				_log.debug("Invalid asset type type " + assetTypeType);
+			}
+
+			return null;
 		}
 
 		return _portal.getClassNameId(className);
 	}
 
-	private long _getClassTypePK(
+	private Long _getClassTypePK(
 		long classNameId, String subtype, long groupId) {
 
 		if (Objects.equals(subtype, "AllAssetSubtypes") ||
@@ -803,7 +787,11 @@ public class TaxonomyVocabularyResourceImpl
 			}
 		}
 
-		throw new BadRequestException("Invalid subtype " + subtype);
+		if (_log.isDebugEnabled()) {
+			_log.debug("Invalid asset type subtype " + subtype);
+		}
+
+		return null;
 	}
 
 	private String _getModelResource(
@@ -850,20 +838,33 @@ public class TaxonomyVocabularyResourceImpl
 		}
 
 		long[] classNameIds = new long[assetTypes.length];
+
 		long[] classTypePKs = new long[assetTypes.length];
+
+		Arrays.fill(classTypePKs, AssetCategoryConstants.ALL_CLASS_TYPE_PK);
+
 		boolean[] requiredClassNameIds = new boolean[assetTypes.length];
 
 		for (int i = 0; i < assetTypes.length; i++) {
 			AssetType assetType = assetTypes[i];
 
-			long classNameId = _getClassNameId(assetType.getType());
+			Long classNameId = _getClassNameId(assetType.getType());
+
+			if (classNameId == null) {
+				continue;
+			}
 
 			classNameIds[i] = classNameId;
 
-			classTypePKs[i] = _getClassTypePK(
+			Long classTypePK = _getClassTypePK(
 				classNameId, assetType.getSubtype(), groupId);
 
-			requiredClassNameIds[i] = assetType.getRequired();
+			if (classTypePK != null) {
+				classTypePKs[i] = classTypePK;
+
+				requiredClassNameIds[i] = GetterUtil.getBoolean(
+					assetType.getRequired());
+			}
 		}
 
 		assetVocabularySettingsHelper.setClassNameIdsAndClassTypePKs(
@@ -906,8 +907,8 @@ public class TaxonomyVocabularyResourceImpl
 
 					searchContext.setBooleanClauses(
 						new BooleanClause[] {
-							BooleanClauseFactoryUtil.create(
-								new BooleanQueryImpl() {
+							new BooleanClause<>(
+								new BooleanQuery() {
 									{
 										if (filter != null) {
 											booleanFilter.add(
@@ -918,7 +919,7 @@ public class TaxonomyVocabularyResourceImpl
 										setPreBooleanFilter(booleanFilter);
 									}
 								},
-								BooleanClauseOccur.MUST.getName())
+								BooleanClauseOccur.MUST)
 						});
 				}
 				else {
@@ -1098,6 +1099,9 @@ public class TaxonomyVocabularyResourceImpl
 				taxonomyVocabulary.getViewableByAsString()
 			).build());
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		TaxonomyVocabularyResourceImpl.class);
 
 	private static final Map<String, String> _assetTypeTypeToClassNames =
 		new HashMap<>();

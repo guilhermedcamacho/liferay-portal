@@ -10,11 +10,24 @@ import React from 'react';
 
 import {Wizard, WizardStep} from '../../components/Wizard';
 import {DateFilterValues} from '../../components/date_filter';
+import {flattenContentSelection} from '../../utils/flattenContentSelection';
+import {
+	PortletDataHandlerSection,
+	mockPortletDataHandlerSections,
+} from '../../utils/mockPortletDataHandlerSections';
 import DataSelectionStep from './steps/DataSelectionStep';
 import SettingsStep from './steps/SettingsStep';
 import SetupStep from './steps/SetupStep';
 
-export function NewExport({backURL}: {backURL: string}) {
+interface NewExportProps {
+	backURL: string;
+	sections?: PortletDataHandlerSection[];
+}
+
+export function NewExport({
+	backURL,
+	sections = mockPortletDataHandlerSections,
+}: NewExportProps) {
 	const handleApplyFilter = (filterValues: DateFilterValues) => {
 
 		// eslint-disable-next-line no-console
@@ -44,18 +57,22 @@ export function NewExport({backURL}: {backURL: string}) {
 					return errors;
 				}}
 			>
-				<SetupStep />
+				<SetupStep sections={sections} />
 			</WizardStep>
 
 			<WizardStep
 				description={Liferay.Language.get(
 					'select-and-filter-the-data-you-want-to-include-in-your-export'
 				)}
+				initialValues={{
+					contentSelection: undefined,
+				}}
 				title={Liferay.Language.get('data-selection')}
 			>
 				<DataSelectionStep
 					itemsCount={0}
 					onApplyFilter={handleApplyFilter}
+					sections={sections}
 				/>
 			</WizardStep>
 
@@ -72,8 +89,17 @@ export function NewExport({backURL}: {backURL: string}) {
 				description={Liferay.Language.get(
 					'configure-your-export-settings'
 				)}
-				onSubmit={async () => {
-					alert('Export started!');
+				onSubmit={async (values) => {
+					const flatValues = flattenContentSelection({
+						contentSelection: values.contentSelection,
+						sections,
+					});
+
+					// eslint-disable-next-line no-console
+					console.log({
+						contentSelection: values.contentSelection,
+						flatValues,
+					});
 				}}
 				title={Liferay.Language.get('settings')}
 			>
