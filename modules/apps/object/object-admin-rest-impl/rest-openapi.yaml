@@ -67,6 +67,8 @@ components:
                     type: object
                 active:
                     type: boolean
+                allowStandaloneObjectEntry:
+                    type: boolean
                 className:
                     type: string
                 creator:
