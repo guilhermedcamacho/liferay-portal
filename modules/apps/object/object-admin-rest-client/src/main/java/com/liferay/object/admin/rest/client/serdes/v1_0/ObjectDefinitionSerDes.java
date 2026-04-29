@@ -109,6 +109,16 @@ public class ObjectDefinitionSerDes {
 			sb.append(objectDefinition.getActive());
 		}
 
+		if (objectDefinition.getAllowStandaloneObjectEntry() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"allowStandaloneObjectEntry\": ");
+
+			sb.append(objectDefinition.getAllowStandaloneObjectEntry());
+		}
+
 		if (objectDefinition.getClassName() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -803,6 +813,16 @@ public class ObjectDefinitionSerDes {
 			map.put("active", String.valueOf(objectDefinition.getActive()));
 		}
 
+		if (objectDefinition.getAllowStandaloneObjectEntry() == null) {
+			map.put("allowStandaloneObjectEntry", null);
+		}
+		else {
+			map.put(
+				"allowStandaloneObjectEntry",
+				String.valueOf(
+					objectDefinition.getAllowStandaloneObjectEntry()));
+		}
+
 		if (objectDefinition.getClassName() == null) {
 			map.put("className", null);
 		}
@@ -1225,6 +1245,11 @@ public class ObjectDefinitionSerDes {
 			else if (Objects.equals(jsonParserFieldName, "active")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "allowStandaloneObjectEntry")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "className")) {
 				return false;
 			}
@@ -1429,6 +1454,14 @@ public class ObjectDefinitionSerDes {
 			else if (Objects.equals(jsonParserFieldName, "active")) {
 				if (jsonParserFieldValue != null) {
 					objectDefinition.setActive((Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "allowStandaloneObjectEntry")) {
+
+				if (jsonParserFieldValue != null) {
+					objectDefinition.setAllowStandaloneObjectEntry(
+						(Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "className")) {
@@ -1921,4 +1954,4 @@ public class ObjectDefinitionSerDes {
 	}
 
 }
-// LIFERAY-REST-BUILDER-HASH:-722551517
+// LIFERAY-REST-BUILDER-HASH:1184996160

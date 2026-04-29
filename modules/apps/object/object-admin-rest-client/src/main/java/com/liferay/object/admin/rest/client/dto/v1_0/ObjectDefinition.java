@@ -118,6 +118,31 @@ public class ObjectDefinition implements Cloneable, Serializable {
 
 	protected Boolean active;
 
+	public Boolean getAllowStandaloneObjectEntry() {
+		return allowStandaloneObjectEntry;
+	}
+
+	public void setAllowStandaloneObjectEntry(
+		Boolean allowStandaloneObjectEntry) {
+
+		this.allowStandaloneObjectEntry = allowStandaloneObjectEntry;
+	}
+
+	public void setAllowStandaloneObjectEntry(
+		UnsafeSupplier<Boolean, Exception>
+			allowStandaloneObjectEntryUnsafeSupplier) {
+
+		try {
+			allowStandaloneObjectEntry =
+				allowStandaloneObjectEntryUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean allowStandaloneObjectEntry;
+
 	public String getClassName() {
 		return className;
 	}
@@ -1122,4 +1147,4 @@ public class ObjectDefinition implements Cloneable, Serializable {
 	}
 
 }
-// LIFERAY-REST-BUILDER-HASH:-746860302
+// LIFERAY-REST-BUILDER-HASH:-1640444200

@@ -227,6 +227,51 @@ public class ObjectDefinition implements Serializable {
 	private Supplier<Boolean> _activeSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getAllowStandaloneObjectEntry() {
+		if (_allowStandaloneObjectEntrySupplier != null) {
+			allowStandaloneObjectEntry =
+				_allowStandaloneObjectEntrySupplier.get();
+
+			_allowStandaloneObjectEntrySupplier = null;
+		}
+
+		return allowStandaloneObjectEntry;
+	}
+
+	public void setAllowStandaloneObjectEntry(
+		Boolean allowStandaloneObjectEntry) {
+
+		this.allowStandaloneObjectEntry = allowStandaloneObjectEntry;
+
+		_allowStandaloneObjectEntrySupplier = null;
+	}
+
+	@JsonIgnore
+	public void setAllowStandaloneObjectEntry(
+		UnsafeSupplier<Boolean, Exception>
+			allowStandaloneObjectEntryUnsafeSupplier) {
+
+		_allowStandaloneObjectEntrySupplier = () -> {
+			try {
+				return allowStandaloneObjectEntryUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean allowStandaloneObjectEntry;
+
+	@JsonIgnore
+	private Supplier<Boolean> _allowStandaloneObjectEntrySupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getClassName() {
 		if (_classNameSupplier != null) {
 			className = _classNameSupplier.get();
@@ -2170,6 +2215,18 @@ public class ObjectDefinition implements Serializable {
 			sb.append(active);
 		}
 
+		Boolean allowStandaloneObjectEntry = getAllowStandaloneObjectEntry();
+
+		if (allowStandaloneObjectEntry != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"allowStandaloneObjectEntry\": ");
+
+			sb.append(allowStandaloneObjectEntry);
+		}
+
 		String className = getClassName();
 
 		if (className != null) {
@@ -2957,4 +3014,4 @@ public class ObjectDefinition implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:-1878228123
+// LIFERAY-REST-BUILDER-HASH:-340894259

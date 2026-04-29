@@ -1808,6 +1808,16 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"allowStandaloneObjectEntry", additionalAssertFieldName)) {
+
+				if (objectDefinition.getAllowStandaloneObjectEntry() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("className", additionalAssertFieldName)) {
 				if (objectDefinition.getClassName() == null) {
 					valid = false;
@@ -2360,6 +2370,19 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				if (!Objects.deepEquals(
 						objectDefinition1.getActive(),
 						objectDefinition2.getActive())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"allowStandaloneObjectEntry", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						objectDefinition1.getAllowStandaloneObjectEntry(),
+						objectDefinition2.getAllowStandaloneObjectEntry())) {
 
 					return false;
 				}
@@ -3067,6 +3090,11 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("active")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("allowStandaloneObjectEntry")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -3925,6 +3953,7 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				accountEntryRestrictedObjectFieldName = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				active = RandomTestUtil.randomBoolean();
+				allowStandaloneObjectEntry = RandomTestUtil.randomBoolean();
 				className = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				dateCreated = RandomTestUtil.nextDate();
@@ -4239,4 +4268,4 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }
-// LIFERAY-REST-BUILDER-HASH:1637343173
+// LIFERAY-REST-BUILDER-HASH:-163321867
