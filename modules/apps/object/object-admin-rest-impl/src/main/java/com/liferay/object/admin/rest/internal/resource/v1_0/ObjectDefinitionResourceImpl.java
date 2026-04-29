@@ -401,7 +401,8 @@ public class ObjectDefinitionResourceImpl
 						objectDefinition.getScope(),
 						ObjectDefinitionSettingUtil.toObjectDefinitionSettings(
 							contextUser.getCompanyId(), _groupLocalService,
-							objectDefinition.getObjectDefinitionSettings(),
+							ObjectDefinitionSettingUtil.
+								mergeAllowStandaloneObjectEntry(objectDefinition),
 							_objectDefinitionSettingLocalService),
 						objectFields,
 						WorkflowDefinitionLinkUtil.toWorkflowDefinitionLinks(
@@ -453,7 +454,8 @@ public class ObjectDefinitionResourceImpl
 						objectDefinition.getStorageType(),
 						ObjectDefinitionSettingUtil.toObjectDefinitionSettings(
 							contextUser.getCompanyId(), _groupLocalService,
-							objectDefinition.getObjectDefinitionSettings(),
+							ObjectDefinitionSettingUtil.
+								mergeAllowStandaloneObjectEntry(objectDefinition),
 							_objectDefinitionSettingLocalService),
 						objectFields,
 						WorkflowDefinitionLinkUtil.toWorkflowDefinitionLinks(
@@ -630,7 +632,8 @@ public class ObjectDefinitionResourceImpl
 						0,
 						ObjectDefinitionSettingUtil.toObjectDefinitionSettings(
 							contextUser.getCompanyId(), _groupLocalService,
-							objectDefinition.getObjectDefinitionSettings(),
+							ObjectDefinitionSettingUtil.
+								mergeAllowStandaloneObjectEntry(objectDefinition),
 							_objectDefinitionSettingLocalService),
 						ObjectFieldUtil.toObjectFields(
 							objectDefinition.getDefaultLanguageId(),
@@ -716,7 +719,8 @@ public class ObjectDefinitionResourceImpl
 						pluralLabelMap, objectDefinition.getScope(), statusInt,
 						ObjectDefinitionSettingUtil.toObjectDefinitionSettings(
 							contextUser.getCompanyId(), _groupLocalService,
-							objectDefinition.getObjectDefinitionSettings(),
+							ObjectDefinitionSettingUtil.
+								mergeAllowStandaloneObjectEntry(objectDefinition),
 							_objectDefinitionSettingLocalService),
 						ObjectFieldUtil.toObjectFields(
 							objectDefinition.getDefaultLanguageId(),

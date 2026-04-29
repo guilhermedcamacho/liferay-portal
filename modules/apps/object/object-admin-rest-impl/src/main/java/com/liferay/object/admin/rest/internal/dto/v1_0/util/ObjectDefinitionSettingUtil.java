@@ -5,13 +5,16 @@
 
 package com.liferay.object.admin.rest.internal.dto.v1_0.util;
 
+import com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectDefinitionSetting;
 import com.liferay.object.constants.ObjectDefinitionSettingConstants;
 import com.liferay.object.service.ObjectDefinitionSettingLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
 
@@ -19,6 +22,51 @@ import java.util.List;
  * @author Pedro Tavares
  */
 public class ObjectDefinitionSettingUtil {
+
+	public static ObjectDefinitionSetting[] mergeAllowStandaloneObjectEntry(
+		ObjectDefinition objectDefinition) {
+
+		ObjectDefinitionSetting[] objectDefinitionSettings =
+			objectDefinition.getObjectDefinitionSettings();
+
+		Boolean allowStandaloneObjectEntry =
+			objectDefinition.getAllowStandaloneObjectEntry();
+
+		if (allowStandaloneObjectEntry == null) {
+			return objectDefinitionSettings;
+		}
+
+		// Silently ignore the setting when the target definition is not a root
+		// descendant — the property only applies to child definitions in an
+		// inheritance relationship.
+
+		if (Validator.isNull(
+				objectDefinition.
+					getRootObjectDefinitionExternalReferenceCode())) {
+
+			return objectDefinitionSettings;
+		}
+
+		ObjectDefinitionSetting allowStandaloneObjectEntrySetting =
+			new ObjectDefinitionSetting() {
+				{
+					setName(
+						() ->
+							ObjectDefinitionSettingConstants.
+								NAME_ALLOW_STANDALONE_OBJECT_ENTRY);
+					setValue(() -> String.valueOf(allowStandaloneObjectEntry));
+				}
+			};
+
+		if (objectDefinitionSettings == null) {
+			return new ObjectDefinitionSetting[] {
+				allowStandaloneObjectEntrySetting
+			};
+		}
+
+		return ArrayUtil.append(
+			objectDefinitionSettings, allowStandaloneObjectEntrySetting);
+	}
 
 	public static List<com.liferay.object.model.ObjectDefinitionSetting>
 		toObjectDefinitionSettings(

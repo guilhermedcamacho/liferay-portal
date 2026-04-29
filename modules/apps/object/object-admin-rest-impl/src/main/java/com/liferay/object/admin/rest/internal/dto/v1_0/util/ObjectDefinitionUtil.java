@@ -150,6 +150,20 @@ public class ObjectDefinitionUtil {
 						return serviceBuilderObjectField.getName();
 					});
 				setActive(serviceBuilderObjectDefinition::isActive);
+				setAllowStandaloneObjectEntry(
+					() -> {
+						if (!FeatureFlagManagerUtil.isEnabled(
+								serviceBuilderObjectDefinition.getCompanyId(),
+								"LPD-34594") ||
+							!serviceBuilderObjectDefinition.
+								isRootDescendantNode()) {
+
+							return null;
+						}
+
+						return serviceBuilderObjectDefinition.
+							isAllowStandaloneObjectEntry();
+					});
 				setClassName(serviceBuilderObjectDefinition::getClassName);
 				setCreator(
 					() -> CreatorUtil.toCreator(
