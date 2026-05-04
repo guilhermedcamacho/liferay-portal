@@ -25,6 +25,7 @@
 			"accountEntryRestrictedObjectFieldName"?: string;
 			"actions"?: {[key: string]: {[key: string]: string;};};
 			"active"?: boolean;
+			"allowStandaloneObjectEntry"?: boolean;
 			"className"?: string;
 			"creator"?: Creator;
 			"dateCreated"?: Date;
@@ -95,6 +96,11 @@
 		{
 			baseName: "active",
 			name: "active",
+			type: "boolean",
+		},
+		{
+			baseName: "allowStandaloneObjectEntry",
+			name: "allowStandaloneObjectEntry",
 			type: "boolean",
 		},
 		{

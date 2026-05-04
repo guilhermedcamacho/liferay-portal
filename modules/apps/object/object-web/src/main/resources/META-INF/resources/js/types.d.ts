@@ -192,6 +192,7 @@ interface ObjectDefinition {
 	accountEntryRestrictedObjectFieldName: string;
 	actions: Actions;
 	active: boolean;
+	allowStandaloneObjectEntry?: boolean;
 	dateCreated: string;
 	dateModified: string;
 	dbTableName?: string;

@@ -39,6 +39,7 @@ import com.liferay.object.constants.ObjectActionNameConstants;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectDefinitionSettingConstants;
+import com.liferay.object.definition.setting.util.ObjectDefinitionSettingUtil;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectFolderConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
@@ -2848,6 +2849,101 @@ public class ObjectDefinitionResourceTest
 			_contains(
 				expectedObjectDefinition,
 				(List<ObjectDefinition>)page.getItems()));
+	}
+
+	@Test
+	public void testAllowStandaloneObjectEntry() throws Exception {
+		ObjectDefinition rootObjectDefinition =
+			objectDefinitionResource.postObjectDefinition(
+				randomObjectDefinition());
+		ObjectDefinition childObjectDefinition =
+			objectDefinitionResource.postObjectDefinition(
+				randomObjectDefinition());
+
+		try {
+			TreeTestUtil.bind(
+				rootObjectDefinition.getId(), childObjectDefinition.getId(),
+				_objectRelationshipLocalService);
+
+			rootObjectDefinition =
+				objectDefinitionResource.getObjectDefinition(
+					rootObjectDefinition.getId());
+			childObjectDefinition =
+				objectDefinitionResource.getObjectDefinition(
+					childObjectDefinition.getId());
+
+			Assert.assertNull(
+				"Root definition GET response must omit " +
+					"allowStandaloneObjectEntry",
+				rootObjectDefinition.getAllowStandaloneObjectEntry());
+			Assert.assertEquals(
+				"Child definition GET defaults to true", Boolean.TRUE,
+				childObjectDefinition.getAllowStandaloneObjectEntry());
+
+			ObjectDefinition patchObjectDefinition = new ObjectDefinition();
+
+			patchObjectDefinition.setAllowStandaloneObjectEntry(false);
+
+			objectDefinitionResource.patchObjectDefinition(
+				childObjectDefinition.getId(), patchObjectDefinition);
+
+			childObjectDefinition =
+				objectDefinitionResource.getObjectDefinition(
+					childObjectDefinition.getId());
+
+			Assert.assertEquals(
+				"PATCH false then GET returns false", Boolean.FALSE,
+				childObjectDefinition.getAllowStandaloneObjectEntry());
+
+			patchObjectDefinition = new ObjectDefinition();
+
+			patchObjectDefinition.setAllowStandaloneObjectEntry(true);
+
+			objectDefinitionResource.patchObjectDefinition(
+				childObjectDefinition.getId(), patchObjectDefinition);
+
+			childObjectDefinition =
+				objectDefinitionResource.getObjectDefinition(
+					childObjectDefinition.getId());
+
+			Assert.assertEquals(
+				"PATCH true then GET returns true", Boolean.TRUE,
+				childObjectDefinition.getAllowStandaloneObjectEntry());
+
+			ObjectDefinition standaloneObjectDefinition =
+				objectDefinitionResource.postObjectDefinition(
+					randomObjectDefinition());
+
+			patchObjectDefinition = new ObjectDefinition();
+
+			patchObjectDefinition.setAllowStandaloneObjectEntry(false);
+
+			objectDefinitionResource.patchObjectDefinition(
+				standaloneObjectDefinition.getId(), patchObjectDefinition);
+
+			standaloneObjectDefinition =
+				objectDefinitionResource.getObjectDefinition(
+					standaloneObjectDefinition.getId());
+
+			Assert.assertNull(
+				"Non-root-descendant PATCH must be a no-op (field absent on " +
+					"GET, setting not persisted)",
+				standaloneObjectDefinition.getAllowStandaloneObjectEntry());
+			Assert.assertNull(
+				"Non-root-descendant PATCH must not persist the underlying " +
+					"setting row",
+				ObjectDefinitionSettingUtil.getValue(
+					ObjectDefinitionSettingConstants.
+						NAME_ALLOW_STANDALONE_OBJECT_ENTRY,
+					_objectDefinitionLocalService.getObjectDefinition(
+						standaloneObjectDefinition.getId()
+					).getObjectDefinitionSettings()));
+		}
+		finally {
+			TreeTestUtil.unbind(
+				childObjectDefinition.getId(),
+				_objectRelationshipLocalService);
+		}
 	}
 
 	private void _testGetObjectDefinitionWithRootObjectDefinitionExternalReferenceCodes()
