@@ -1401,7 +1401,7 @@ public class ObjectEntryLocalServiceImpl
 
 		predicate = predicate.and(_getHeadObjectEntryPredicate(false));
 
-		if (!objectScopeProvider.isGroupAware()) {
+		if (!objectScopeProvider.isGroupAware() || (groupId == 0)) {
 			return dslQueryCount(joinStep.where(predicate));
 		}
 
