@@ -1,0 +1,3 @@
+Bundle-Name: Liferay AI Hub Pricing REST Client
+Bundle-SymbolicName: com.liferay.ai.hub.pricing.rest.client
+Bundle-Version: 1.0.0

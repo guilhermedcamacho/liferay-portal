@@ -1,0 +1,13 @@
+apiDir: ../ai-hub-pricing-rest-api/src/main/java
+apiPackagePath: com.liferay.ai.hub.pricing.rest
+application:
+    baseURI: /ai-hub-pricing
+    className: AIHubPricingRESTApplication
+    name: Liferay.AI.Hub.Pricing.REST
+author: Carolina Barbosa
+clientDir: ../ai-hub-pricing-rest-client/src/main/java
+compatibilityVersion: 15
+forcePredictableOperationId: true
+generateGraphQL: false
+javaEEPackage: jakarta
+testDir: ../ai-hub-pricing-rest-test/src/testIntegration/java
