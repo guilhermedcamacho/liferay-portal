@@ -1,0 +1,14 @@
+{
+	"object-entries": [
+		{
+			"aenPerLRT": 10,
+			"embeddingTokensPerLRT": 45000,
+			"externalReferenceCode": "L_AI_HUB_QUOTA_CONVERSION_TABLE_V0_6",
+			"modelArmorTokensPerLRT": 90000,
+			"version": 0.6,
+			"vertexInputTokensPerLRT": 2340,
+			"vertexOutputTokensPerLRT": 525
+		}
+	],
+	"objectDefinitionName": "AIHubQuotaConversionTable"
+}

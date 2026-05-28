@@ -1,0 +1,13 @@
+{
+	"deletionType": "cascade",
+	"externalReferenceCode": "L_AI_HUB_QUOTA_TO_L_AI_HUB_QUOTA_BLOCKS",
+	"label": {
+		"en_US": "AI Hub Quota to AI Hub Quota Blocks"
+	},
+	"name": "quotaToQuotaBlocks",
+	"objectDefinitionId1": "[$OBJECT_DEFINITION_ID:AIHubQuota$]",
+	"objectDefinitionId2": "[$OBJECT_DEFINITION_ID:AIHubQuotaBlock$]",
+	"objectDefinitionName2": "AIHubQuotaBlock",
+	"system": true,
+	"type": "oneToMany"
+}

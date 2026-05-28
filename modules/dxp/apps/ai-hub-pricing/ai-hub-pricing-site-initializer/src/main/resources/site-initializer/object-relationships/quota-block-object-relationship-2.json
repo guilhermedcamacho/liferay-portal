@@ -1,0 +1,13 @@
+{
+	"deletionType": "prevent",
+	"externalReferenceCode": "L_AI_HUB_QUOTA_CONVERSION_TABLE_TO_L_AI_HUB_QUOTA_BLOCKS",
+	"label": {
+		"en_US": "AI Hub Quota Conversion Table to AI Hub Quota Blocks"
+	},
+	"name": "quotaCTToQuotaBlocks",
+	"objectDefinitionId1": "[$OBJECT_DEFINITION_ID:AIHubQuotaConversionTable$]",
+	"objectDefinitionId2": "[$OBJECT_DEFINITION_ID:AIHubQuotaBlock$]",
+	"objectDefinitionName2": "AIHubQuotaBlock",
+	"system": true,
+	"type": "oneToMany"
+}

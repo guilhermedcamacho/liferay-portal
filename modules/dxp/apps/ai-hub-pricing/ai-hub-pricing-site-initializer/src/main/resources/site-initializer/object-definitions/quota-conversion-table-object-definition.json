@@ -1,0 +1,101 @@
+{
+	"className": "com.liferay.object.model.ObjectDefinition#QCT1",
+	"enableFormContainer": false,
+	"enableIndexSearch": true,
+	"enableObjectEntryHistory": true,
+	"externalReferenceCode": "L_AI_HUB_QUOTA_CONVERSION_TABLE",
+	"friendlyURLSeparator": "l",
+	"label": {
+		"en_US": "AI Hub Quota Conversion Table"
+	},
+	"modifiable": true,
+	"name": "AIHubQuotaConversionTable",
+	"objectFields": [
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "AEN_PER_LRT",
+			"indexed": true,
+			"label": {
+				"en_US": "AEN Per LRT"
+			},
+			"name": "aenPerLRT",
+			"required": true,
+			"system": true,
+			"type": "Integer"
+		},
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "EMBEDDING_TOKENS_PER_LRT",
+			"indexed": true,
+			"label": {
+				"en_US": "Embedding Tokens Per LRT"
+			},
+			"name": "embeddingTokensPerLRT",
+			"required": true,
+			"system": true,
+			"type": "Integer"
+		},
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "MODEL_ARMOR_TOKENS_PER_LRT",
+			"indexed": true,
+			"label": {
+				"en_US": "Model Armor Tokens Per LRT"
+			},
+			"name": "modelArmorTokensPerLRT",
+			"required": true,
+			"system": true,
+			"type": "Integer"
+		},
+		{
+			"DBType": "Double",
+			"businessType": "Decimal",
+			"externalReferenceCode": "VERSION",
+			"indexed": true,
+			"label": {
+				"en_US": "Version"
+			},
+			"name": "version",
+			"required": true,
+			"system": true,
+			"type": "Double"
+		},
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "VERTEX_INPUT_TOKENS_PER_LRT",
+			"indexed": true,
+			"label": {
+				"en_US": "Vertex Input Tokens Per LRT"
+			},
+			"name": "vertexInputTokensPerLRT",
+			"required": true,
+			"system": true,
+			"type": "Integer"
+		},
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "VERTEX_OUTPUT_TOKENS_PER_LRT",
+			"indexed": true,
+			"label": {
+				"en_US": "Vertex Output Tokens Per LRT"
+			},
+			"name": "vertexOutputTokensPerLRT",
+			"required": true,
+			"system": true,
+			"type": "Integer"
+		}
+	],
+	"objectFolderExternalReferenceCode": "default",
+	"panelCategoryKey": "control_panel.object",
+	"pluralLabel": {
+		"en_US": "AI Hub Quota Conversion Tables"
+	},
+	"portlet": true,
+	"scope": "company",
+	"system": true
+}

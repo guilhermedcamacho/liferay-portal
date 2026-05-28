@@ -1,0 +1,106 @@
+{
+	"className": "com.liferay.object.model.ObjectDefinition#QB1K",
+	"enableFormContainer": false,
+	"enableIndexSearch": true,
+	"enableObjectEntryHistory": true,
+	"externalReferenceCode": "L_AI_HUB_QUOTA_BLOCK",
+	"friendlyURLSeparator": "l",
+	"label": {
+		"en_US": "AI Hub Quota Block"
+	},
+	"modifiable": true,
+	"name": "AIHubQuotaBlock",
+	"objectFields": [
+		{
+			"DBType": "DateTime",
+			"businessType": "DateTime",
+			"externalReferenceCode": "PURCHASE_DATE",
+			"indexed": true,
+			"label": {
+				"en_US": "Purchase Date"
+			},
+			"name": "purchaseDate",
+			"objectFieldSettings": [
+				{
+					"name": "timeStorage",
+					"value": "convertToUTC"
+				}
+			],
+			"required": true,
+			"system": true,
+			"type": "DateTime"
+		},
+		{
+			"DBType": "DateTime",
+			"businessType": "DateTime",
+			"externalReferenceCode": "PURCHASE_EXPIRATION_DATE",
+			"indexed": true,
+			"label": {
+				"en_US": "Purchase Expiration Date"
+			},
+			"name": "purchaseExpirationDate",
+			"objectFieldSettings": [
+				{
+					"name": "timeStorage",
+					"value": "convertToUTC"
+				}
+			],
+			"required": true,
+			"system": true,
+			"type": "DateTime"
+		},
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "REMAINING_BALANCE",
+			"indexed": true,
+			"label": {
+				"en_US": "Remaining Balance"
+			},
+			"name": "remainingBalance",
+			"system": true,
+			"type": "Integer"
+		},
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "SIZE",
+			"indexed": true,
+			"label": {
+				"en_US": "Size"
+			},
+			"name": "size",
+			"required": true,
+			"system": true,
+			"type": "Integer"
+		},
+		{
+			"DBType": "String",
+			"businessType": "Text",
+			"externalReferenceCode": "TRANSACTION_ID",
+			"indexed": true,
+			"indexedAsKeyword": true,
+			"label": {
+				"en_US": "Transaction Id"
+			},
+			"name": "transactionId",
+			"objectFieldSettings": [
+				{
+					"name": "uniqueValues",
+					"value": "true"
+				}
+			],
+			"required": true,
+			"system": true,
+			"type": "String"
+		}
+	],
+	"objectFolderExternalReferenceCode": "default",
+	"panelCategoryKey": "control_panel.object",
+	"pluralLabel": {
+		"en_US": "AI Hub Quota Blocks"
+	},
+	"portlet": true,
+	"scope": "company",
+	"system": true
+}
