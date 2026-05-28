@@ -1,4 +1,6 @@
 Bundle-Name: Liferay AI Hub Pricing REST API
 Bundle-SymbolicName: com.liferay.ai.hub.pricing.rest.api
 Bundle-Version: 1.0.0
-Export-Package: com.liferay.ai.hub.pricing.rest.resource.v1_0
+Export-Package:\
+	com.liferay.ai.hub.pricing.rest.dto.v1_0,\
+	com.liferay.ai.hub.pricing.rest.resource.v1_0
