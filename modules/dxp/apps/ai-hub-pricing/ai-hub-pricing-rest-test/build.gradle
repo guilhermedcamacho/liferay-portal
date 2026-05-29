@@ -6,8 +6,11 @@ dependencies {
 	testIntegrationImplementation group: "commons-beanutils", name: "commons-beanutils", version: "1.11.0"
 	testIntegrationImplementation group: "jakarta.annotation", name: "jakarta.annotation-api", version: "2.1.1"
 	testIntegrationImplementation group: "org.skyscreamer", name: "jsonassert", version: "1.2.3"
+	testIntegrationImplementation project(":apps:account:account-api")
+	testIntegrationImplementation project(":apps:object:object-api")
 	testIntegrationImplementation project(":apps:portal-odata:portal-odata-api")
 	testIntegrationImplementation project(":apps:portal-vulcan:portal-vulcan-api")
+	testIntegrationImplementation project(":apps:site:site-api")
 	testIntegrationImplementation project(":dxp:apps:ai-hub-pricing:ai-hub-pricing-rest-api")
 	testIntegrationImplementation project(":dxp:apps:ai-hub-pricing:ai-hub-pricing-rest-client")
 	testIntegrationImplementation project(":test:arquillian-extension-junit-bridge")
