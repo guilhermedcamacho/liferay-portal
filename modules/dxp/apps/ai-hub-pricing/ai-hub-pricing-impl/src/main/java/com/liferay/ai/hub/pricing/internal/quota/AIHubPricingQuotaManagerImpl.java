@@ -34,6 +34,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.Serializable;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 
@@ -64,38 +65,59 @@ public class AIHubPricingQuotaManagerImpl implements QuotaManager {
 	}
 
 	@Override
-	public void checkUsage(long companyId, String text, long userId)
+	public long checkUsage(long companyId, String text, long userId)
 		throws PortalException {
 
 		ObjectEntry objectEntry = _fetchQuotaObjectEntry(companyId, userId);
 
 		if (objectEntry == null) {
-			return;
+			return 0L;
 		}
 
-		long tokensCount = _getTokensCount(companyId, text);
+		long inputTokensCount = _getInputTokensCount(companyId, text);
+
+		long preDebitedTokens =
+			inputTokensCount + QuotaManager.MAX_OUTPUT_TOKENS_RESERVATION;
+
+		long milliLRTCount = LiferayTokenConverter.convert(
+			Map.of(
+				TokenSource.VERTEX_INPUT, inputTokensCount,
+				TokenSource.VERTEX_OUTPUT,
+				(long)QuotaManager.MAX_OUTPUT_TOKENS_RESERVATION));
 
 		try (Closeable closeable = _lock(objectEntry.getObjectEntryId())) {
 			objectEntry = _objectEntryLocalService.getObjectEntry(
 				objectEntry.getObjectEntryId());
 
+			long lrtUsage =
+				MapUtil.getLong(objectEntry.getValues(), "lrtUsage") +
+					milliLRTCount;
 			long usage =
-				MapUtil.getLong(objectEntry.getValues(), "usage") + tokensCount;
+				MapUtil.getLong(objectEntry.getValues(), "usage") +
+					preDebitedTokens;
 
-			if (usage > MapUtil.getLong(objectEntry.getValues(), "limit")) {
+			if ((usage > MapUtil.getLong(objectEntry.getValues(), "limit")) ||
+				(lrtUsage > MapUtil.getLong(
+					objectEntry.getValues(), "lrtLimit"))) {
+
 				throw new UnsupportedOperationException(
 					"You have exceeded your token quota");
 			}
 
-			_partialUpdateObjectEntry(companyId, objectEntry, usage, userId);
+			_partialUpdateObjectEntry(
+				companyId, lrtUsage, objectEntry, usage, userId);
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);
 		}
+
+		return preDebitedTokens;
 	}
 
 	@Override
-	public void updateUsage(long companyId, long tokensCount, long userId)
+	public void updateUsage(
+			long companyId, long inputTokensCount, long outputTokensCount,
+			long preDebitedTokens, long userId)
 		throws PortalException {
 
 		ObjectEntry objectEntry = _fetchQuotaObjectEntry(companyId, userId);
@@ -103,13 +125,37 @@ public class AIHubPricingQuotaManagerImpl implements QuotaManager {
 		if (objectEntry == null) {
 			return;
 		}
+
+		long milliLRTCount = LiferayTokenConverter.convert(
+			Map.of(
+				TokenSource.VERTEX_INPUT, inputTokensCount,
+				TokenSource.VERTEX_OUTPUT, outputTokensCount));
+
+		long preDebitedMilliLRTCount = 0L;
+
+		if (preDebitedTokens > 0L) {
+			preDebitedMilliLRTCount = LiferayTokenConverter.convert(
+				Map.of(
+					TokenSource.VERTEX_INPUT,
+					preDebitedTokens -
+						QuotaManager.MAX_OUTPUT_TOKENS_RESERVATION,
+					TokenSource.VERTEX_OUTPUT,
+					(long)QuotaManager.MAX_OUTPUT_TOKENS_RESERVATION));
+		}
+
+		long milliLRTDelta = milliLRTCount - preDebitedMilliLRTCount;
+		long tokensCount =
+			(inputTokensCount + outputTokensCount) - preDebitedTokens;
 
 		try (Closeable closeable = _lock(objectEntry.getObjectEntryId())) {
 			objectEntry = _objectEntryLocalService.getObjectEntry(
 				objectEntry.getObjectEntryId());
 
 			_partialUpdateObjectEntry(
-				companyId, objectEntry,
+				companyId,
+				MapUtil.getLong(objectEntry.getValues(), "lrtUsage") +
+					milliLRTDelta,
+				objectEntry,
 				MapUtil.getLong(objectEntry.getValues(), "usage") + tokensCount,
 				userId);
 		}
@@ -137,6 +183,10 @@ public class AIHubPricingQuotaManagerImpl implements QuotaManager {
 				"externalReferenceCode", externalReferenceCode
 			).put(
 				"limit", _QUOTA_TOKEN_LIMIT
+			).put(
+				"lrtLimit", _QUOTA_LRT_LIMIT_MILLI
+			).put(
+				"lrtUsage", 0
 			).put(
 				"r_accountToAIHubQuotas_accountEntryId", accountEntryId
 			).put(
@@ -178,16 +228,7 @@ public class AIHubPricingQuotaManagerImpl implements QuotaManager {
 			externalReferenceCode, 0, objectDefinition.getObjectDefinitionId());
 	}
 
-	private ServiceContext _getServiceContext(long companyId, long userId) {
-		ServiceContext serviceContext = new ServiceContext();
-
-		serviceContext.setCompanyId(companyId);
-		serviceContext.setUserId(userId);
-
-		return serviceContext;
-	}
-
-	private long _getTokensCount(long companyId, String text)
+	private long _getInputTokensCount(long companyId, String text)
 		throws PortalException {
 
 		VertexAIConfiguration vertexAIConfiguration =
@@ -195,18 +236,16 @@ public class AIHubPricingQuotaManagerImpl implements QuotaManager {
 				VertexAIConfiguration.class, companyId);
 
 		String location = vertexAIConfiguration.location();
-		String modelName = vertexAIConfiguration.modelName();
 
 		if (Objects.equals(location, "global")) {
-			location = "europe-central2";
-			modelName = "gemini-2.5-flash";
+			location = _COUNT_TOKENS_FALLBACK_LOCATION;
 		}
 
 		try (VertexAI vertexAI = new VertexAI(
 				vertexAIConfiguration.projectId(), location)) {
 
 			GenerativeModel generativeModel = new GenerativeModel(
-				modelName, vertexAI);
+				vertexAIConfiguration.modelName(), vertexAI);
 
 			CountTokensResponse countTokensResponse =
 				generativeModel.countTokens(text);
@@ -216,6 +255,15 @@ public class AIHubPricingQuotaManagerImpl implements QuotaManager {
 		catch (IOException ioException) {
 			throw new PortalException(ioException);
 		}
+	}
+
+	private ServiceContext _getServiceContext(long companyId, long userId) {
+		ServiceContext serviceContext = new ServiceContext();
+
+		serviceContext.setCompanyId(companyId);
+		serviceContext.setUserId(userId);
+
+		return serviceContext;
 	}
 
 	private Closeable _lock(long objectEntryId) throws PortalException {
@@ -254,16 +302,24 @@ public class AIHubPricingQuotaManagerImpl implements QuotaManager {
 	}
 
 	private void _partialUpdateObjectEntry(
-			long companyId, ObjectEntry objectEntry, long usage, long userId)
+			long companyId, long lrtUsage, ObjectEntry objectEntry, long usage,
+			long userId)
 		throws PortalException {
 
 		_objectEntryLocalService.partialUpdateObjectEntry(
 			userId, objectEntry.getObjectEntryId(), 0,
 			HashMapBuilder.<String, Serializable>put(
+				"lrtUsage", lrtUsage
+			).put(
 				"usage", usage
 			).build(),
 			_getServiceContext(companyId, userId));
 	}
+
+	private static final String _COUNT_TOKENS_FALLBACK_LOCATION =
+		"europe-central2";
+
+	private static final long _QUOTA_LRT_LIMIT_MILLI = 36141000;
 
 	private static final int _QUOTA_TOKEN_LIMIT = 33333333;
 
