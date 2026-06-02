@@ -38,6 +38,8 @@ public class EditConfigurationDisplayContext {
 		}
 
 		return HashMapBuilder.<String, Object>put(
+			"accountEntryId", accountEntry.getAccountEntryId()
+		).put(
 			"backURL", DisplayContextUtil.getAIHubURL(_themeDisplay)
 		).put(
 			"externalReferenceCode",

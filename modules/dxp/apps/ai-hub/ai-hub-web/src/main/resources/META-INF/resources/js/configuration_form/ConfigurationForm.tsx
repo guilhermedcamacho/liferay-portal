@@ -16,9 +16,11 @@ import {useConfigurationForm} from './hooks/useConfigurationForm';
 const FORM_ID = 'configurationForm';
 
 export default function ConfigurationForm({
+	accountEntryId,
 	backURL,
 	externalReferenceCode,
 }: {
+	accountEntryId: number;
 	backURL: string;
 	externalReferenceCode: string;
 }) {
@@ -31,7 +33,7 @@ export default function ConfigurationForm({
 		setField,
 		touched,
 		values,
-	} = useConfigurationForm({externalReferenceCode});
+	} = useConfigurationForm({accountEntryId, externalReferenceCode});
 
 	if (loading) {
 		return null;

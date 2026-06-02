@@ -15,10 +15,12 @@ import {
 import {Configuration} from '../types/Configuration';
 
 interface UseConfigurationFormProps {
+	accountEntryId: number;
 	externalReferenceCode: string;
 }
 
 export function useConfigurationForm({
+	accountEntryId,
 	externalReferenceCode,
 }: UseConfigurationFormProps) {
 	const [loading, setLoading] = useState(Boolean(externalReferenceCode));
@@ -40,7 +42,11 @@ export function useConfigurationForm({
 		},
 		onSubmit: async (formValues) => {
 			try {
-				await putConfiguration(externalReferenceCode, formValues);
+				await putConfiguration(externalReferenceCode, {
+					...formValues,
+					r_accountToAIHubConfigurations_accountEntryId:
+						accountEntryId,
+				});
 
 				openToast({
 					message: Liferay.Language.get(
