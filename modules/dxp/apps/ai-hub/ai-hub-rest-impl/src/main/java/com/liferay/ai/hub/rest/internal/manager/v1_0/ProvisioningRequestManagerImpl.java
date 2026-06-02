@@ -21,6 +21,10 @@ import com.liferay.oauth2.provider.constants.GrantType;
 import com.liferay.oauth2.provider.model.OAuth2Application;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationLocalService;
 import com.liferay.oauth2.provider.util.OAuth2SecureRandomGenerator;
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.rest.dto.v1_0.ObjectEntry;
+import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Company;
@@ -32,6 +36,8 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
@@ -71,6 +77,10 @@ public class ProvisioningRequestManagerImpl
 			provisioningRequest.getAccountEntryExternalReferenceCode(),
 			provisioningRequest.getAccountEntryName(), serviceContext);
 
+		_addConfiguration(
+			customerAccountEntry, company.getCompanyId(), dtoConverterContext,
+			provisioningRequest.getRecipientEmailAddress());
+
 		_quotaManager.addQuotas(
 			customerAccountEntry.getAccountEntryId(), company.getCompanyId(),
 			dtoConverterContext.getUserId());
@@ -96,12 +106,49 @@ public class ProvisioningRequestManagerImpl
 				setAccountEntryId(customerAccountEntry::getAccountEntryId);
 				setAccountEntryName(customerAccountEntry::getName);
 				setLiferayDXPURL(provisioningRequest::getLiferayDXPURL);
+				setRecipientEmailAddress(
+					provisioningRequest::getRecipientEmailAddress);
 				setUserAccounts(
 					() -> TransformUtil.transformToArray(
 						users, user -> _toUserAccount(user),
 						UserAccount.class));
 			}
 		};
+	}
+
+	private void _addConfiguration(
+			AccountEntry accountEntry, long companyId,
+			DTOConverterContext dtoConverterContext,
+			String recipientEmailAddress)
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinition(
+				companyId, "AIHubConfiguration");
+
+		if (objectDefinition == null) {
+			return;
+		}
+
+		_objectEntryManager.addObjectEntry(
+			dtoConverterContext, objectDefinition,
+			new ObjectEntry() {
+				{
+					setExternalReferenceCode(
+						() ->
+							accountEntry.getAccountEntryId() +
+								"-ai-hub-configuration");
+					setProperties(
+						() -> HashMapBuilder.<String, Object>put(
+							"r_accountToAIHubConfigurations_accountEntryId",
+							accountEntry.getAccountEntryId()
+						).put(
+							"recipientEmailAddress",
+							GetterUtil.getString(recipientEmailAddress)
+						).build());
+				}
+			},
+			null);
 	}
 
 	private AccountEntry _addCustomerAccountEntry(
@@ -341,6 +388,12 @@ public class ProvisioningRequestManagerImpl
 
 	@Reference
 	private OAuth2ApplicationLocalService _oAuth2ApplicationLocalService;
+
+	@Reference
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Reference(target = "(object.entry.manager.storage.type=default)")
+	private ObjectEntryManager _objectEntryManager;
 
 	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private QuotaManager _quotaManager;
