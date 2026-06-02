@@ -1,0 +1,20 @@
+{
+	"object-actions": [
+		{
+			"active": true,
+			"errorMessage": {
+				"en_US": "Failed to update portal CORS configuration."
+			},
+			"externalReferenceCode": "UPDATE_PORTAL_CORS_CONFIGURATION",
+			"label": {
+				"en_US": "Update portal CORS configuration"
+			},
+			"name": "UpdatePortalCORSConfiguration",
+			"objectActionExecutorKey": "update-portal-cors-configuration",
+			"objectActionTriggerKey": "onAfterUpdate",
+			"parameters": {
+			}
+		}
+	],
+	"objectDefinitionId": "[$OBJECT_DEFINITION_ID:AIHubConfiguration$]"
+}
