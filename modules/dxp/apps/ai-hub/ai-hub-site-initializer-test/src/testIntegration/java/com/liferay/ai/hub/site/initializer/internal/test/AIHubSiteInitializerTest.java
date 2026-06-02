@@ -157,6 +157,7 @@ public class AIHubSiteInitializerTest {
 			"L_AI_HUB_ACCOUNT_INVITE_USER_EMAIL_NOTIFICATION_TEMPLATE");
 		_assertObjectDefinitionExists("L_AI_HUB_AGENT_DEFINITION");
 		_assertObjectDefinitionExists("L_AI_HUB_CHATBOT");
+		_assertObjectDefinitionExists("L_AI_HUB_CONFIGURATION");
 		_assertObjectDefinitionExists("L_AI_HUB_CONTENT_RETRIEVER");
 		_assertObjectDefinitionExists("L_AI_HUB_CRAWLER_JOB");
 		_assertObjectDefinitionExists("L_AI_HUB_INSTRUCTION_DEFINITION");
@@ -167,6 +168,10 @@ public class AIHubSiteInitializerTest {
 			"inputVariables", "outputVariable",
 			"r_accountToAIHubAgentDefinitions_accountEntryId", "title",
 			"workflowDefinitionName");
+		_assertObjectFieldsExist(
+			"L_AI_HUB_CONFIGURATION", "environmentUrls",
+			"r_accountToAIHubConfigurations_accountEntryId",
+			"recipientEmailAddress");
 		_assertObjectFieldsExist(
 			"L_AI_HUB_CHATBOT", "active", "avatar", "description",
 			"introMessage", "notificationMessage", "placeholderMessage",
@@ -200,6 +205,10 @@ public class AIHubSiteInitializerTest {
 		_assertObjectRelationshipExists(
 			ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 			"L_ACCOUNT_TO_L_AI_HUB_AGENT_DEFINITIONS", "L_ACCOUNT",
+			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+		_assertObjectRelationshipExists(
+			ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+			"L_ACCOUNT_TO_L_AI_HUB_CONFIGURATIONS", "L_ACCOUNT",
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 		_assertObjectRelationshipExists(
 			ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
