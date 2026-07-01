@@ -8,17 +8,6 @@ import {fetch} from 'frontend-js-web';
 const WORKFLOW_DEFINITION_BASE_URI =
 	'/o/headless-admin-workflow/v1.0/workflow-definitions';
 
-async function getWorkflowDefinitions() {
-	const response = await fetch(
-		`${WORKFLOW_DEFINITION_BASE_URI}?active=true&scope=ai`,
-		{
-			method: 'GET',
-		}
-	);
-
-	return response.json();
-}
-
 async function getWorkflowDefinition(workflowDefinitionName: string) {
 	const response = await fetch(
 		`${WORKFLOW_DEFINITION_BASE_URI}/by-name/${workflowDefinitionName}`,
@@ -30,4 +19,4 @@ async function getWorkflowDefinition(workflowDefinitionName: string) {
 	return response.json();
 }
 
-export {getWorkflowDefinitions, getWorkflowDefinition};
+export {getWorkflowDefinition};
