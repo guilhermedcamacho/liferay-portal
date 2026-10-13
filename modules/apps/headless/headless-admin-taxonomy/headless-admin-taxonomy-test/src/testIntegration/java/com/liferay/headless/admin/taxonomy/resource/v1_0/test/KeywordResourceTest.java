@@ -1359,6 +1359,14 @@ public class KeywordResourceTest extends BaseKeywordResourceTestCase {
 		KeywordResource cmsTagManagerKeywordResource = _getKeywordResource(
 			_cmsTagManagerUser);
 
+		Keyword putKeyword = cmsTagManagerKeywordResource.putKeyword(
+			keyword.getId(), randomKeyword());
+
+		_assertAssetTagGroupRels(DepotConstants.TYPE_PROJECT, putKeyword);
+		_assertAssetTagGroupRels(
+			DepotConstants.TYPE_SPACE, putKeyword,
+			GroupConstants.ANY_PARENT_GROUP_ID);
+
 		Keyword randomKeyword = randomKeyword();
 
 		randomKeyword.setProjects(new Project[] {_randomProject()});
@@ -1372,11 +1380,12 @@ public class KeywordResourceTest extends BaseKeywordResourceTestCase {
 
 		Assert.assertEquals("FORBIDDEN", problem.getStatus());
 
-		assertEquals(keyword, keywordResource.getKeyword(keyword.getId()));
+		assertEquals(putKeyword, keywordResource.getKeyword(keyword.getId()));
 
-		_assertAssetTagGroupRels(DepotConstants.TYPE_PROJECT, keyword);
+		_assertAssetTagGroupRels(DepotConstants.TYPE_PROJECT, putKeyword);
 		_assertAssetTagGroupRels(
-			DepotConstants.TYPE_SPACE, keyword, assetLibrary.getId());
+			DepotConstants.TYPE_SPACE, putKeyword,
+			GroupConstants.ANY_PARENT_GROUP_ID);
 	}
 
 	private void _testPutSiteKeywordByExternalReferenceCodeDuplicateName()
