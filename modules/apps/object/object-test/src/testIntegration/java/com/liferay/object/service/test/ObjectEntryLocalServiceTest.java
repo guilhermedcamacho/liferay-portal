@@ -5025,20 +5025,20 @@ public class ObjectEntryLocalServiceTest {
 
 		ObjectDefinition objectDefinition = _addCMSObjectDefinition();
 
-		DepotEntry depotEntry1 = _addDepotEntry(DepotConstants.TYPE_PROJECT);
-		DepotEntry depotEntry2 = _addDepotEntry(DepotConstants.TYPE_PROJECT);
-		DepotEntry depotEntry3 = _addDepotEntry(DepotConstants.TYPE_SPACE);
-		DepotEntry depotEntry4 = _addDepotEntry(DepotConstants.TYPE_SPACE);
+		DepotEntry projectDepotEntry1 = _addDepotEntry(
+			DepotConstants.TYPE_PROJECT);
+		DepotEntry spaceDepotEntry1 = _addDepotEntry(DepotConstants.TYPE_SPACE);
 
 		AssetTag assetTag1 = _addProjectAndSpaceScopedAssetTag(
-			depotEntry1.getGroupId(), GroupConstants.ANY_PARENT_GROUP_ID);
+			projectDepotEntry1.getGroupId(),
+			GroupConstants.ANY_PARENT_GROUP_ID);
 		AssetTag assetTag2 = _addProjectAndSpaceScopedAssetTag(
 			GroupConstants.ANY_PARENT_GROUP_ID,
 			GroupConstants.ANY_PARENT_GROUP_ID);
 		AssetTag assetTag3 = _addSpaceScopedAssetTag(
 			GroupConstants.ANY_PARENT_GROUP_ID);
 		AssetTag assetTag4 = _addProjectAndSpaceScopedAssetTag(
-			GroupConstants.ANY_PARENT_GROUP_ID, depotEntry3.getGroupId());
+			GroupConstants.ANY_PARENT_GROUP_ID, spaceDepotEntry1.getGroupId());
 		AssetTag assetTag5 = _addAssetTag();
 
 		String[] assetTagNames = {
@@ -5046,32 +5046,37 @@ public class ObjectEntryLocalServiceTest {
 			assetTag4.getName(), assetTag5.getName()
 		};
 
+		DepotEntry projectDepotEntry2 = _addDepotEntry(
+			DepotConstants.TYPE_PROJECT);
+
 		_assertCopiedObjectEntryAssetTagNames(
 			assetTagNames,
 			new String[] {assetTag2.getName(), assetTag4.getName()},
-			objectDefinition, depotEntry2.getGroupId(),
-			depotEntry1.getGroupId());
+			objectDefinition, projectDepotEntry2.getGroupId(),
+			projectDepotEntry1.getGroupId());
 
 		_assertCopiedObjectEntryAssetTagNames(
 			assetTagNames,
 			new String[] {
 				assetTag1.getName(), assetTag2.getName(), assetTag4.getName()
 			},
-			objectDefinition, depotEntry1.getGroupId());
+			objectDefinition, projectDepotEntry1.getGroupId());
 
 		_assertMovedObjectEntryAssetTagNames(
 			assetTagNames,
 			new String[] {
 				assetTag1.getName(), assetTag2.getName(), assetTag4.getName()
 			},
-			objectDefinition, depotEntry1.getGroupId(),
-			depotEntry1.getGroupId());
+			objectDefinition, projectDepotEntry1.getGroupId(),
+			projectDepotEntry1.getGroupId());
 
 		_assertMovedObjectEntryAssetTagNames(
 			assetTagNames,
 			new String[] {assetTag2.getName(), assetTag4.getName()},
-			objectDefinition, depotEntry2.getGroupId(),
-			depotEntry1.getGroupId());
+			objectDefinition, projectDepotEntry2.getGroupId(),
+			projectDepotEntry1.getGroupId());
+
+		DepotEntry spaceDepotEntry2 = _addDepotEntry(DepotConstants.TYPE_SPACE);
 
 		_assertMovedObjectEntryAssetTagNames(
 			assetTagNames,
@@ -5079,8 +5084,8 @@ public class ObjectEntryLocalServiceTest {
 				assetTag1.getName(), assetTag2.getName(), assetTag3.getName(),
 				assetTag5.getName()
 			},
-			objectDefinition, depotEntry4.getGroupId(),
-			depotEntry3.getGroupId());
+			objectDefinition, spaceDepotEntry2.getGroupId(),
+			spaceDepotEntry1.getGroupId());
 
 		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
 	}
@@ -10568,11 +10573,21 @@ public class ObjectEntryLocalServiceTest {
 		return _addObjectEntry(0, objectDefinition, values, serviceContext);
 	}
 
-	private long _addObjectEntryFolderId(long groupId) throws Exception {
-		ObjectEntryFolder objectEntryFolder =
-			ObjectEntryFolderTestUtil.addObjectEntryFolder(groupId);
+	private ObjectEntry _addObjectEntryWithAssetTagNames(
+			String[] assetTagNames, ObjectDefinition objectDefinition,
+			long objectEntryGroupId, ServiceContext serviceContext,
+			Map<String, Serializable> values)
+		throws Exception {
 
-		return objectEntryFolder.getObjectEntryFolderId();
+		serviceContext.setAssetTagNames(ArrayUtil.clone(assetTagNames));
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			objectEntryGroupId, objectDefinition, values, serviceContext);
+
+		_assertObjectEntryAssetTagNames(
+			ArrayUtil.clone(assetTagNames), objectDefinition, objectEntry);
+
+		return objectEntry;
 	}
 
 	private ObjectValidationRule _addObjectValidationRule(
@@ -10748,8 +10763,8 @@ public class ObjectEntryLocalServiceTest {
 			ObjectDefinition objectDefinition, long objectEntryGroupId)
 		throws Exception {
 
-		_assertObjectEntryAssetTagNames(
-			assetTagNames, true, expectedAssetTagNames, objectDefinition,
+		_copyObjectEntryAndAssertAssetTagNames(
+			assetTagNames, expectedAssetTagNames, objectDefinition,
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			objectEntryGroupId);
 	}
@@ -10760,10 +10775,13 @@ public class ObjectEntryLocalServiceTest {
 			long objectEntryGroupId)
 		throws Exception {
 
-		_assertObjectEntryAssetTagNames(
-			assetTagNames, true, expectedAssetTagNames, objectDefinition,
-			_addObjectEntryFolderId(objectEntryFolderGroupId),
-			objectEntryGroupId);
+		ObjectEntryFolder objectEntryFolder =
+			ObjectEntryFolderTestUtil.addObjectEntryFolder(
+				objectEntryFolderGroupId);
+
+		_copyObjectEntryAndAssertAssetTagNames(
+			assetTagNames, expectedAssetTagNames, objectDefinition,
+			objectEntryFolder.getObjectEntryFolderId(), objectEntryGroupId);
 	}
 
 	private void _assertCount(int count) throws Exception {
@@ -10955,10 +10973,13 @@ public class ObjectEntryLocalServiceTest {
 			long objectEntryGroupId)
 		throws Exception {
 
-		_assertObjectEntryAssetTagNames(
-			assetTagNames, false, expectedAssetTagNames, objectDefinition,
-			_addObjectEntryFolderId(objectEntryFolderGroupId),
-			objectEntryGroupId);
+		ObjectEntryFolder objectEntryFolder =
+			ObjectEntryFolderTestUtil.addObjectEntryFolder(
+				objectEntryFolderGroupId);
+
+		_moveObjectEntryAndAssertAssetTagNames(
+			assetTagNames, expectedAssetTagNames, objectDefinition,
+			objectEntryFolder.getObjectEntryFolderId(), objectEntryGroupId);
 	}
 
 	private void _assertObjectActionStatus(
@@ -10992,42 +11013,11 @@ public class ObjectEntryLocalServiceTest {
 	}
 
 	private void _assertObjectEntryAssetTagNames(
-			String[] assetTagNames, boolean copy,
 			String[] expectedAssetTagNames, ObjectDefinition objectDefinition,
-			long objectEntryFolderId, long objectEntryGroupId)
+			ObjectEntry objectEntry)
 		throws Exception {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext();
-
-		serviceContext.setAssetTagNames(ArrayUtil.clone(assetTagNames));
-
-		Map<String, Serializable> values =
-			HashMapBuilder.<String, Serializable>put(
-				"name", StringUtil.randomString()
-			).build();
-
-		ObjectEntry objectEntry = _addObjectEntry(
-			objectEntryGroupId, objectDefinition, values, serviceContext);
-
 		AssetEntry assetEntry = _assetEntryLocalService.getEntry(
-			objectDefinition.getClassName(), objectEntry.getObjectEntryId());
-
-		AssertUtils.assertEqualsSorted(
-			ArrayUtil.clone(assetTagNames), assetEntry.getTagNames());
-
-		if (copy) {
-			objectEntry = _objectEntryLocalService.copyObjectEntry(
-				TestPropsValues.getUserId(), objectEntry.getObjectEntryId(),
-				objectEntryFolderId, values, serviceContext);
-		}
-		else {
-			_objectEntryLocalService.moveObjectEntry(
-				TestPropsValues.getUserId(), objectEntry.getObjectEntryId(),
-				objectEntryFolderId, values, serviceContext);
-		}
-
-		assetEntry = _assetEntryLocalService.getEntry(
 			objectDefinition.getClassName(), objectEntry.getObjectEntryId());
 
 		AssertUtils.assertEqualsSorted(
@@ -11169,6 +11159,31 @@ public class ObjectEntryLocalServiceTest {
 		}
 
 		return false;
+	}
+
+	private void _copyObjectEntryAndAssertAssetTagNames(
+			String[] assetTagNames, String[] expectedAssetTagNames,
+			ObjectDefinition objectDefinition, long objectEntryFolderId,
+			long objectEntryGroupId)
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext();
+
+		Map<String, Serializable> values =
+			HashMapBuilder.<String, Serializable>put(
+				"name", StringUtil.randomString()
+			).build();
+
+		ObjectEntry objectEntry = _addObjectEntryWithAssetTagNames(
+			assetTagNames, objectDefinition, objectEntryGroupId, serviceContext,
+			values);
+
+		_assertObjectEntryAssetTagNames(
+			expectedAssetTagNames, objectDefinition,
+			_objectEntryLocalService.copyObjectEntry(
+				TestPropsValues.getUserId(), objectEntry.getObjectEntryId(),
+				objectEntryFolderId, values, serviceContext));
 	}
 
 	private long _count() throws Exception {
@@ -11344,6 +11359,32 @@ public class ObjectEntryLocalServiceTest {
 			ResourceConstants.SCOPE_INDIVIDUAL,
 			String.valueOf(objectEntry.getPrimaryKey()), role.getRoleId(),
 			objectAction.getName());
+	}
+
+	private void _moveObjectEntryAndAssertAssetTagNames(
+			String[] assetTagNames, String[] expectedAssetTagNames,
+			ObjectDefinition objectDefinition, long objectEntryFolderId,
+			long objectEntryGroupId)
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext();
+
+		Map<String, Serializable> values =
+			HashMapBuilder.<String, Serializable>put(
+				"name", StringUtil.randomString()
+			).build();
+
+		ObjectEntry objectEntry = _addObjectEntryWithAssetTagNames(
+			assetTagNames, objectDefinition, objectEntryGroupId, serviceContext,
+			values);
+
+		_objectEntryLocalService.moveObjectEntry(
+			TestPropsValues.getUserId(), objectEntry.getObjectEntryId(),
+			objectEntryFolderId, values, serviceContext);
+
+		_assertObjectEntryAssetTagNames(
+			expectedAssetTagNames, objectDefinition, objectEntry);
 	}
 
 	private ObjectDefinition _publishCustomObjectDefinition(
