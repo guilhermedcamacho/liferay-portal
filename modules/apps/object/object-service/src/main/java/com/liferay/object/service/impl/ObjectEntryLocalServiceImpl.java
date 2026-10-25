@@ -5300,8 +5300,10 @@ public class ObjectEntryLocalServiceImpl
 				false, objectDefinition, _objectFieldLocalService);
 
 		Predicate wherePredicate = _getObjectEntriesWherePredicate(
-			dynamicObjectDefinitionTable, groupIds, objectDefinition, predicate,
-			preferApproved, search);
+			dynamicObjectDefinitionTable, groupIds,
+			_getObjectEntriesCountFilterPredicate(
+				groupIds, objectDefinition, predicate, search),
+			preferApproved);
 
 		Set<String> tableNames = _getTableNames(wherePredicate);
 
@@ -5332,6 +5334,29 @@ public class ObjectEntryLocalServiceImpl
 				dynamicObjectDefinitionLocalizationTable, tableNames)
 		).where(
 			wherePredicate
+		);
+	}
+
+	private Predicate _getObjectEntriesCountFilterPredicate(
+			Long[] groupIds, ObjectDefinition objectDefinition,
+			Predicate predicate, String search)
+		throws PortalException {
+
+		Predicate fillPredicate = Predicate.withParentheses(
+			_fillPredicate(objectDefinition, predicate, search));
+
+		if (!StringUtil.equals(
+				objectDefinition.getScope(),
+				ObjectDefinitionConstants.SCOPE_COMPANY)) {
+
+			return ObjectEntrySearchUtil.getObjectEntryIndexPredicate(
+				groupIds, objectDefinition, fillPredicate);
+		}
+
+		return ObjectEntryTable.INSTANCE.objectDefinitionId.eq(
+			objectDefinition.getObjectDefinitionId()
+		).and(
+			fillPredicate
 		);
 	}
 
@@ -5448,22 +5473,21 @@ public class ObjectEntryLocalServiceImpl
 				dynamicObjectDefinitionTable, null)
 		).where(
 			_getObjectEntriesWherePredicate(
-				dynamicObjectDefinitionTable, groupIds, objectDefinition,
-				predicate, preferApproved, search)
+				dynamicObjectDefinitionTable, groupIds,
+				ObjectEntrySearchUtil.getObjectEntryIndexPredicate(
+					groupIds, objectDefinition,
+					Predicate.withParentheses(
+						_fillPredicate(objectDefinition, predicate, search))),
+				preferApproved)
 		);
 	}
 
 	private Predicate _getObjectEntriesWherePredicate(
 			DynamicObjectDefinitionTable dynamicObjectDefinitionTable,
-			Long[] groupIds, ObjectDefinition objectDefinition,
-			Predicate predicate, boolean preferApproved, String search)
+			Long[] groupIds, Predicate predicate, boolean preferApproved)
 		throws PortalException {
 
-		return ObjectEntrySearchUtil.getObjectEntryIndexPredicate(
-			groupIds, objectDefinition,
-			Predicate.withParentheses(
-				_fillPredicate(objectDefinition, predicate, search))
-		).and(
+		return predicate.and(
 			ObjectEntryTable.INSTANCE.rootObjectEntryId.eq(
 				ObjectEntryTable.INSTANCE.objectEntryId
 			).or(
