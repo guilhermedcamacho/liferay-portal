@@ -5318,8 +5318,10 @@ public class ObjectEntryLocalServiceImpl
 			ObjectEntryTable.INSTANCE
 		).innerJoinON(
 			dynamicObjectDefinitionTable,
-			_getObjectEntriesCountJoinPredicate(
-				dynamicObjectDefinitionTable, tableNames)
+			dynamicObjectDefinitionTable.getPrimaryKeyColumn(
+			).eq(
+				ObjectEntryTable.INSTANCE.objectEntryId
+			)
 		).leftJoinOn(
 			extensionDynamicObjectDefinitionTable,
 			_getObjectEntriesCountJoinPredicate(
