@@ -7137,7 +7137,12 @@ public class ObjectEntryLocalServiceTest {
 				"name", "Peter"
 			).build());
 
-		// No predicate with trashed object entry
+		// No predicate with placeholder and trashed object entries
+
+		_objectEntryLocalService.addObjectEntry(
+			RandomTestUtil.randomString(), 0, TestPropsValues.getUserId(),
+			objectDefinition,
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT);
 
 		ObjectEntry objectEntry = _addObjectEntry(
 			0, objectDefinition.getObjectDefinitionId(),
@@ -7200,11 +7205,7 @@ public class ObjectEntryLocalServiceTest {
 				objectDefinition.getObjectDefinitionId(), "name");
 
 		_testGetValuesListCount(
-			1,
-			new String[] {
-				objectDefinition.getDBTableName(),
-				objectDefinition.getExtensionDBTableName()
-			},
+			1, new String[] {objectDefinition.getExtensionDBTableName()},
 			objectDefinition,
 			extensionColumn.eq(
 				"foo"
@@ -7216,15 +7217,14 @@ public class ObjectEntryLocalServiceTest {
 		// Predicate on table column
 
 		_testGetValuesListCount(
-			2, new String[] {objectDefinition.getDBTableName()},
-			objectDefinition, nameColumn.eq("Peter"), null,
+			2, new String[0], objectDefinition, nameColumn.eq("Peter"), null,
 			TestPropsValues.getUserId());
 
 		// Search
 
 		_testGetValuesListCount(
-			2, new String[] {objectDefinition.getDBTableName()},
-			objectDefinition, null, "Peter", TestPropsValues.getUserId());
+			2, new String[0], objectDefinition, null, "Peter",
+			TestPropsValues.getUserId());
 
 		// User with view permission on one object entry
 
@@ -7563,8 +7563,7 @@ public class ObjectEntryLocalServiceTest {
 				objectDefinition1.getObjectDefinitionId(), "name");
 
 		_testGetValuesListCount(
-			1, new String[] {objectDefinition2.getDBTableName()},
-			objectDefinition2,
+			1, new String[0], objectDefinition2,
 			manyToManyObjectRelatedModelsPredicateProvider.getPredicate(
 				new Long[] {0L}, manyToManyObjectRelationship,
 				nameColumn.eq("Peter")),
@@ -7588,11 +7587,7 @@ public class ObjectEntryLocalServiceTest {
 						ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 
 		_testGetValuesListCount(
-			1,
-			new String[] {
-				objectDefinition2.getDBTableName(),
-				objectDefinition2.getExtensionDBTableName()
-			},
+			1, new String[] {objectDefinition2.getExtensionDBTableName()},
 			objectDefinition2,
 			oneToManyObjectRelatedModelsPredicateProvider.getPredicate(
 				new Long[] {0L}, oneToManyObjectRelationship,
@@ -12881,9 +12876,12 @@ public class ObjectEntryLocalServiceTest {
 
 			String sql = _getObjectEntriesCountSQL(logCapture);
 
+			Assert.assertTrue(
+				sql.contains(
+					"join " + objectDefinition.getDBTableName() + " "));
+
 			for (String tableName :
 					new String[] {
-						objectDefinition.getDBTableName(),
 						objectDefinition.getExtensionDBTableName(),
 						objectDefinition.getLocalizationDBTableName()
 					}) {
