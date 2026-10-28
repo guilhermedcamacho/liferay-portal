@@ -7617,6 +7617,57 @@ public class ObjectEntryLocalServiceTest {
 	}
 
 	@Test
+	public void testGetValuesListCountWithSiteScope() throws Exception {
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				Collections.singletonList(
+					ObjectFieldUtil.createObjectField(
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING,
+						RandomTestUtil.randomString(), "name")),
+				ObjectDefinitionConstants.SCOPE_SITE);
+
+		_addObjectEntry(
+			TestPropsValues.getGroupId(),
+			objectDefinition.getObjectDefinitionId(),
+			HashMapBuilder.<String, Serializable>put(
+				"name", RandomTestUtil.randomString()
+			).build());
+
+		Group irrelevantGroup = GroupTestUtil.addGroup();
+
+		_addObjectEntry(
+			irrelevantGroup.getGroupId(),
+			objectDefinition.getObjectDefinitionId(),
+			HashMapBuilder.<String, Serializable>put(
+				"name", RandomTestUtil.randomString()
+			).build());
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"org.hibernate.SQL", LoggerTestUtil.DEBUG)) {
+
+			Assert.assertEquals(
+				1,
+				_objectEntryLocalService.getValuesListCount(
+					new Long[] {TestPropsValues.getGroupId()},
+					TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+					objectDefinition.getObjectDefinitionId(), null, false,
+					null));
+
+			String sql = _getObjectEntriesCountSQL(logCapture);
+
+			Assert.assertTrue(
+				sql.contains(
+					"where ObjectEntry.companyId = ? and ObjectEntry.groupId " +
+						"in (?) and ObjectEntry.objectDefinitionId = ? "));
+		}
+
+		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
+
+		GroupTestUtil.deleteGroup(irrelevantGroup);
+	}
+
+	@Test
 	public void testGetValuesWithFirstExtensionTableAggregationObjectField()
 		throws Exception {
 
@@ -12879,6 +12930,8 @@ public class ObjectEntryLocalServiceTest {
 			Assert.assertTrue(
 				sql.contains(
 					"join " + objectDefinition.getDBTableName() + " "));
+			Assert.assertTrue(
+				sql.contains("where ObjectEntry.objectDefinitionId = ? "));
 
 			for (String tableName :
 					new String[] {
